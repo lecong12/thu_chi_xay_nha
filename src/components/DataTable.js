@@ -6,6 +6,8 @@ import {
   FiUser,
   FiTag,
   FiInfo,
+  FiEdit2,
+  FiTrash2,
 } from "react-icons/fi";
 import "./DataTable.css";
 
@@ -26,7 +28,7 @@ const formatDate = (date) => {
   });
 };
 
-function DataTable({ data }) {
+function DataTable({ data, onEdit, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
   const itemsPerPage = 10;
@@ -92,6 +94,7 @@ function DataTable({ data }) {
               <th>Số tiền</th>
               <th>Người cập nhật</th>
               <th>Ghi chú</th>
+              <th>Thao tác</th>
             </tr>
           </thead>
           <tbody>
@@ -122,6 +125,28 @@ function DataTable({ data }) {
                 </td>
                 <td>{item.nguoiCapNhat || "-"}</td>
                 <td className="note-cell">{item.ghiChu || "-"}</td>
+                <td className="action-cell">
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(item);
+                    }}
+                    title="Chỉnh sửa"
+                  >
+                    <FiEdit2 />
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(item.id);
+                    }}
+                    title="Xóa"
+                  >
+                    <FiTrash2 />
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -190,6 +215,26 @@ function DataTable({ data }) {
                     <span className="detail-value">{item.ghiChu}</span>
                   </div>
                 )}
+                <div className="card-actions">
+                  <button
+                    className="action-btn edit-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onEdit(item);
+                    }}
+                  >
+                    <FiEdit2 /> Chỉnh sửa
+                  </button>
+                  <button
+                    className="action-btn delete-btn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete(item.id);
+                    }}
+                  >
+                    <FiTrash2 /> Xóa
+                  </button>
+                </div>
               </div>
             )}
           </div>

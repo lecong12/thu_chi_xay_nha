@@ -127,6 +127,45 @@
   font-style: italic;
 }
 
+/* Action buttons */
+.action-cell {
+  white-space: nowrap;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  transition: all 0.2s;
+  margin: 0 2px;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.edit-btn {
+  color: #2563eb;
+}
+
+.edit-btn:hover {
+  background: #dbeafe;
+}
+
+.delete-btn {
+  color: #dc2626;
+}
+
+.delete-btn:hover {
+  background: #fee2e2;
+}
+
 /* Mobile Cards */
 .mobile-cards {
   display: none;
@@ -365,6 +404,22 @@
   .detail-value {
     color: #1f2937;
     flex: 1;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .card-actions .action-btn {
+    flex: 1;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 8px 12px;
   }
 
   .pagination {

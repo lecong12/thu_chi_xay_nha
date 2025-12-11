@@ -1,16 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
-import Papa from "papaparse";
 import Dashboard from "./components/Dashboard";
 import FilterBar from "./components/FilterBar";
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
 import Login from "./components/Login";
+import EditModal from "./components/EditModal";
+import Toast from "./components/Toast";
+import { fetchDataFromAppSheet, updateRowInSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import "./App.css";
-
-const SHEET_ID = "1XHDNHpQ6GtPjIDGtKRHMUyHTWJWS8Q4WlT_Du-qggLA";
-const SHEET_GID = "0";
-const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -20,6 +18,12 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [editingItem, setEditingItem] = useState(null);
+  const [toast, setToast] = useState(null);
+  const [localChanges, setLocalChanges] = useState(() => {
+    const saved = localStorage.getItem("dataChanges");
+    return saved ? JSON.parse(saved) : { edited: {}, deleted: [] };
+  });
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -31,34 +35,41 @@ function App() {
     searchText: "",
   });
 
-  // Fetch data from Google Sheets
+  // Fetch data from AppSheet
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(CSV_URL);
-      if (!response.ok) throw new Error("Không thể tải dữ liệu");
-
-      const csvText = await response.text();
-
-      Papa.parse(csvText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          const parsedData = results.data.map((row, index) => ({
+      const result = await fetchDataFromAppSheet();
+      
+      if (result.success && result.data) {
+        const parsedData = result.data.map((row, index) => {
+          // Create unique ID combining original ID and index
+          const uniqueId = row.id 
+            ? `${row.id}_${index}` 
+            : `row_${Date.now()}_${index}`;
+          
+          return {
             ...row,
-            id: row.id || `row_${index}`,
-            soTien: parseFloat(row.soTien?.replace(/,/g, "") || 0),
-            ngay: row.ngay ? new Date(row.ngay) : new Date(),
-          }));
-          setData(parsedData);
-          setLoading(false);
-        },
-        error: (err) => {
-          setError("Lỗi phân tích dữ liệu: " + err.message);
-          setLoading(false);
-        },
-      });
+            id: uniqueId,
+            originalId: row.originalId || row.id,
+          };
+        });
+        
+        // Apply local changes
+        const mergedData = parsedData
+          .filter(item => !localChanges.deleted.includes(item.id))
+          .map(item => localChanges.edited[item.id] ? {
+            ...item,
+            ...localChanges.edited[item.id],
+            ngay: new Date(localChanges.edited[item.id].ngay)
+          } : item);
+        
+        setData(mergedData);
+        setLoading(false);
+      } else {
+        throw new Error(result.message || "Không thể tải dữ liệu");
+      }
     } catch (err) {
       setError("Lỗi tải dữ liệu: " + err.message);
       setLoading(false);
@@ -67,6 +78,7 @@ function App() {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get unique values for filter dropdowns
@@ -171,6 +183,72 @@ function App() {
     setIsLoggedIn(false);
   };
 
+  const showToast = (message, type = "success") => {
+    setToast({ message, type });
+  };
+
+  const handleEdit = (item) => {
+    setEditingItem(item);
+  };
+
+  const handleSaveEdit = async (updatedItem) => {
+    try {
+      // Update to Google Sheets
+      const result = await updateRowInSheet(updatedItem);
+      
+      if (result.success) {
+        const newLocalChanges = {
+          ...localChanges,
+          edited: {
+            ...localChanges.edited,
+            [updatedItem.id]: updatedItem,
+          },
+        };
+        setLocalChanges(newLocalChanges);
+        localStorage.setItem("dataChanges", JSON.stringify(newLocalChanges));
+        
+        // Update data immediately
+        setData(data.map(item => 
+          item.id === updatedItem.id ? updatedItem : item
+        ));
+        setEditingItem(null);
+        showToast(result.message || "Cập nhật thành công!", "success");
+      } else {
+        showToast(result.message || "Cập nhật thất bại", "error");
+      }
+    } catch (error) {
+      showToast("Có lỗi xảy ra khi cập nhật", "error");
+      console.error("Error saving edit:", error);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
+      try {
+        // Delete from Google Sheets
+        const result = await deleteRowFromSheet(id);
+        
+        if (result.success) {
+          const newLocalChanges = {
+            ...localChanges,
+            deleted: [...localChanges.deleted, id],
+          };
+          setLocalChanges(newLocalChanges);
+          localStorage.setItem("dataChanges", JSON.stringify(newLocalChanges));
+          
+          // Update data immediately
+          setData(data.filter(item => item.id !== id));
+          showToast(result.message || "Xóa thành công!", "success");
+        } else {
+          showToast(result.message || "Xóa thất bại", "error");
+        }
+      } catch (error) {
+        showToast("Có lỗi xảy ra khi xóa", "error");
+        console.error("Error deleting:", error);
+      }
+    }
+  };
+
   // Show login page if not logged in
   if (!isLoggedIn) {
     return <Login onLogin={handleLogin} />;
@@ -207,7 +285,11 @@ function App() {
                   onFilterChange={handleFilterChange}
                   onReset={resetFilters}
                 />
-                <DataTable data={filteredData} />
+                <DataTable 
+                  data={filteredData} 
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
               </>
             )}
           </>
@@ -215,6 +297,22 @@ function App() {
       </main>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
+      
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+      
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
