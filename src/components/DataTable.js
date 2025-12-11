@@ -1,21 +1,28 @@
-import React, { useState } from 'react';
-import { FiChevronLeft, FiChevronRight, FiCalendar, FiUser, FiTag, FiInfo } from 'react-icons/fi';
-import './DataTable.css';
+import React, { useState } from "react";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiCalendar,
+  FiUser,
+  FiTag,
+  FiInfo,
+} from "react-icons/fi";
+import "./DataTable.css";
 
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
   }).format(value);
 };
 
 const formatDate = (date) => {
-  if (!date || !(date instanceof Date)) return '-';
-  return date.toLocaleDateString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+  if (!date || !(date instanceof Date)) return "-";
+  return date.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
 };
 
@@ -40,11 +47,11 @@ function DataTable({ data }) {
 
   // Calculate total for current page
   const pageTotalThu = currentData
-    .filter(item => item.loaiThuChi === 'Thu')
+    .filter((item) => item.loaiThuChi === "Thu")
     .reduce((sum, item) => sum + item.soTien, 0);
-  
+
   const pageTotalChi = currentData
-    .filter(item => item.loaiThuChi === 'Chi')
+    .filter((item) => item.loaiThuChi === "Chi")
     .reduce((sum, item) => sum + item.soTien, 0);
 
   if (data.length === 0) {
@@ -63,8 +70,12 @@ function DataTable({ data }) {
       <div className="table-header">
         <h3 className="table-title">Danh sách giao dịch</h3>
         <div className="table-summary">
-          <span className="summary-item thu">Thu: {formatCurrency(pageTotalThu)}</span>
-          <span className="summary-item chi">Chi: {formatCurrency(pageTotalChi)}</span>
+          <span className="summary-item thu">
+            Thu: {formatCurrency(pageTotalThu)}
+          </span>
+          <span className="summary-item chi">
+            Chi: {formatCurrency(pageTotalChi)}
+          </span>
         </div>
       </div>
 
@@ -85,21 +96,32 @@ function DataTable({ data }) {
           </thead>
           <tbody>
             {currentData.map((item, index) => (
-              <tr key={item.id} className={item.loaiThuChi === 'Thu' ? 'row-thu' : 'row-chi'}>
+              <tr
+                key={item.id}
+                className={item.loaiThuChi === "Thu" ? "row-thu" : "row-chi"}
+              >
                 <td>{startIndex + index + 1}</td>
                 <td>{formatDate(item.ngay)}</td>
                 <td>
-                  <span className={`type-badge ${item.loaiThuChi === 'Thu' ? 'thu' : 'chi'}`}>
+                  <span
+                    className={`type-badge ${
+                      item.loaiThuChi === "Thu" ? "thu" : "chi"
+                    }`}
+                  >
                     {item.loaiThuChi}
                   </span>
                 </td>
-                <td className="content-cell">{item.noiDung || '-'}</td>
-                <td>{item.doiTuongThuChi || '-'}</td>
-                <td className={`amount-cell ${item.loaiThuChi === 'Thu' ? 'thu' : 'chi'}`}>
+                <td className="content-cell">{item.noiDung || "-"}</td>
+                <td>{item.doiTuongThuChi || "-"}</td>
+                <td
+                  className={`amount-cell ${
+                    item.loaiThuChi === "Thu" ? "thu" : "chi"
+                  }`}
+                >
                   {formatCurrency(item.soTien)}
                 </td>
-                <td>{item.nguoiCapNhat || '-'}</td>
-                <td className="note-cell">{item.ghiChu || '-'}</td>
+                <td>{item.nguoiCapNhat || "-"}</td>
+                <td className="note-cell">{item.ghiChu || "-"}</td>
               </tr>
             ))}
           </tbody>
@@ -109,40 +131,57 @@ function DataTable({ data }) {
       {/* Mobile Cards */}
       <div className="mobile-cards">
         {currentData.map((item, index) => (
-          <div 
-            key={item.id} 
-            className={`transaction-card ${item.loaiThuChi === 'Thu' ? 'thu' : 'chi'} ${expandedRow === item.id ? 'expanded' : ''}`}
+          <div
+            key={item.id}
+            className={`transaction-card ${
+              item.loaiThuChi === "Thu" ? "thu" : "chi"
+            } ${expandedRow === item.id ? "expanded" : ""}`}
             onClick={() => toggleRow(item.id)}
           >
             <div className="card-main">
               <div className="card-left">
-                <span className={`type-indicator ${item.loaiThuChi === 'Thu' ? 'thu' : 'chi'}`}>
+                <span
+                  className={`type-indicator ${
+                    item.loaiThuChi === "Thu" ? "thu" : "chi"
+                  }`}
+                >
                   {item.loaiThuChi}
                 </span>
                 <div className="card-content">
-                  <span className="card-title">{item.noiDung || 'Không có nội dung'}</span>
+                  <span className="card-title">
+                    {item.noiDung || "Không có nội dung"}
+                  </span>
                   <span className="card-subtitle">
                     <FiCalendar size={12} />
                     {formatDate(item.ngay)}
                   </span>
                 </div>
               </div>
-              <div className={`card-amount ${item.loaiThuChi === 'Thu' ? 'thu' : 'chi'}`}>
-                {item.loaiThuChi === 'Thu' ? '+' : '-'}{formatCurrency(item.soTien)}
+              <div
+                className={`card-amount ${
+                  item.loaiThuChi === "Thu" ? "thu" : "chi"
+                }`}
+              >
+                {item.loaiThuChi === "Thu" ? "+" : "-"}
+                {formatCurrency(item.soTien)}
               </div>
             </div>
-            
+
             {expandedRow === item.id && (
               <div className="card-details">
                 <div className="detail-item">
                   <FiUser size={14} />
                   <span className="detail-label">Người cập nhật:</span>
-                  <span className="detail-value">{item.nguoiCapNhat || '-'}</span>
+                  <span className="detail-value">
+                    {item.nguoiCapNhat || "-"}
+                  </span>
                 </div>
                 <div className="detail-item">
                   <FiTag size={14} />
                   <span className="detail-label">Đối tượng:</span>
-                  <span className="detail-value">{item.doiTuongThuChi || '-'}</span>
+                  <span className="detail-value">
+                    {item.doiTuongThuChi || "-"}
+                  </span>
                 </div>
                 {item.ghiChu && (
                   <div className="detail-item">
@@ -160,14 +199,14 @@ function DataTable({ data }) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="pagination">
-          <button 
+          <button
             className="page-btn"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
             <FiChevronLeft />
           </button>
-          
+
           <div className="page-numbers">
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
               let pageNum;
@@ -180,11 +219,13 @@ function DataTable({ data }) {
               } else {
                 pageNum = currentPage - 2 + i;
               }
-              
+
               return (
                 <button
                   key={pageNum}
-                  className={`page-num ${pageNum === currentPage ? 'active' : ''}`}
+                  className={`page-num ${
+                    pageNum === currentPage ? "active" : ""
+                  }`}
                   onClick={() => handlePageChange(pageNum)}
                 >
                   {pageNum}
@@ -192,15 +233,15 @@ function DataTable({ data }) {
               );
             })}
           </div>
-          
-          <button 
+
+          <button
             className="page-btn"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
             <FiChevronRight />
           </button>
-          
+
           <span className="page-info">
             {startIndex + 1}-{Math.min(endIndex, data.length)} / {data.length}
           </span>

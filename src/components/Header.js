@@ -1,6 +1,6 @@
-import React from 'react';
-import { FiRefreshCw, FiHome, FiLogOut } from 'react-icons/fi';
-import './Header.css';
+import React from "react";
+import { FiRefreshCw, FiHome, FiLogOut } from "react-icons/fi";
+import "./Header.css";
 
 function Header({ onRefresh, loading, onLogout }) {
   return (
@@ -13,10 +13,10 @@ function Header({ onRefresh, loading, onLogout }) {
           </div>
           <span className="subtitle">Dự án xây nhà</span>
         </div>
-        
+
         <div className="header-right">
-          <button 
-            className={`refresh-btn ${loading ? 'loading' : ''}`}
+          <button
+            className={`refresh-btn ${loading ? "loading" : ""}`}
             onClick={onRefresh}
             disabled={loading}
             title="Làm mới dữ liệu"
@@ -24,11 +24,7 @@ function Header({ onRefresh, loading, onLogout }) {
             <FiRefreshCw />
             <span>Làm mới</span>
           </button>
-          <button 
-            className="logout-btn"
-            onClick={onLogout}
-            title="Đăng xuất"
-          >
+          <button className="logout-btn" onClick={onLogout} title="Đăng xuất">
             <FiLogOut />
             <span>Thoát</span>
           </button>

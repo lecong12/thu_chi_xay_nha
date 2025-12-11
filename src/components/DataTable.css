@@ -252,11 +252,13 @@
   }
 
   .transaction-card.thu {
-    box-shadow: 0 1px 3px rgba(22, 163, 74, 0.15), 0 2px 8px rgba(22, 163, 74, 0.1);
+    box-shadow: 0 1px 3px rgba(22, 163, 74, 0.15),
+      0 2px 8px rgba(22, 163, 74, 0.1);
   }
 
   .transaction-card.chi {
-    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.15), 0 2px 8px rgba(220, 38, 38, 0.1);
+    box-shadow: 0 1px 3px rgba(220, 38, 38, 0.15),
+      0 2px 8px rgba(220, 38, 38, 0.1);
   }
 
   .transaction-card.expanded {

@@ -1,25 +1,41 @@
-import React from 'react';
-import { FiTrendingUp, FiTrendingDown, FiDollarSign, FiActivity } from 'react-icons/fi';
-import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
-import './Dashboard.css';
+import React from "react";
+import {
+  FiTrendingUp,
+  FiTrendingDown,
+  FiDollarSign,
+  FiActivity,
+} from "react-icons/fi";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts";
+import "./Dashboard.css";
 
 const formatCurrency = (value) => {
-  return new Intl.NumberFormat('vi-VN', {
-    style: 'currency',
-    currency: 'VND',
-    maximumFractionDigits: 0
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0,
   }).format(value);
 };
 
 const formatShortCurrency = (value) => {
   if (value >= 1000000000) {
-    return (value / 1000000000).toFixed(1) + ' tỷ';
+    return (value / 1000000000).toFixed(1) + " tỷ";
   }
   if (value >= 1000000) {
-    return (value / 1000000).toFixed(1) + ' triệu';
+    return (value / 1000000).toFixed(1) + " triệu";
   }
   if (value >= 1000) {
-    return (value / 1000).toFixed(0) + 'k';
+    return (value / 1000).toFixed(0) + "k";
   }
   return value.toString();
 };
@@ -27,8 +43,8 @@ const formatShortCurrency = (value) => {
 function Dashboard({ stats, data }) {
   // Group data by doiTuongThuChi for pie chart
   const groupByDoiTuong = data.reduce((acc, item) => {
-    if (item.loaiThuChi === 'Chi') {
-      const key = item.doiTuongThuChi || 'Khác';
+    if (item.loaiThuChi === "Chi") {
+      const key = item.doiTuongThuChi || "Khác";
       acc[key] = (acc[key] || 0) + item.soTien;
     }
     return acc;
@@ -41,11 +57,11 @@ function Dashboard({ stats, data }) {
 
   // Group data by noiDung for bar chart
   const groupByNoiDung = data.reduce((acc, item) => {
-    const key = item.noiDung || 'Khác';
+    const key = item.noiDung || "Khác";
     if (!acc[key]) {
       acc[key] = { name: key.substring(0, 20), thu: 0, chi: 0 };
     }
-    if (item.loaiThuChi === 'Thu') {
+    if (item.loaiThuChi === "Thu") {
       acc[key].thu += item.soTien;
     } else {
       acc[key].chi += item.soTien;
@@ -54,10 +70,17 @@ function Dashboard({ stats, data }) {
   }, {});
 
   const barData = Object.values(groupByNoiDung)
-    .sort((a, b) => (b.thu + b.chi) - (a.thu + a.chi))
+    .sort((a, b) => b.thu + b.chi - (a.thu + a.chi))
     .slice(0, 5);
 
-  const COLORS = ['#2d8e2b', '#16a34a', '#22c55e', '#4ade80', '#86efac', '#bbf7d0'];
+  const COLORS = [
+    "#2d8e2b",
+    "#16a34a",
+    "#22c55e",
+    "#4ade80",
+    "#86efac",
+    "#bbf7d0",
+  ];
 
   return (
     <div className="dashboard">
@@ -89,7 +112,11 @@ function Dashboard({ stats, data }) {
           </div>
           <div className="stat-info">
             <span className="stat-label">Cân Đối</span>
-            <span className={`stat-value ${stats.canDoi >= 0 ? 'positive' : 'negative'}`}>
+            <span
+              className={`stat-value ${
+                stats.canDoi >= 0 ? "positive" : "negative"
+              }`}
+            >
               {formatCurrency(stats.canDoi)}
             </span>
           </div>
@@ -123,21 +150,26 @@ function Dashboard({ stats, data }) {
                     outerRadius={90}
                     paddingAngle={3}
                     dataKey="value"
-                    label={({ name, percent }) => `${name.substring(0, 10)} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) =>
+                      `${name.substring(0, 10)} ${(percent * 100).toFixed(0)}%`
+                    }
                     labelLine={false}
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[index % COLORS.length]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value) => formatCurrency(value)}
                     contentStyle={{
-                      background: 'white',
-                      border: '1px solid #e5e7eb',
-                      borderRadius: '8px',
-                      color: '#1f2937',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                      background: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      color: "#1f2937",
+                      boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                     }}
                   />
                 </PieChart>
@@ -145,12 +177,14 @@ function Dashboard({ stats, data }) {
               <div className="chart-legend">
                 {pieData.map((entry, index) => (
                   <div key={entry.name} className="legend-item">
-                    <span 
-                      className="legend-color" 
+                    <span
+                      className="legend-color"
                       style={{ backgroundColor: COLORS[index % COLORS.length] }}
                     ></span>
                     <span className="legend-label">{entry.name}</span>
-                    <span className="legend-value">{formatShortCurrency(entry.value)}</span>
+                    <span className="legend-value">
+                      {formatShortCurrency(entry.value)}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -166,32 +200,40 @@ function Dashboard({ stats, data }) {
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData} layout="vertical">
-                <XAxis 
-                  type="number" 
+                <XAxis
+                  type="number"
                   tickFormatter={formatShortCurrency}
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                  tick={{ fill: "#6b7280", fontSize: 12 }}
                 />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
+                <YAxis
+                  type="category"
+                  dataKey="name"
                   width={100}
-                  tick={{ fill: '#1f2937', fontSize: 11 }}
+                  tick={{ fill: "#1f2937", fontSize: 11 }}
                 />
-                <Tooltip 
+                <Tooltip
                   formatter={(value) => formatCurrency(value)}
                   contentStyle={{
-                    background: 'white',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    color: '#1f2937',
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+                    background: "white",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: "8px",
+                    color: "#1f2937",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
                 />
-                <Legend 
-                  wrapperStyle={{ color: '#1f2937' }}
+                <Legend wrapperStyle={{ color: "#1f2937" }} />
+                <Bar
+                  dataKey="thu"
+                  name="Thu"
+                  fill="#2d8e2b"
+                  radius={[0, 4, 4, 0]}
                 />
-                <Bar dataKey="thu" name="Thu" fill="#2d8e2b" radius={[0, 4, 4, 0]} />
-                <Bar dataKey="chi" name="Chi" fill="#dc2626" radius={[0, 4, 4, 0]} />
+                <Bar
+                  dataKey="chi"
+                  name="Chi"
+                  fill="#dc2626"
+                  radius={[0, 4, 4, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           ) : (

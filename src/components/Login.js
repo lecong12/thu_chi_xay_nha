@@ -1,32 +1,32 @@
-import React, { useState } from 'react';
-import { FiLock, FiHome, FiEye, FiEyeOff } from 'react-icons/fi';
-import './Login.css';
+import React, { useState } from "react";
+import { FiLock, FiHome, FiEye, FiEyeOff } from "react-icons/fi";
+import "./Login.css";
 
-const PASSCODE = '081212';
+const PASSCODE = "081212";
 
 function Login({ onLogin }) {
-  const [passcode, setPasscode] = useState('');
-  const [error, setError] = useState('');
+  const [passcode, setPasscode] = useState("");
+  const [error, setError] = useState("");
   const [showPasscode, setShowPasscode] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (passcode === PASSCODE) {
-      localStorage.setItem('isLoggedIn', 'true');
+      localStorage.setItem("isLoggedIn", "true");
       onLogin();
     } else {
-      setError('Mật mã không đúng!');
+      setError("Mật mã không đúng!");
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
-      setPasscode('');
+      setPasscode("");
     }
   };
 
   const handleChange = (e) => {
     setPasscode(e.target.value);
-    if (error) setError('');
+    if (error) setError("");
   };
 
   return (
@@ -40,7 +40,10 @@ function Login({ onLogin }) {
           <p className="login-subtitle">Dự án xây nhà</p>
         </div>
 
-        <form onSubmit={handleSubmit} className={`login-form ${isShaking ? 'shake' : ''}`}>
+        <form
+          onSubmit={handleSubmit}
+          className={`login-form ${isShaking ? "shake" : ""}`}
+        >
           <div className="input-group">
             <label className="input-label">
               <FiLock />
@@ -48,11 +51,11 @@ function Login({ onLogin }) {
             </label>
             <div className="input-wrapper">
               <input
-                type={showPasscode ? 'text' : 'password'}
+                type={showPasscode ? "text" : "password"}
                 value={passcode}
                 onChange={handleChange}
                 placeholder="••••••"
-                className={`passcode-input ${error ? 'error' : ''}`}
+                className={`passcode-input ${error ? "error" : ""}`}
                 autoFocus
                 maxLength={10}
               />
@@ -72,9 +75,7 @@ function Login({ onLogin }) {
           </button>
         </form>
 
-        <p className="login-footer">
-          © 2025 Quản Lý Thu Chi Xây Nhà
-        </p>
+        <p className="login-footer">© 2025 Quản Lý Thu Chi Xây Nhà</p>
       </div>
     </div>
   );

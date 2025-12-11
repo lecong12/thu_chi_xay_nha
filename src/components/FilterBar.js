@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
-import { FiFilter, FiSearch, FiX, FiChevronDown, FiChevronUp } from 'react-icons/fi';
-import './FilterBar.css';
+import React, { useState } from "react";
+import {
+  FiFilter,
+  FiSearch,
+  FiX,
+  FiChevronDown,
+  FiChevronUp,
+} from "react-icons/fi";
+import "./FilterBar.css";
 
 function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const hasActiveFilters = Object.values(filters).some(v => v !== '');
+  const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
     <div className="filter-bar">
@@ -13,11 +19,9 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
         <div className="filter-title">
           <FiFilter />
           <span>Bộ lọc dữ liệu</span>
-          {hasActiveFilters && (
-            <span className="filter-badge">Đang lọc</span>
-          )}
+          {hasActiveFilters && <span className="filter-badge">Đang lọc</span>}
         </div>
-        
+
         <div className="filter-actions">
           {hasActiveFilters && (
             <button className="reset-btn" onClick={onReset}>
@@ -25,12 +29,14 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
               <span>Xóa lọc</span>
             </button>
           )}
-          <button 
+          <button
             className="toggle-btn"
             onClick={() => setIsExpanded(!isExpanded)}
           >
             {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
-            <span className="toggle-text">{isExpanded ? 'Thu gọn' : 'Mở rộng'}</span>
+            <span className="toggle-text">
+              {isExpanded ? "Thu gọn" : "Mở rộng"}
+            </span>
           </button>
         </div>
       </div>
@@ -42,13 +48,13 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
           type="text"
           placeholder="Tìm kiếm theo nội dung, ghi chú, người cập nhật..."
           value={filters.searchText}
-          onChange={(e) => onFilterChange('searchText', e.target.value)}
+          onChange={(e) => onFilterChange("searchText", e.target.value)}
           className="search-input"
         />
         {filters.searchText && (
-          <button 
+          <button
             className="clear-search"
-            onClick={() => onFilterChange('searchText', '')}
+            onClick={() => onFilterChange("searchText", "")}
           >
             <FiX />
           </button>
@@ -56,19 +62,21 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
       </div>
 
       {/* Expanded filters */}
-      <div className={`filter-content ${isExpanded ? 'expanded' : ''}`}>
+      <div className={`filter-content ${isExpanded ? "expanded" : ""}`}>
         <div className="filter-grid">
           {/* Loại thu chi */}
           <div className="filter-group">
             <label className="filter-label">Loại</label>
             <select
               value={filters.loaiThuChi}
-              onChange={(e) => onFilterChange('loaiThuChi', e.target.value)}
+              onChange={(e) => onFilterChange("loaiThuChi", e.target.value)}
               className="filter-select"
             >
               <option value="">Tất cả</option>
-              {filterOptions.loaiThuChi.map(option => (
-                <option key={option} value={option}>{option}</option>
+              {filterOptions.loaiThuChi.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </div>
@@ -78,12 +86,14 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
             <label className="filter-label">Người cập nhật</label>
             <select
               value={filters.nguoiCapNhat}
-              onChange={(e) => onFilterChange('nguoiCapNhat', e.target.value)}
+              onChange={(e) => onFilterChange("nguoiCapNhat", e.target.value)}
               className="filter-select"
             >
               <option value="">Tất cả</option>
-              {filterOptions.nguoiCapNhat.map(option => (
-                <option key={option} value={option}>{option}</option>
+              {filterOptions.nguoiCapNhat.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </div>
@@ -93,12 +103,14 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
             <label className="filter-label">Đối tượng</label>
             <select
               value={filters.doiTuongThuChi}
-              onChange={(e) => onFilterChange('doiTuongThuChi', e.target.value)}
+              onChange={(e) => onFilterChange("doiTuongThuChi", e.target.value)}
               className="filter-select"
             >
               <option value="">Tất cả</option>
-              {filterOptions.doiTuongThuChi.map(option => (
-                <option key={option} value={option}>{option}</option>
+              {filterOptions.doiTuongThuChi.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
               ))}
             </select>
           </div>
@@ -109,7 +121,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
             <input
               type="date"
               value={filters.startDate}
-              onChange={(e) => onFilterChange('startDate', e.target.value)}
+              onChange={(e) => onFilterChange("startDate", e.target.value)}
               className="filter-input"
             />
           </div>
@@ -120,7 +132,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
             <input
               type="date"
               value={filters.endDate}
-              onChange={(e) => onFilterChange('endDate', e.target.value)}
+              onChange={(e) => onFilterChange("endDate", e.target.value)}
               className="filter-input"
             />
           </div>

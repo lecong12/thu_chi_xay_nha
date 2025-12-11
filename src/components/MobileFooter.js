@@ -1,27 +1,27 @@
-import React from 'react';
-import { FiHome, FiList, FiGrid, FiMessageCircle } from 'react-icons/fi';
-import './MobileFooter.css';
+import React from "react";
+import { FiHome, FiList, FiGrid } from "react-icons/fi";
+import "./MobileFooter.css";
 
 function MobileFooter({ activeTab, onTabChange }) {
   const tabs = [
-    { id: 'dashboard', icon: FiHome, label: 'Tổng quan' },
-    { id: 'list', icon: FiList, label: 'Danh sách' },
-    { id: 'all', icon: FiGrid, label: 'Tất cả' }
+    { id: "dashboard", icon: FiHome, label: "Tổng quan" },
+    { id: "list", icon: FiList, label: "Danh sách" },
+    { id: "all", icon: FiGrid, label: "Tất cả" },
   ];
 
   const openZalo = () => {
-    window.open('http://zalo.me/0898639286', '_blank');
+    window.open("http://zalo.me/0898639286", "_blank");
   };
 
   return (
     <footer className="mobile-footer">
       <nav className="footer-nav">
-        {tabs.map(tab => {
+        {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.id}
-              className={`nav-item ${activeTab === tab.id ? 'active' : ''}`}
+              className={`nav-item ${activeTab === tab.id ? "active" : ""}`}
               onClick={() => onTabChange(tab.id)}
             >
               <Icon className="nav-icon" />
@@ -31,9 +31,9 @@ function MobileFooter({ activeTab, onTabChange }) {
           );
         })}
         <button className="nav-item zalo-btn" onClick={openZalo}>
-          <img 
-            src="https://img.icons8.com/?size=100&id=0m71tmRjlxEe&format=png&color=000000" 
-            alt="Zalo" 
+          <img
+            src="https://img.icons8.com/?size=100&id=0m71tmRjlxEe&format=png&color=000000"
+            alt="Zalo"
             className="zalo-icon"
           />
           <span className="nav-label">Zalo</span>
