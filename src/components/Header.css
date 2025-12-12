@@ -99,6 +99,26 @@
   transform: translateY(-1px);
 }
 
+.clear-cache-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.clear-cache-btn:hover {
+  background: rgba(251, 146, 60, 0.8);
+  transform: translateY(-1px);
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -124,12 +144,14 @@
   }
 
   .refresh-btn span,
-  .logout-btn span {
+  .logout-btn span,
+  .clear-cache-btn span {
     display: none;
   }
 
   .refresh-btn,
-  .logout-btn {
+  .logout-btn,
+  .clear-cache-btn {
     padding: 10px;
     border-radius: 50%;
   }

@@ -7,7 +7,11 @@ import Header from "./components/Header";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
-import { fetchDataFromAppSheet, updateRowInSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
+import {
+  fetchDataFromAppSheet,
+  updateRowInSheet,
+  deleteRowFromSheet,
+} from "./utils/sheetsAPI";
 import "./App.css";
 
 function App() {
@@ -20,10 +24,6 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
-  const [localChanges, setLocalChanges] = useState(() => {
-    const saved = localStorage.getItem("dataChanges");
-    return saved ? JSON.parse(saved) : { edited: {}, deleted: [] };
-  });
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -41,30 +41,34 @@ function App() {
     setError(null);
     try {
       const result = await fetchDataFromAppSheet();
-      
+
       if (result.success && result.data) {
         const parsedData = result.data.map((row, index) => {
           // Create unique ID combining original ID and index
-          const uniqueId = row.id 
-            ? `${row.id}_${index}` 
+          const uniqueId = row.id
+            ? `${row.id}_${index}`
             : `row_${Date.now()}_${index}`;
-          
+
           return {
             ...row,
             id: uniqueId,
             originalId: row.originalId || row.id,
           };
         });
-        
+
         // Apply local changes
         const mergedData = parsedData
-          .filter(item => !localChanges.deleted.includes(item.id))
-          .map(item => localChanges.edited[item.id] ? {
-            ...item,
-            ...localChanges.edited[item.id],
-            ngay: new Date(localChanges.edited[item.id].ngay)
-          } : item);
-        
+          .filter((item) => !localChanges.deleted.includes(item.id))
+          .map((item) =>
+            localChanges.edited[item.id]
+              ? {
+                  ...item,
+                  ...localChanges.edited[item.id],
+                  ngay: new Date(localChanges.edited[item.id].ngay),
+                }
+              : item
+          );
+
         setData(mergedData);
         setLoading(false);
       } else {
@@ -193,24 +197,11 @@ function App() {
 
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Update to Google Sheets
       const result = await updateRowInSheet(updatedItem);
-      
+
       if (result.success) {
-        const newLocalChanges = {
-          ...localChanges,
-          edited: {
-            ...localChanges.edited,
-            [updatedItem.id]: updatedItem,
-          },
-        };
-        setLocalChanges(newLocalChanges);
-        localStorage.setItem("dataChanges", JSON.stringify(newLocalChanges));
-        
-        // Update data immediately
-        setData(data.map(item => 
-          item.id === updatedItem.id ? updatedItem : item
-        ));
+        // Refresh data from AppSheet to ensure consistency
+        await fetchData();
         setEditingItem(null);
         showToast(result.message || "Cập nhật thành công!", "success");
       } else {
@@ -225,19 +216,11 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
       try {
-        // Delete from Google Sheets
         const result = await deleteRowFromSheet(id);
-        
+
         if (result.success) {
-          const newLocalChanges = {
-            ...localChanges,
-            deleted: [...localChanges.deleted, id],
-          };
-          setLocalChanges(newLocalChanges);
-          localStorage.setItem("dataChanges", JSON.stringify(newLocalChanges));
-          
-          // Update data immediately
-          setData(data.filter(item => item.id !== id));
+          // Refresh data from AppSheet to ensure consistency
+          await fetchData();
           showToast(result.message || "Xóa thành công!", "success");
         } else {
           showToast(result.message || "Xóa thất bại", "error");
@@ -285,8 +268,8 @@ function App() {
                   onFilterChange={handleFilterChange}
                   onReset={resetFilters}
                 />
-                <DataTable 
-                  data={filteredData} 
+                <DataTable
+                  data={filteredData}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                 />
@@ -297,7 +280,7 @@ function App() {
       </main>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      
+
       {editingItem && (
         <EditModal
           item={editingItem}
@@ -305,7 +288,7 @@ function App() {
           onSave={handleSaveEdit}
         />
       )}
-      
+
       {toast && (
         <Toast
           message={toast.message}
