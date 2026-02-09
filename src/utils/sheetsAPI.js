@@ -1,19 +1,14 @@
 // AppSheet API Configuration
-const APPSHEET_APP_ID = "f3e183ba-cb36-4be2-a1d2-7875985f2b4a";
-const APPSHEET_ACCESS_KEY =
-  "V2-ESOKa-VoG63-hS9D7-t8Jsn-ioQ7o-aASZH-Ahfti-adTgF";
+const APPSHEET_A3-hS9D7-t8Jsn-ioQ7o-aASZH-Ahfti-adTgF";
 const APPSHEET_TABLE_NAME = "data_thu_chi";
 
-const APPSHEET_API_BASE = `https://www.appsheet.com/api/v2/apps/${APPSHEET_APP_ID}/tables/${APPSHEET_TABLE_NAME}/Action`;
-
-// Fetch all data from AppSheet
-export const fetchDataFromAppSheet = async () => {
+const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${APPSHEET_TABLE_NAME}/Action`;
+ch all data from AppSheet
+export const fetchDataFromAppSheet = async (appId) => {
   try {
-    const response = await fetch(APPSHEET_API_BASE, {
-      method: "POST",
+    const response = await fetch(getApiUrl(a
       headers: {
-        applicationAccessKey: APPSHEET_ACCESS_KEY,
-        "Content-Type": "application/json",
+        applicationAccessKey: APPion/json",
       },
       body: JSON.stringify({
         Action: "Find",
@@ -66,12 +61,11 @@ export const fetchDataFromAppSheet = async () => {
   }
 };
 
-export const updateRowInSheet = async (rowData) => {
+export const updateRowInSheet = async (rowData, appId) => {
   try {
     // Chuẩn bị data theo format AppSheet: [{id: ..., key: value, ...}]
     const editData = [
-      {
-        id: rowData.appSheetId || rowData.id,
+      { a
         ngay:
           rowData.ngay instanceof Date
             ? rowData.ngay.toISOString().split("T")[0]
@@ -85,12 +79,11 @@ export const updateRowInSheet = async (rowData) => {
       },
     ];
 
-    const response = await fetch(APPSHEET_API_BASE, {
+    const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
         applicationAccessKey: APPSHEET_ACCESS_KEY,
-        "Content-Type": "application/json",
-      },
+
       body: JSON.stringify({
         Action: "Edit",
         Properties: {},
@@ -112,16 +105,14 @@ export const updateRowInSheet = async (rowData) => {
   }
 };
 
-export const deleteRowFromSheet = async (rowId, appSheetId) => {
+export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
   try {
-    const response = await fetch(APPSHEET_API_BASE, {
+    const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
         applicationAccessKey: APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        Action: "Delete",
+     
         Properties: {
           Locale: "en-US",
         },
