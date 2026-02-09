@@ -41,7 +41,7 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchDataFromAppSheet();
+      const result = await fetchDataFromAppSheet(process.env.REACT_APP_SHEET_ID);
 
       if (result.success && result.data) {
         setData(result.data);
@@ -175,7 +175,7 @@ function App() {
 
   const handleSaveEdit = async (updatedItem) => {
     try {
-      const result = await updateRowInSheet(updatedItem);
+      const result = await updateRowInSheet(updatedItem, process.env.REACT_APP_SHEET_ID);
 
       if (result.success) {
         // Refresh data from AppSheet to ensure consistency
@@ -196,7 +196,7 @@ function App() {
       try {
         // Find the item to get appSheetId
         const item = data.find(row => row.id === id);
-        const result = await deleteRowFromSheet(id, item?.appSheetId);
+        const result = await deleteRowFromSheet(id, item?.appSheetId, process.env.REACT_APP_SHEET_ID);
 
         if (result.success) {
           // Refresh data from AppSheet to ensure consistency
