@@ -10,10 +10,10 @@ export const fetchDataFromAppSheet = async (appId) => {
   try {
     // Kiểm tra cấu hình trước khi gọi API
     if (!APPSHEET_ACCESS_KEY) {
-      throw new Error("Thiếu Access Key. Hãy kiểm tra file .env và khởi động lại server (npm start).");
+      throw new Error("Thiếu Access Key. Vui lòng kiểm tra biến môi trường (Environment Variables).");
     }
     if (!appId) {
-      throw new Error("Thiếu App ID. Hãy kiểm tra file .env và khởi động lại server.");
+      throw new Error("Thiếu App ID. Vui lòng kiểm tra biến môi trường (Environment Variables).");
     }
     const apiUrl = getApiUrl(appId);
     console.log(`Đang tải dữ liệu... URL: ${apiUrl}`);
@@ -35,7 +35,7 @@ export const fetchDataFromAppSheet = async (appId) => {
 
     if (!response.ok) {
       if (response.status === 404) {
-        throw new Error(`Lỗi 404: Không tìm thấy bảng "${APPSHEET_TABLE_NAME}". Hãy kiểm tra lại tên bảng trong AppSheet và file .env`);
+        throw new Error(`Lỗi 404: Không tìm thấy bảng "${APPSHEET_TABLE_NAME}". Hãy kiểm tra lại tên bảng trong AppSheet và biến môi trường.`);
       }
       if (response.status === 403) {
         throw new Error("Lỗi 403: Không có quyền truy cập. Hãy kiểm tra Access Key hoặc Deploy ứng dụng.");
@@ -66,7 +66,7 @@ export const fetchDataFromAppSheet = async (appId) => {
       console.log("Sample row keys (Tên cột nhận được):", currentKeys);
 
       // Kiểm tra các cột quan trọng
-      const requiredCols = ["ngay", "loaiThuChi", "soTien"];
+      const requiredCols = ["id", "ngay", "loaiThuChi", "soTien"];
       const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
 
       if (missingCols.length > 0) {
