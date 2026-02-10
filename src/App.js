@@ -50,7 +50,8 @@ function App() {
         throw new Error(result.message || "Không thể tải dữ liệu");
       }
     } catch (err) {
-      setError("Lỗi tải dữ liệu: " + err.message);
+      console.error("Fetch error details:", err);
+      setError(err.message);
       setLoading(false);
     }
   };
@@ -126,12 +127,12 @@ function App() {
   // Calculate statistics
   const stats = useMemo(() => {
     const tongThu = filteredData
-      .filter((item) => item.loaiThuChi === "Thu")
-      .reduce((sum, item) => sum + item.soTien, 0);
+      .filter((item) => item.loaiThuChi?.trim().toLowerCase() === "thu")
+      .reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
 
     const tongChi = filteredData
-      .filter((item) => item.loaiThuChi === "Chi")
-      .reduce((sum, item) => sum + item.soTien, 0);
+      .filter((item) => item.loaiThuChi?.trim().toLowerCase() === "chi")
+      .reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
 
     return {
       tongThu,

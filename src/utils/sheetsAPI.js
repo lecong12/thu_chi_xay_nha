@@ -1,14 +1,28 @@
 // AppSheet API Configuration
-const APPSHEET_A3-hS9D7-t8Jsn-ioQ7o-aASZH-Ahfti-adTgF";
-const APPSHEET_TABLE_NAME = "data_thu_chi";
+const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
+const APPSHEET_TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_NAME || "data_thu_chi";
 
-const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${APPSHEET_TABLE_NAME}/Action`;
-ch all data from AppSheet
+// Sử dụng encodeURIComponent để xử lý tên bảng có dấu cách hoặc ký tự đặc biệt
+const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
+
+// Fetch all data from AppSheet
 export const fetchDataFromAppSheet = async (appId) => {
   try {
-    const response = await fetch(getApiUrl(a
+    // Kiểm tra cấu hình trước khi gọi API
+    if (!APPSHEET_ACCESS_KEY) {
+      throw new Error("Thiếu Access Key. Hãy kiểm tra file .env và khởi động lại server (npm start).");
+    }
+    if (!appId) {
+      throw new Error("Thiếu App ID. Hãy kiểm tra file .env và khởi động lại server.");
+    }
+    const apiUrl = getApiUrl(appId);
+    console.log(`Đang tải dữ liệu... URL: ${apiUrl}`);
+
+    const response = await fetch(apiUrl, {
+      method: "POST",
       headers: {
-        applicationAccessKey: APPion/json",
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY, // Sửa thành PascalCase cho chuẩn
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({
         Action: "Find",
@@ -20,13 +34,36 @@ export const fetchDataFromAppSheet = async (appId) => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      if (response.status === 404) {
+        throw new Error(`Lỗi 404: Không tìm thấy bảng "${APPSHEET_TABLE_NAME}". Hãy kiểm tra lại tên bảng trong AppSheet và file .env`);
+      }
+      if (response.status === 403) {
+        throw new Error("Lỗi 403: Không có quyền truy cập. Hãy kiểm tra Access Key hoặc Deploy ứng dụng.");
+      }
+      throw new Error(`Lỗi kết nối AppSheet (Mã lỗi: ${response.status})`);
     }
 
-    const data = await response.json();
+    // Handle cases where the response body is empty (e.g., no rows in the sheet)
+    const responseText = await response.text();
+    const data = responseText ? JSON.parse(responseText) : [];
     
     console.log("Raw data from AppSheet:", data);
     console.log("Total rows:", data.length);
+
+    if (data.length > 0) {
+      const firstRow = data[0];
+      const currentKeys = Object.keys(firstRow);
+      console.log("Sample row keys (Tên cột nhận được):", currentKeys);
+
+      // Kiểm tra các cột quan trọng
+      const requiredCols = ["ngay", "loaiThuChi", "soTien"];
+      const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
+
+      if (missingCols.length > 0) {
+        const msg = `Dữ liệu không khớp! Không tìm thấy cột: [${missingCols.join(", ")}]. AppSheet đang trả về: [${currentKeys.join(", ")}]. Hãy kiểm tra lại tên cột trong Google Sheet (phải là tiếng Việt không dấu: ngay, loaiThuChi, soTien) và Regenerate Structure trong AppSheet.`;
+        throw new Error(msg);
+      }
+    }
     
     // Deduplicate by _RowNumber (unique row identifier)
     const uniqueData = data.reduce((acc, row) => {
@@ -46,7 +83,11 @@ export const fetchDataFromAppSheet = async (appId) => {
       loaiThuChi: row.loaiThuChi || "",
       noiDung: row.noiDung || "",
       doiTuongThuChi: row.doiTuongThuChi || "",
-      soTien: parseFloat(row.soTien?.toString().replace(/,/g, "") || 0),
+      soTien: (() => {
+        const val = row.soTien?.toString().replace(/,/g, "") || "0";
+        const number = parseFloat(val);
+        return isNaN(number) ? 0 : number;
+      })(),
       ghiChu: row.ghiChu || "",
     }));
 
@@ -55,7 +96,7 @@ export const fetchDataFromAppSheet = async (appId) => {
     console.error("Error fetching from AppSheet:", error);
     return {
       success: false,
-      message: "Lỗi tải dữ liệu: " + error.message,
+      message: error.message,
       data: [],
     };
   }
@@ -65,7 +106,8 @@ export const updateRowInSheet = async (rowData, appId) => {
   try {
     // Chuẩn bị data theo format AppSheet: [{id: ..., key: value, ...}]
     const editData = [
-      { a
+      {
+        id: rowData.appSheetId || rowData.id,
         ngay:
           rowData.ngay instanceof Date
             ? rowData.ngay.toISOString().split("T")[0]
@@ -82,7 +124,9 @@ export const updateRowInSheet = async (rowData, appId) => {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        applicationAccessKey: APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
+        "Content-Type": "application/json",
+      },
 
       body: JSON.stringify({
         Action: "Edit",
@@ -95,13 +139,15 @@ export const updateRowInSheet = async (rowData, appId) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const result = await response.json();
+    // Edit action might return an empty body on success, so we handle it
+    const responseText = await response.text();
+    const result = responseText ? JSON.parse(responseText) : null;
     console.log("Kết quả edit:", result);
 
     return { success: true, message: "Cập nhật thành công" };
   } catch (error) {
     console.error("Error updating AppSheet:", error);
-    return { success: false, message: "Lỗi cập nhật: " + error.message };
+    return { success: false, message: error.message };
   }
 };
 
@@ -110,9 +156,11 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        applicationAccessKey: APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
-     
+      },
+      body: JSON.stringify({
+        Action: "Delete",
         Properties: {
           Locale: "en-US",
         },
@@ -132,6 +180,6 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
     return { success: true, message: "Xóa thành công" };
   } catch (error) {
     console.error("Error deleting from AppSheet:", error);
-    return { success: false, message: "Lỗi xóa: " + error.message };
+    return { success: false, message: error.message };
   }
 };

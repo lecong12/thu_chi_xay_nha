@@ -33,7 +33,7 @@ npm start
 - **Mật mã đăng nhập**: `081212`
 - **Google Sheets ID**: ID của Google Sheet được cấu hình trong một tệp `.env` ở thư mục gốc của dự án.
 
-  Tạo một tệp có tên `.env` và thêm vào nội dung sau (thay thế bằng ID của bạn):
+  Tạo một tệp có tên `.env` và thêm vào nội dung sau (thay thế bằng thông tin của bạn):
   ```
   REACT_APP_SHEET_ID=YOUR_GOOGLE_SHEET_ID_HERE
   ```
