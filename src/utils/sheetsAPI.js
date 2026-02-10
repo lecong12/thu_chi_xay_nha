@@ -45,13 +45,23 @@ export const fetchDataFromAppSheet = async (appId) => {
 
     // Handle cases where the response body is empty (e.g., no rows in the sheet)
     const responseText = await response.text();
-    const data = responseText ? JSON.parse(responseText) : [];
-    
-    console.log("Raw data from AppSheet:", data);
-    console.log("Total rows:", data.length);
+    const rawData = responseText ? JSON.parse(responseText) : [];
 
-    if (data.length > 0) {
-      const firstRow = data[0];
+    // Chuẩn hóa tên cột: xóa dấu hai chấm hoặc khoảng trắng thừa ở cuối (ví dụ "loaiThuChi:" -> "loaiThuChi")
+    const normalizedData = rawData.map((row) => {
+      const newRow = {};
+      Object.keys(row).forEach((key) => {
+        const cleanKey = key.trim().replace(/:$/, "");
+        newRow[cleanKey] = row[key];
+      });
+      return newRow;
+    });
+    
+    console.log("Raw data from AppSheet:", normalizedData);
+    console.log("Total rows:", normalizedData.length);
+
+    if (normalizedData.length > 0) {
+      const firstRow = normalizedData[0];
       const currentKeys = Object.keys(firstRow);
       console.log("Sample row keys (Tên cột nhận được):", currentKeys);
 
@@ -66,7 +76,7 @@ export const fetchDataFromAppSheet = async (appId) => {
     }
     
     // Deduplicate by _RowNumber (unique row identifier)
-    const uniqueData = data.reduce((acc, row) => {
+    const uniqueData = normalizedData.reduce((acc, row) => {
       const rowNumber = row._RowNumber || row.id;
       acc[rowNumber] = row;
       return acc;
