@@ -89,10 +89,15 @@ export const fetchDataFromAppSheet = async (appId) => {
       id: row._RowNumber || row.id,
       appSheetId: row.id,
       ngay: row.ngay ? new Date(row.ngay) : new Date(),
-      nguoiCapNhat: row.nguoiCapNhat || "",
-      loaiThuChi: row.loaiThuChi || "",
+      nguoiCapNhat: row.nguoiCapNhat ? row.nguoiCapNhat.toString().trim() : "",
+      loaiThuChi: (() => {
+        const val = row.loaiThuChi ? row.loaiThuChi.toString().trim() : "";
+        if (val.toLowerCase() === "thu") return "Thu";
+        if (val.toLowerCase() === "chi") return "Chi";
+        return val;
+      })(),
       noiDung: row.noiDung || "",
-      doiTuongThuChi: row.doiTuongThuChi || "",
+      doiTuongThuChi: row.doiTuongThuChi ? row.doiTuongThuChi.toString().trim() : "",
       soTien: (() => {
         const val = row.soTien?.toString().replace(/,/g, "") || "0";
         const number = parseFloat(val);
