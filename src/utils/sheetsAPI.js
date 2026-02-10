@@ -100,7 +100,9 @@ export const fetchDataFromAppSheet = async (appId) => {
       noiDung: row.noiDung || "",
       doiTuongThuChi: row.doiTuongThuChi ? row.doiTuongThuChi.toString().trim() : "",
       soTien: (() => {
-        const val = row.soTien?.toString().replace(/,/g, "") || "0";
+        // Xử lý số tiền: loại bỏ cả dấu phẩy (,) và dấu chấm (.) để hỗ trợ định dạng tiền tệ Việt Nam/Mỹ
+        // Ví dụ: "1,000,000" hoặc "1.000.000" đều thành 1000000
+        const val = row.soTien?.toString().replace(/[.,]/g, "") || "0";
         const number = parseFloat(val);
         return isNaN(number) ? 0 : number;
       })(),
