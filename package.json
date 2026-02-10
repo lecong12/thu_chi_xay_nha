@@ -13,7 +13,8 @@
     "recharts": "^2.10.3"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "yaml": "^2.4.1"
   },
   "scripts": {
     "start": "react-scripts start",

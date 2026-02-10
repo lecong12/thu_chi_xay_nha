@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "CI=false npm run build",
   "framework": "create-react-app"
 }
