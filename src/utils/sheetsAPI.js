@@ -76,17 +76,18 @@ export const fetchDataFromAppSheet = async (appId) => {
     }
     
     // Deduplicate by _RowNumber (unique row identifier)
-    const uniqueData = normalizedData.reduce((acc, row) => {
-      const rowNumber = row._RowNumber || row.id;
-      acc[rowNumber] = row;
+    const uniqueData = normalizedData.reduce((acc, row, index) => {
+      // Sử dụng _RowNumber hoặc id nếu có, nếu không dùng index để tránh mất dữ liệu do trùng key undefined
+      const rowKey = row._RowNumber || row.id || `row_${index}`;
+      acc[rowKey] = row;
       return acc;
     }, {});
     
     const deduplicatedData = Object.values(uniqueData);
     console.log("After deduplication:", deduplicatedData.length, "rows");
 
-    const transformedData = deduplicatedData.map((row) => ({
-      id: row._RowNumber || row.id,
+    const transformedData = deduplicatedData.map((row, index) => ({
+      id: row._RowNumber || row.id || `generated_id_${index}`,
       appSheetId: row.id,
       ngay: row.ngay ? new Date(row.ngay) : new Date(),
       nguoiCapNhat: row.nguoiCapNhat ? row.nguoiCapNhat.toString().trim() : "",
