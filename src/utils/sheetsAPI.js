@@ -134,7 +134,7 @@ export const updateRowInSheet = async (rowData, appId) => {
         loaiThuChi: rowData.loaiThuChi,
         noiDung: rowData.noiDung,
         doiTuongThuChi: rowData.doiTuongThuChi,
-        soTien: rowData.soTien.toString(),
+        soTien: rowData.soTien ? rowData.soTien.toString() : "0",
         ghiChu: rowData.ghiChu || "",
       },
     ];
