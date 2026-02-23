@@ -28,16 +28,18 @@ npm start
 
 Ứng dụng sẽ chạy tại http://localhost:3000
 
-## Cấu hình
+## Cấu hình và Triển khai
 
 - **Mật mã đăng nhập**: `081212`
-- **Google Sheets ID**: ID của Google Sheet được cấu hình trong một tệp `.env` ở thư mục gốc của dự án.
 
-  ### Cấu hình
+### 1. Chạy Local (Trên máy tính)
+Tạo một file có tên `.env` trong thư mục gốc và điền các giá trị sau. Ứng dụng sẽ tự động đọc file này khi bạn chạy `npm start`.
+```dotenv
+REACT_APP_SHEET_ID=...
+REACT_APP_APPSHEET_APP_ID=...
+REACT_APP_APPSHEET_ACCESS_KEY=...
+REACT_APP_APPSHEET_TABLE_NAME=...
+```
 
-  **1. Chạy Local (Trên máy tính):**
-  Tạo file `.env` và điền các thông tin cần thiết. Ứng dụng sẽ tự động đọc file này khi chạy lệnh `npm start`.
-  ```
-  REACT_APP_SHEET_ID=YOUR_GOOGLE_SHEET_ID_HERE
-  ```
-  Thay ID sheet. et Deploy. share
+### 2. Deploy lên Cloud (Railway, Render)
+Nền tảng đám mây sẽ **KHÔNG** sử dụng file `.env` của bạn. Thay vào đó, bạn phải khai báo các biến môi trường trên giao diện Dashboard của nền tảng (trong phần **Variables** hoặc **Environment**). Các giá trị này sẽ được "tiêm" vào ứng dụng lúc build.
