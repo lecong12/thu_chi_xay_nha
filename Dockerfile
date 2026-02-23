@@ -18,14 +18,6 @@ RUN npm run build
 FROM nginx:alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
-
-# Copy config vào thư mục templates để Nginx tự động xử lý thay thế biến môi trường
-COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
-
-# Cấu hình để Nginx chỉ thay thế biến $PORT (giữ nguyên $uri và các biến khác)
-ENV NGINX_ENVSUBST_FILTER=PORT
-ENV PORT=80
-
-CMD ["nginx", "-g", "daemon off;"]
