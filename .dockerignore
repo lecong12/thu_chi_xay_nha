@@ -1,6 +1,5 @@
 node_modules
 build
 .git
-.env
 .DS_Store
 npm-debug.log
