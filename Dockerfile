@@ -6,31 +6,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Nhận biến môi trường (Build Args) cho React
-# Railway/Render cần cấu hình biến này trong phần Build Settings hoặc Environment Variables
-ARG REACT_APP_SHEET_ID
-ENV REACT_APP_SHEET_ID=$REACT_APP_SHEET_ID
-
-# Thêm biến Access Key để React nhận được lúc build
-ARG REACT_APP_APPSHEET_ACCESS_KEY
-ENV REACT_APP_APPSHEET_ACCESS_KEY=$REACT_APP_APPSHEET_ACCESS_KEY
-
-# Thêm biến App ID riêng cho AppSheet (Khác với Google Sheet ID)
-ARG REACT_APP_APPSHEET_APP_ID
-ENV REACT_APP_APPSHEET_APP_ID=$REACT_APP_APPSHEET_APP_ID
-
-# Thêm biến tên bảng cho AppSheet
-ARG REACT_APP_APPSHEET_TABLE_NAME
-ENV REACT_APP_APPSHEET_TABLE_NAME=$REACT_APP_APPSHEET_TABLE_NAME
-
-# Kiểm tra xem biến đã vào được chưa ngay lúc build
-RUN echo "--- DEBUGGING BUILD VARIABLES ---" && \
-    echo "SHEET_ID: $REACT_APP_SHEET_ID" && \
-    echo "APP_ID: $REACT_APP_APPSHEET_APP_ID" && \
-    echo "TABLE_NAME: $REACT_APP_APPSHEET_TABLE_NAME" && \
-    (if [ -z "$REACT_APP_APPSHEET_ACCESS_KEY" ]; then echo "ACCESS_KEY: EMPTY!!!"; else echo "ACCESS_KEY: Received."; fi) && \
-    echo "---------------------------------"
-
 COPY . .
 RUN npm run build
 
