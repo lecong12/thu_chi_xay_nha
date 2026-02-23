@@ -23,5 +23,6 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 EXPOSE 80
 
 # Dùng envsubst để thay thế biến $PORT trong file template thành file config thực tế
-# Lưu ý: '$PORT' (trong dấu nháy đơn) để bảo vệ các biến khác của Nginx như $uri không bị thay thế
-CMD ["/bin/sh", "-c", "envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Đặt giá trị mặc định cho PORT là 80 nếu không được cung cấp, sau đó chạy Nginx.
+# Điều này giúp container chạy ổn định trên cả local và các nền tảng đám mây.
+CMD ["/bin/sh", "-c", "export PORT=${PORT:-80} && envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
