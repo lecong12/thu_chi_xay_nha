@@ -35,10 +35,10 @@ npm start
 ### 1. Chạy Local (Trên máy tính)
 Tạo một file có tên `.env` trong thư mục gốc và điền các giá trị sau. Ứng dụng sẽ tự động đọc file này khi bạn chạy `npm start`.
 ```dotenv
-REACT_APP_SHEET_ID=ID_CUA_FILE_GOOGLE_SHEET (Dùng để đọc dữ liệu ban đầu)
-REACT_APP_APPSHEET_APP_ID=thuchixaynha-3204729
-REACT_APP_APPSHEET_ACCESS_KEY=KEY_TRUY_CAP_TU_APPSHEET
-REACT_APP_APPSHEET_TABLE_NAME=thuchixaynha (Tên Bảng trong AppSheet, không phải tên Sheet)
+REACT_APP_SHEET_ID=xxxxxxxxxxxxxxxxxxxx # ID của file Google Sheet (dùng để đọc dữ liệu ban đầu)
+REACT_APP_APPSHEET_APP_ID=thuchixaynha-3204729 # ID của ứng dụng AppSheet
+REACT_APP_APPSHEET_ACCESS_KEY=xxxxxxxxxxxx # Key truy cập API từ AppSheet
+REACT_APP_APPSHEET_TABLE_NAME=thuchixaynha # Tên Bảng (Table) trong AppSheet, không phải tên Sheet
 ```
 
 ### 2. Deploy lên Cloud (Railway, Render)
