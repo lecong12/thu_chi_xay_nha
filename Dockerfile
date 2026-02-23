@@ -24,7 +24,12 @@ ARG REACT_APP_APPSHEET_TABLE_NAME
 ENV REACT_APP_APPSHEET_TABLE_NAME=$REACT_APP_APPSHEET_TABLE_NAME
 
 # Kiểm tra xem biến đã vào được chưa ngay lúc build
-RUN if [ -z "$REACT_APP_APPSHEET_ACCESS_KEY" ]; then echo "WARNING: Access Key dang bi TRONG!"; else echo "SUCCESS: Da nhan duoc Access Key."; fi
+RUN echo "--- DEBUGGING BUILD VARIABLES ---" && \
+    echo "SHEET_ID: $REACT_APP_SHEET_ID" && \
+    echo "APP_ID: $REACT_APP_APPSHEET_APP_ID" && \
+    echo "TABLE_NAME: $REACT_APP_APPSHEET_TABLE_NAME" && \
+    (if [ -z "$REACT_APP_APPSHEET_ACCESS_KEY" ]; then echo "ACCESS_KEY: EMPTY!!!"; else echo "ACCESS_KEY: Received."; fi) && \
+    echo "---------------------------------"
 
 COPY . .
 RUN npm run build

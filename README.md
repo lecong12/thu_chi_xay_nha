@@ -37,4 +37,4 @@ npm start
   ```
   REACT_APP_SHEET_ID=YOUR_GOOGLE_SHEET_ID_HERE
   ```
-  Thay ID sheet. et Deploy
+  Thay ID sheet. et Deploy. share
