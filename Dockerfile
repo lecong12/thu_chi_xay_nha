@@ -18,9 +18,10 @@ RUN npm run build
 FROM nginx:alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 80
 
-# Thay thế cổng 80 bằng cổng $PORT do Railway/Render cung cấp, sau đó chạy Nginx
-CMD ["/bin/sh", "-c", "sed -i -e 's/listen 80;/listen '${PORT:-80}';/g' /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+# Dùng envsubst để thay thế biến $PORT trong file template thành file config thực tế
+# Lưu ý: '$PORT' (trong dấu nháy đơn) để bảo vệ các biến khác của Nginx như $uri không bị thay thế
+CMD ["/bin/sh", "-c", "envsubst '$PORT' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
