@@ -1,7 +1,7 @@
 // AppSheet API Configuration
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
-// Sử dụng biến môi trường hoặc giá trị mặc định là "data_thu_chi"
-const APPSHEET_TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_NAME || "data_thu_chi";
+// CHỐT CỨNG TÊN BẢNG: data_thu_chi (Tránh lỗi do biến môi trường sai trên Cloud)
+const APPSHEET_TABLE_NAME = "data_thu_chi";
 
 // Sử dụng encodeURIComponent để xử lý tên bảng có dấu cách hoặc ký tự đặc biệt
 const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
