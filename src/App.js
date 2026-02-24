@@ -35,13 +35,10 @@ function App() {
     searchText: "",
   });
 
-  // --- PHẦN SỬA LỖI 1: Fetch data dùng App ID ---
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      // Thay đổi từ SHEET_ID sang APPSHEET_APP_ID
-      console.log("App ID đang dùng:", process.env.REACT_APP_APPSHEET_APP_ID);
       const result = await fetchDataFromAppSheet(process.env.REACT_APP_APPSHEET_APP_ID);
 
       if (result.success && result.data) {
@@ -105,10 +102,8 @@ function App() {
   const showToast = (message, type = "success") => setToast({ message, type });
   const handleEdit = (item) => setEditingItem(item);
 
-  // --- PHẦN SỬA LỖI 2: Update dùng App ID ---
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Thay đổi từ SHEET_ID sang APPSHEET_APP_ID
       const result = await updateRowInSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
 
       if (result.success) {
@@ -124,12 +119,10 @@ function App() {
     }
   };
 
-  // --- PHẦN SỬA LỖI 3: Delete dùng App ID ---
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
       try {
         const item = data.find(row => row.id === id);
-        // Thay đổi từ SHEET_ID sang APPSHEET_APP_ID
         const result = await deleteRowFromSheet(id, item?.appSheetId, process.env.REACT_APP_APPSHEET_APP_ID);
 
         if (result.success) {

@@ -1,7 +1,7 @@
 // AppSheet API Configuration
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
-// CHỐT CỨNG TÊN BẢNG: Để đảm bảo không bị biến môi trường sai ghi đè.
-const APPSHEET_TABLE_NAME = "data_thu_chi";
+// Sử dụng biến môi trường hoặc giá trị mặc định là "data_thu_chi"
+const APPSHEET_TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_NAME || "data_thu_chi";
 
 // Sử dụng encodeURIComponent để xử lý tên bảng có dấu cách hoặc ký tự đặc biệt
 const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
@@ -17,13 +17,11 @@ export const fetchDataFromAppSheet = async (appId) => {
       throw new Error("Thiếu App ID. Vui lòng kiểm tra biến môi trường (Environment Variables).");
     }
     const apiUrl = getApiUrl(appId);
-    console.log(`Đang tải dữ liệu... URL: ${apiUrl}`);
-    console.log(`Bảng đang dùng (Table Name): ${APPSHEET_TABLE_NAME}`);
 
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": APPSHEET_ACCESS_KEY, // Sửa thành PascalCase cho chuẩn
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -48,7 +46,6 @@ export const fetchDataFromAppSheet = async (appId) => {
 
     // Handle cases where the response body is empty (e.g., no rows in the sheet)
     const responseText = await response.text();
-    console.log("AppSheet Response Text:", responseText);
     const rawData = responseText ? JSON.parse(responseText) : [];
 
     // Helper để map tên cột tiếng Việt/Tiếng Anh sang chuẩn code
@@ -74,9 +71,6 @@ export const fetchDataFromAppSheet = async (appId) => {
       return newRow;
     });
     
-    console.log("Raw data from AppSheet:", normalizedDataFromRaw);
-    console.log("Total rows:", normalizedDataFromRaw.length);
-
     if (normalizedDataFromRaw.length === 0) {
       console.warn("AppSheet trả về danh sách rỗng. Nguyên nhân có thể do: 1. Bảng chưa có dữ liệu. 2. AppSheet có 'Security Filter' (Bộ lọc bảo mật) đang chặn API (ví dụ: lọc theo USEREMAIL()).");
     }
@@ -84,7 +78,6 @@ export const fetchDataFromAppSheet = async (appId) => {
     if (normalizedDataFromRaw.length > 0) {
       const firstRow = normalizedDataFromRaw[0];
       const currentKeys = Object.keys(firstRow);
-      console.log("Sample row keys (Tên cột nhận được):", currentKeys);
 
       // Kiểm tra các cột quan trọng
       // Bỏ 'id' khỏi danh sách bắt buộc vì AppSheet có thể không trả về nếu chưa cấu hình Key
@@ -118,7 +111,6 @@ export const fetchDataFromAppSheet = async (appId) => {
       }
     });
     const deduplicatedData = Array.from(uniqueDataMap.values());
-    console.log("After deduplication:", deduplicatedData.length, "rows");
 
     const transformedData = deduplicatedData.map((row, index) => ({
       id: row._RowNumber || row.id || `generated_id_${index}`,
@@ -194,7 +186,6 @@ export const updateRowInSheet = async (rowData, appId) => {
     // Edit action might return an empty body on success, so we handle it
     const responseText = await response.text();
     const result = responseText ? JSON.parse(responseText) : null;
-    console.log("Kết quả edit:", result);
 
     return { success: true, message: "Cập nhật thành công" };
   } catch (error) {
