@@ -21,7 +21,7 @@ function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(window.innerWidth > 768 ? "all" : "dashboard");
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -57,6 +57,15 @@ function App() {
   useEffect(() => {
     fetchData();
   }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy một lần sau khi component mount
+
+  // Tự động chuyển sang chế độ hiển thị tất cả (Dashboard + List) khi ở màn hình lớn (Desktop)
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768) setActiveTab("all");
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Filter Options & Filtered Data logic (giữ nguyên vì không liên quan lỗi kết nối)
   const filterOptions = useMemo(() => ({
