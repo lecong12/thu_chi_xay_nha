@@ -1,7 +1,7 @@
 // AppSheet API Configuration
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 // CHỐT CỨNG TÊN BẢNG: Để đảm bảo không bị biến môi trường sai ghi đè.
-const APPSHEET_TABLE_NAME = "thuchixaynha";
+const APPSHEET_TABLE_NAME = "data_thu_chi";
 
 // Sử dụng encodeURIComponent để xử lý tên bảng có dấu cách hoặc ký tự đặc biệt
 const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
@@ -28,7 +28,11 @@ export const fetchDataFromAppSheet = async (appId) => {
       },
       body: JSON.stringify({
         Action: "Find",
-        // Xóa Properties và Rows: [] để AppSheet hiểu là "Lấy tất cả dữ liệu"
+        Properties: {
+          Locale: "vi-VN",
+          Timezone: "Asia/Ho_Chi_Minh",
+        },
+        Rows: [],
       }),
     });
 
@@ -44,6 +48,7 @@ export const fetchDataFromAppSheet = async (appId) => {
 
     // Handle cases where the response body is empty (e.g., no rows in the sheet)
     const responseText = await response.text();
+    console.log("AppSheet Response Text:", responseText);
     const rawData = responseText ? JSON.parse(responseText) : [];
 
     // Helper để map tên cột tiếng Việt/Tiếng Anh sang chuẩn code
