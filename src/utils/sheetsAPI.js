@@ -65,7 +65,7 @@ export const fetchDataFromAppSheet = async (appId) => {
     };
 
     // Chuẩn hóa tên cột
-    const normalizedData = rawData.map((row) => {
+    const normalizedDataFromRaw = rawData.map((row) => {
       const newRow = {};
       Object.keys(row).forEach((key) => {
         const cleanKey = normalizeKey(key);
@@ -74,15 +74,15 @@ export const fetchDataFromAppSheet = async (appId) => {
       return newRow;
     });
     
-    console.log("Raw data from AppSheet:", normalizedData);
-    console.log("Total rows:", normalizedData.length);
+    console.log("Raw data from AppSheet:", normalizedDataFromRaw);
+    console.log("Total rows:", normalizedDataFromRaw.length);
 
-    if (normalizedData.length === 0) {
+    if (normalizedDataFromRaw.length === 0) {
       console.warn("AppSheet trả về danh sách rỗng. Nguyên nhân có thể do: 1. Bảng chưa có dữ liệu. 2. AppSheet có 'Security Filter' (Bộ lọc bảo mật) đang chặn API (ví dụ: lọc theo USEREMAIL()).");
     }
 
-    if (normalizedData.length > 0) {
-      const firstRow = normalizedData[0];
+    if (normalizedDataFromRaw.length > 0) {
+      const firstRow = normalizedDataFromRaw[0];
       const currentKeys = Object.keys(firstRow);
       console.log("Sample row keys (Tên cột nhận được):", currentKeys);
 
@@ -100,7 +100,7 @@ export const fetchDataFromAppSheet = async (appId) => {
     
     // Deduplicate data to prevent duplicate rows from AppSheet API
     const uniqueDataMap = new Map();
-    normalizedData.forEach(row => {
+    normalizedDataFromRaw.forEach(row => {
       // Ưu tiên dùng _RowNumber làm key, nếu không có thì tạo fingerprint từ nội dung
       let fingerprint;
       if (row._RowNumber) {

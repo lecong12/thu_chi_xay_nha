@@ -24,7 +24,6 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
-  const hasFetched = useRef(false);
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -59,11 +58,8 @@ function App() {
   };
 
   useEffect(() => {
-    if (!hasFetched.current) {
-      hasFetched.current = true;
-      fetchData();
-    }
-  }, []);
+    fetchData();
+  }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy một lần sau khi component mount
 
   // Filter Options & Filtered Data logic (giữ nguyên vì không liên quan lỗi kết nối)
   const filterOptions = useMemo(() => ({
