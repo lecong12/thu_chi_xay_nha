@@ -79,7 +79,8 @@ export const fetchDataFromAppSheet = async (appId) => {
       console.log("Sample row keys (Tên cột nhận được):", currentKeys);
 
       // Kiểm tra các cột quan trọng
-      const requiredCols = ["id", "ngay", "loaiThuChi", "soTien"];
+      // Bỏ 'id' khỏi danh sách bắt buộc vì AppSheet có thể không trả về nếu chưa cấu hình Key
+      const requiredCols = ["ngay", "loaiThuChi", "soTien"];
       const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
 
       if (missingCols.length > 0) {
@@ -91,8 +92,18 @@ export const fetchDataFromAppSheet = async (appId) => {
     // Deduplicate data to prevent duplicate rows from AppSheet API
     const uniqueDataMap = new Map();
     normalizedData.forEach(row => {
-      // Create a unique fingerprint for each row based on its content
-      const fingerprint = JSON.stringify(Object.values(row).sort());
+      // Ưu tiên dùng _RowNumber làm key, nếu không có thì tạo fingerprint từ nội dung
+      let fingerprint;
+      if (row._RowNumber) {
+        fingerprint = row._RowNumber;
+      } else {
+        // Sắp xếp key để đảm bảo thứ tự JSON stringify giống nhau
+        const sortedKeys = Object.keys(row).sort();
+        const sortedObj = {};
+        sortedKeys.forEach(key => sortedObj[key] = row[key]);
+        fingerprint = JSON.stringify(sortedObj);
+      }
+
       if (!uniqueDataMap.has(fingerprint)) {
         uniqueDataMap.set(fingerprint, row);
       }
