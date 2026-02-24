@@ -47,11 +47,24 @@ export const fetchDataFromAppSheet = async (appId) => {
     const responseText = await response.text();
     const rawData = responseText ? JSON.parse(responseText) : [];
 
-    // Chuẩn hóa tên cột: xóa dấu hai chấm hoặc khoảng trắng thừa ở cuối (ví dụ "loaiThuChi:" -> "loaiThuChi")
+    // Helper để map tên cột tiếng Việt/Tiếng Anh sang chuẩn code
+    const normalizeKey = (key) => {
+      const k = key.toLowerCase().trim().replace(/:$/, "");
+      if (['ngay', 'ngày', 'date', 'time'].includes(k)) return 'ngay';
+      if (['sotien', 'so tien', 'số tiền', 'amount', 'price', 'giá'].includes(k)) return 'soTien';
+      if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại'].includes(k)) return 'loaiThuChi';
+      if (['noidung', 'noi dung', 'nội dung', 'content', 'description', 'mô tả'].includes(k)) return 'noiDung';
+      if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận'].includes(k)) return 'doiTuongThuChi';
+      if (['ghichu', 'ghi chu', 'ghi chú', 'note', 'notes'].includes(k)) return 'ghiChu';
+      if (['nguoicapnhat', 'nguoi cap nhat', 'người cập nhật', 'user'].includes(k)) return 'nguoiCapNhat';
+      return key.trim().replace(/:$/, ""); // Fallback: giữ nguyên hoặc chỉ trim
+    };
+
+    // Chuẩn hóa tên cột
     const normalizedData = rawData.map((row) => {
       const newRow = {};
       Object.keys(row).forEach((key) => {
-        const cleanKey = key.trim().replace(/:$/, "");
+        const cleanKey = normalizeKey(key);
         newRow[cleanKey] = row[key];
       });
       return newRow;
@@ -70,7 +83,7 @@ export const fetchDataFromAppSheet = async (appId) => {
       const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
 
       if (missingCols.length > 0) {
-        const msg = `Dữ liệu không khớp! Không tìm thấy cột: [${missingCols.join(", ")}]. AppSheet đang trả về: [${currentKeys.join(", ")}]. Hãy kiểm tra lại tên cột trong Google Sheet (phải là tiếng Việt không dấu: ngay, loaiThuChi, soTien) và Regenerate Structure trong AppSheet.`;
+        const msg = `Dữ liệu không khớp! Không tìm thấy cột: [${missingCols.join(", ")}]. AppSheet đang trả về: [${currentKeys.join(", ")}]. Hãy kiểm tra lại tên cột trong Google Sheet. Hệ thống đã thử tự động map các tên cột phổ biến (Ngày, Số tiền...) nhưng vẫn thiếu.`;
         throw new Error(msg);
       }
     }
