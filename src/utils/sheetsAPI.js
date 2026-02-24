@@ -11,9 +11,9 @@ const normalizeKey = (key) => {
   const k = key.toLowerCase().trim().replace(/:$/, "");
   if (['ngay', 'ngày', 'date', 'time', 'thời gian', 'ngày tháng'].includes(k)) return 'ngay';
   if (['sotien', 'so tien', 'số tiền', 'amount', 'price', 'giá', 'chi phí', 'thành tiền', 'trị giá', 'giá trị'].includes(k)) return 'soTien';
-  if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại', 'loại', 'hạng mục', 'nhóm'].includes(k)) return 'loaiThuChi';
+  if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại', 'loại', 'hạng mục'].includes(k)) return 'loaiThuChi';
   if (['noidung', 'noi dung', 'nội dung', 'content', 'description', 'mô tả', 'diễn giải', 'chi tiết'].includes(k)) return 'noiDung';
-  if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận', 'đối tượng', 'khách hàng'].includes(k)) return 'doiTuongThuChi';
+  if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận', 'đối tượng', 'khách hàng', 'nhóm'].includes(k)) return 'doiTuongThuChi';
   if (['ghichu', 'ghi chu', 'ghi chú', 'note', 'notes'].includes(k)) return 'ghiChu';
   if (['nguoicapnhat', 'nguoi cap nhat', 'người cập nhật', 'user', 'người tạo', 'nhân viên'].includes(k)) return 'nguoiCapNhat';
   return key.trim().replace(/:$/, ""); // Fallback: giữ nguyên hoặc chỉ trim

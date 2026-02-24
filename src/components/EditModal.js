@@ -92,7 +92,7 @@ function EditModal({ item, onClose, onSave }) {
               </select>
             </div>
             <div className="form-group">
-              <label>Đối tượng</label>
+              <label>Nhóm</label>
               <input
                 type="text"
                 name="doiTuongThuChi"

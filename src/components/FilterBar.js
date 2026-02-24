@@ -100,7 +100,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
 
           {/* Đối tượng thu chi */}
           <div className="filter-group">
-            <label className="filter-label">Đối tượng</label>
+            <label className="filter-label">Nhóm</label>
             <select
               value={filters.doiTuongThuChi}
               onChange={(e) => onFilterChange("doiTuongThuChi", e.target.value)}
