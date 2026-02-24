@@ -42,6 +42,7 @@ function App() {
     setError(null);
     try {
       // Thay đổi từ SHEET_ID sang APPSHEET_APP_ID
+      console.log("App ID đang dùng:", process.env.REACT_APP_APPSHEET_APP_ID);
       const result = await fetchDataFromAppSheet(process.env.REACT_APP_APPSHEET_APP_ID);
 
       if (result.success && result.data) {
