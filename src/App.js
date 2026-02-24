@@ -140,9 +140,38 @@ function App() {
       }
 
       if (result.success) {
-        await fetchData();
+        // Cập nhật giao diện NGAY LẬP TỨC (Optimistic Update) không cần chờ tải lại từ server
+        setData((prevData) => {
+          // Chuẩn hóa dữ liệu vừa nhập để khớp với định dạng hiển thị (Date object, Number...)
+          const newItem = {
+            ...updatedItem,
+            id: updatedItem.id || updatedItem.appSheetId || `temp_${Date.now()}`, // Tạo ID tạm nếu là thêm mới
+            appSheetId: updatedItem.appSheetId || updatedItem.id,
+            ngay: updatedItem.ngay instanceof Date ? updatedItem.ngay : new Date(updatedItem.ngay),
+            soTien: Number(updatedItem.soTien?.toString().replace(/[.,]/g, "") || 0),
+            nguoiCapNhat: updatedItem.nguoiCapNhat || "",
+            loaiThuChi: updatedItem.loaiThuChi || "Chi",
+            noiDung: updatedItem.noiDung || "",
+            doiTuongThuChi: updatedItem.doiTuongThuChi || "",
+            ghiChu: updatedItem.ghiChu || ""
+          };
+
+          if (updatedItem.id || updatedItem.appSheetId) {
+            // Trường hợp Sửa: Tìm và thay thế dòng cũ
+            return prevData.map((item) => 
+              (item.id === updatedItem.id || item.appSheetId === updatedItem.appSheetId) ? newItem : item
+            );
+          } else {
+            // Trường hợp Thêm: Đưa lên đầu danh sách
+            return [newItem, ...prevData];
+          }
+        });
+
         setEditingItem(null);
         showToast(result.message || "Thành công!", "success");
+        
+        // Tải lại dữ liệu thật từ server (chạy ngầm, không await để UI không bị đơ)
+        fetchData();
       } else {
         showToast(result.message || "Thất bại", "error");
       }
