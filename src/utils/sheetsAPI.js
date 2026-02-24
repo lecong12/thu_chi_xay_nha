@@ -50,13 +50,13 @@ export const fetchDataFromAppSheet = async (appId) => {
     // Helper để map tên cột tiếng Việt/Tiếng Anh sang chuẩn code
     const normalizeKey = (key) => {
       const k = key.toLowerCase().trim().replace(/:$/, "");
-      if (['ngay', 'ngày', 'date', 'time'].includes(k)) return 'ngay';
-      if (['sotien', 'so tien', 'số tiền', 'amount', 'price', 'giá'].includes(k)) return 'soTien';
-      if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại'].includes(k)) return 'loaiThuChi';
-      if (['noidung', 'noi dung', 'nội dung', 'content', 'description', 'mô tả'].includes(k)) return 'noiDung';
-      if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận'].includes(k)) return 'doiTuongThuChi';
+      if (['ngay', 'ngày', 'date', 'time', 'thời gian', 'ngày tháng'].includes(k)) return 'ngay';
+      if (['sotien', 'so tien', 'số tiền', 'amount', 'price', 'giá', 'chi phí', 'thành tiền', 'trị giá', 'giá trị'].includes(k)) return 'soTien';
+      if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại', 'loại', 'hạng mục', 'nhóm'].includes(k)) return 'loaiThuChi';
+      if (['noidung', 'noi dung', 'nội dung', 'content', 'description', 'mô tả', 'diễn giải', 'chi tiết'].includes(k)) return 'noiDung';
+      if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận', 'đối tượng', 'khách hàng'].includes(k)) return 'doiTuongThuChi';
       if (['ghichu', 'ghi chu', 'ghi chú', 'note', 'notes'].includes(k)) return 'ghiChu';
-      if (['nguoicapnhat', 'nguoi cap nhat', 'người cập nhật', 'user'].includes(k)) return 'nguoiCapNhat';
+      if (['nguoicapnhat', 'nguoi cap nhat', 'người cập nhật', 'user', 'người tạo', 'nhân viên'].includes(k)) return 'nguoiCapNhat';
       return key.trim().replace(/:$/, ""); // Fallback: giữ nguyên hoặc chỉ trim
     };
 
@@ -73,6 +73,10 @@ export const fetchDataFromAppSheet = async (appId) => {
     console.log("Raw data from AppSheet:", normalizedData);
     console.log("Total rows:", normalizedData.length);
 
+    if (normalizedData.length === 0) {
+      console.warn("AppSheet trả về danh sách rỗng. Hãy kiểm tra xem bảng có dữ liệu không, hoặc quyền truy cập.");
+    }
+
     if (normalizedData.length > 0) {
       const firstRow = normalizedData[0];
       const currentKeys = Object.keys(firstRow);
@@ -84,8 +88,9 @@ export const fetchDataFromAppSheet = async (appId) => {
       const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
 
       if (missingCols.length > 0) {
-        const msg = `Dữ liệu không khớp! Không tìm thấy cột: [${missingCols.join(", ")}]. AppSheet đang trả về: [${currentKeys.join(", ")}]. Hãy kiểm tra lại tên cột trong Google Sheet. Hệ thống đã thử tự động map các tên cột phổ biến (Ngày, Số tiền...) nhưng vẫn thiếu.`;
-        throw new Error(msg);
+        // Thay vì báo lỗi và dừng lại, ta chỉ cảnh báo để dữ liệu vẫn có thể hiển thị một phần
+        console.error(`CẢNH BÁO: Không tìm thấy cột: [${missingCols.join(", ")}]. AppSheet đang trả về: [${currentKeys.join(", ")}]. Dữ liệu có thể hiển thị không đúng.`);
+        // throw new Error(msg); // Đã tắt throw Error để cho phép hiển thị dữ liệu một phần
       }
     }
     
