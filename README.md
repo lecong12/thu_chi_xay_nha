@@ -1,29 +1,15 @@
-# thu_chi_xay_nha
+# Quản Lý Thu Chi Xây Nhà
 
-Ứng dụng web quản lý thu chi cho dự án xây nhà.
+Ứng dụng web React giúp theo dõi thu chi dự án xây nhà, tích hợp AppSheet/Google Sheets.
 
-## Tính năng
+## Tính năng chính
+- 📊 Dashboard thống kê & Biểu đồ trực quan.
+- 📋 Quản lý giao dịch (Thêm/Sửa/Xóa).
+- 📱 Giao diện Responsive & Bảo mật đăng nhập.
 
-- 📊 Dashboard thống kê tổng quan
-- 🔍 Bộ lọc dữ liệu đa tiêu chí
-- 📋 Danh sách giao dịch chi tiết
-- 📱 Giao diện responsive (Desktop & Mobile)
-- 🔐 Bảo mật với mật mã đăng nhập
-- 📈 Biểu đồ trực quan (Pie chart, Bar chart)
-- ☁️ Tích hợp Google Sheets
-
-## Công nghệ
-
-- React.js
-- Recharts (Biểu đồ)
-- PapaParse (CSV parser)
-- React Icons
-
-## Cài đặt
-
+## Cài đặt & Chạy
 ```bash
-npm install
-npm start
+npm install && npm start
 ```
 
 Ứng dụng sẽ chạy tại http://localhost:3000
