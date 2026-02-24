@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Dashboard from "./components/Dashboard";
 import FilterBar from "./components/FilterBar";
 import DataTable from "./components/DataTable";
@@ -21,7 +21,8 @@ function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState(window.innerWidth > 768 ? "all" : "dashboard");
+  // Dùng lazy initialization để chỉ tính toán window.innerWidth một lần lúc khởi tạo
+  const [activeTab, setActiveTab] = useState(() => window.innerWidth > 768 ? "all" : "dashboard");
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -79,16 +80,20 @@ function App() {
       if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
       if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
       if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
-      if (filters.startDate && new Date(item.ngay) < new Date(filters.startDate)) return false;
+      
+      // item.ngay đã là Date object từ sheetsAPI, không cần new Date() lại
+      if (filters.startDate && item.ngay < new Date(filters.startDate)) return false;
       if (filters.endDate) {
         const endDate = new Date(filters.endDate);
         endDate.setHours(23, 59, 59, 999);
-        if (new Date(item.ngay) > endDate) return false;
+        if (item.ngay > endDate) return false;
       }
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
-        const matchFields = [item.noiDung, item.ghiChu, item.nguoiCapNhat, item.doiTuongThuChi];
-        if (!matchFields.some((field) => field?.toLowerCase().includes(searchLower))) return false;
+        // Kiểm tra trực tiếp để tối ưu hiệu năng thay vì tạo mảng matchFields
+        const content = item.noiDung?.toLowerCase() || "";
+        const note = item.ghiChu?.toLowerCase() || "";
+        if (!content.includes(searchLower) && !note.includes(searchLower) && !item.nguoiCapNhat?.toLowerCase().includes(searchLower) && !item.doiTuongThuChi?.toLowerCase().includes(searchLower)) return false;
       }
       return true;
     });
