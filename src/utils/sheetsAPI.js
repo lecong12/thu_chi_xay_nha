@@ -27,9 +27,9 @@ export const fetchDataFromAppSheet = async (appId) => {
       body: JSON.stringify({
         Action: "Find",
         Properties: {
-          Locale: "en-US",
+          Locale: "vi-VN",
+          Timezone: "Asia/Ho_Chi_Minh",
         },
-        Rows: [],
       }),
     });
 
@@ -74,7 +74,7 @@ export const fetchDataFromAppSheet = async (appId) => {
     console.log("Total rows:", normalizedData.length);
 
     if (normalizedData.length === 0) {
-      console.warn("AppSheet trả về danh sách rỗng. Hãy kiểm tra xem bảng có dữ liệu không, hoặc quyền truy cập.");
+      console.warn("AppSheet trả về danh sách rỗng. Nguyên nhân có thể do: 1. Bảng chưa có dữ liệu. 2. AppSheet có 'Security Filter' (Bộ lọc bảo mật) đang chặn API (ví dụ: lọc theo USEREMAIL()).");
     }
 
     if (normalizedData.length > 0) {
