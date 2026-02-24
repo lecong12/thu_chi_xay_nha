@@ -88,15 +88,16 @@ export const fetchDataFromAppSheet = async (appId) => {
       }
     }
     
-    // Deduplicate by _RowNumber (unique row identifier)
-    const uniqueData = normalizedData.reduce((acc, row, index) => {
-      // Sử dụng _RowNumber hoặc id nếu có, nếu không dùng index để tránh mất dữ liệu do trùng key undefined
-      const rowKey = row._RowNumber || row.id || `row_${index}`;
-      acc[rowKey] = row;
-      return acc;
-    }, {});
-    
-    const deduplicatedData = Object.values(uniqueData);
+    // Deduplicate data to prevent duplicate rows from AppSheet API
+    const uniqueDataMap = new Map();
+    normalizedData.forEach(row => {
+      // Create a unique fingerprint for each row based on its content
+      const fingerprint = JSON.stringify(Object.values(row).sort());
+      if (!uniqueDataMap.has(fingerprint)) {
+        uniqueDataMap.set(fingerprint, row);
+      }
+    });
+    const deduplicatedData = Array.from(uniqueDataMap.values());
     console.log("After deduplication:", deduplicatedData.length, "rows");
 
     const transformedData = deduplicatedData.map((row, index) => ({
