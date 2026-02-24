@@ -26,10 +26,6 @@ export const fetchDataFromAppSheet = async (appId) => {
       },
       body: JSON.stringify({
         Action: "Find",
-        Properties: {
-          Locale: "vi-VN",
-          Timezone: "Asia/Ho_Chi_Minh",
-        },
       }),
     });
 
