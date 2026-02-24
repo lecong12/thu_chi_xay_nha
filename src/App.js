@@ -11,6 +11,7 @@ import {
   fetchDataFromAppSheet,
   updateRowInSheet,
   deleteRowFromSheet,
+  addRowToSheet,
 } from "./utils/sheetsAPI";
 import "./App.css";
 
@@ -116,19 +117,37 @@ function App() {
   const showToast = (message, type = "success") => setToast({ message, type });
   const handleEdit = (item) => setEditingItem(item);
 
+  const handleAddNew = () => {
+    setEditingItem({
+      ngay: new Date().toISOString().split("T")[0], // Mặc định hôm nay
+      loaiThuChi: "Chi", // Mặc định là Chi
+      soTien: "",
+      noiDung: "",
+      doiTuongThuChi: "",
+      nguoiCapNhat: "",
+      ghiChu: ""
+    });
+  };
+
   const handleSaveEdit = async (updatedItem) => {
     try {
-      const result = await updateRowInSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
+      let result;
+      // Kiểm tra nếu có ID (appSheetId) thì là Sửa, ngược lại là Thêm mới
+      if (updatedItem.id || updatedItem.appSheetId) {
+        result = await updateRowInSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
+      } else {
+        result = await addRowToSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
+      }
 
       if (result.success) {
         await fetchData();
         setEditingItem(null);
-        showToast(result.message || "Cập nhật thành công!", "success");
+        showToast(result.message || "Thành công!", "success");
       } else {
-        showToast(result.message || "Cập nhật thất bại", "error");
+        showToast(result.message || "Thất bại", "error");
       }
     } catch (error) {
-      showToast("Có lỗi xảy ra khi cập nhật", "error");
+      showToast("Có lỗi xảy ra", "error");
       console.error("Error saving edit:", error);
     }
   };
@@ -156,7 +175,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header onRefresh={fetchData} loading={loading} onLogout={handleLogout} />
+      <Header onRefresh={fetchData} loading={loading} onLogout={handleLogout} onAdd={handleAddNew} />
       <main className="main-content">
         {error && (
           <div className="error-banner">

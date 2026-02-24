@@ -194,6 +194,48 @@ export const updateRowInSheet = async (rowData, appId) => {
   }
 };
 
+export const addRowToSheet = async (rowData, appId) => {
+  try {
+    // Chuẩn bị data. Không gửi ID để AppSheet tự sinh (theo công thức Initial Value)
+    const addData = [
+      {
+        ngay: rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
+        nguoiCapNhat: rowData.nguoiCapNhat,
+        loaiThuChi: rowData.loaiThuChi,
+        noiDung: rowData.noiDung,
+        doiTuongThuChi: rowData.doiTuongThuChi,
+        soTien: rowData.soTien ? rowData.soTien.toString() : "0",
+        ghiChu: rowData.ghiChu || "",
+      },
+    ];
+
+    const response = await fetch(getApiUrl(appId), {
+      method: "POST",
+      headers: {
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Action: "Add",
+        Properties: {
+          Locale: "vi-VN",
+          Timezone: "Asia/Ho_Chi_Minh",
+        },
+        Rows: addData,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return { success: true, message: "Thêm mới thành công" };
+  } catch (error) {
+    console.error("Error adding to AppSheet:", error);
+    return { success: false, message: error.message };
+  }
+};
+
 export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
   try {
     const response = await fetch(getApiUrl(appId), {

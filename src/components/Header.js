@@ -1,8 +1,8 @@
 import React from "react";
-import { FiRefreshCw, FiHome, FiLogOut } from "react-icons/fi";
+import { FiRefreshCw, FiHome, FiLogOut, FiPlus } from "react-icons/fi";
 import "./Header.css";
 
-function Header({ onRefresh, loading, onLogout }) {
+function Header({ onRefresh, loading, onLogout, onAdd }) {
   return (
     <header className="header">
       <div className="header-content">
@@ -15,6 +15,10 @@ function Header({ onRefresh, loading, onLogout }) {
         </div>
 
         <div className="header-right">
+          <button className="add-btn" onClick={onAdd} title="Thêm mới">
+            <FiPlus />
+            <span>Thêm</span>
+          </button>
           <button
             className={`refresh-btn ${loading ? "loading" : ""}`}
             onClick={onRefresh}
