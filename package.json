@@ -1,8 +1,11 @@
 {
-  "name": "quan-ly-thu-chi",
+  "name": "thu-chi-xay-nha",
   "version": "1.0.0",
   "private": true,
+  "main": "api/index.js",
   "dependencies": {
+    "express": "^4.18.2",
+    "googleapis": "^105.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
@@ -12,7 +15,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "CI=false react-scripts build",
+    "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
