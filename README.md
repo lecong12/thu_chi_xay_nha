@@ -16,7 +16,7 @@ npm install && npm start
 
 ## Cấu hình và Triển khai
 
-- **Mật mã đăng nhập**: `081212`
+- **Mật mã to đăng nhập**: `081212`
 
 ### 1. Chạy Local (Trên máy tính)
 Tạo một file có tên `.env` trong thư mục gốc và điền các giá trị sau. Ứng dụng sẽ tự động đọc file này khi bạn chạy `npm start`.
