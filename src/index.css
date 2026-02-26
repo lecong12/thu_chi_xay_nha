@@ -9,7 +9,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #f5f7fa;
+  background: #e6e8eb;
   min-height: 100vh;
 }
 
@@ -34,4 +34,10 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Giảm độ chói của các thẻ Card/Tab (chuyển từ trắng tinh sang trắng đục) */
+.card, .tab, .bg-white, .box {
+  background-color: #f9fafb !important;
+  color: #1f2937;
 }
