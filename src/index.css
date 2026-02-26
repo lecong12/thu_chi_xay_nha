@@ -41,3 +41,9 @@ body {
   background-color: #f9fafb !important;
   color: #1f2937;
 }
+
+/* Giảm khoảng cách giữa các dòng trong bảng */
+table td, table th {
+  padding-top: 0.5rem;    /* Giảm padding trên */
+  padding-bottom: 0.5rem; /* Giảm padding dưới */
+}
