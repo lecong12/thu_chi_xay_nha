@@ -28,7 +28,7 @@ app.get('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
     // Thay 'ThuChi' bằng tên Tab (Sheet) thực tế của bạn
-    const range = 'ThuChi!A:E'; 
+    const range = 'data_thu_chi!A:E'; 
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
