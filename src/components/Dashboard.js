@@ -1,10 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   FiTrendingUp,
   FiTrendingDown,
   FiDollarSign,
   FiActivity,
-  FiClock,
 } from "react-icons/fi";
 import {
   PieChart,
@@ -41,15 +40,30 @@ const formatShortCurrency = (value) => {
   return value.toString();
 };
 
-function Dashboard({ stats, data }) {
-  // TÍNH TOÁN TIẾN ĐỘ: Tìm giao dịch chi mới nhất để xác định đang ở giai đoạn nào
-  const latestExpense = [...data]
-    .filter((item) => item.loaiThuChi === "Chi" && item.doiTuongThuChi)
-    .sort((a, b) => new Date(b.ngay) - new Date(a.ngay))[0];
+const initialStages = [
+  { id: 1, name: "1. Chuẩn bị (GPXD, Thiết kế)", status: "Chưa bắt đầu" },
+  { id: 2, name: "2. Phần Móng & Ngầm", status: "Chưa bắt đầu" },
+  { id: 3, name: "3. Phần Thân (Thô)", status: "Chưa bắt đầu" },
+  { id: 4, name: "4. Điện - Nước (ME)", status: "Chưa bắt đầu" },
+  { id: 5, name: "5. Trát, Ốp lát", status: "Chưa bắt đầu" },
+  { id: 6, name: "6. Sơn bả & Thạch cao", status: "Chưa bắt đầu" },
+  { id: 7, name: "7. Hoàn thiện & Nội thất", status: "Chưa bắt đầu" },
+  { id: 8, name: "8. Sân vườn & Cổng", status: "Chưa bắt đầu" },
+  { id: 9, name: "9. Chi phí khác", status: "Chưa bắt đầu" },
+];
 
-  const currentStage = latestExpense
-    ? latestExpense.doiTuongThuChi.split("(")[0].trim() // Lấy phần tên ngắn (bỏ phần trong ngoặc)
-    : "Chưa khởi công";
+function Dashboard({ stats, data }) {
+  const [stages, setStages] = useState(initialStages);
+
+  const handleUpdateStatus = (stageId, newStatus) => {
+    setStages(
+      stages.map((s) => (s.id === stageId ? { ...s, status: newStatus } : s))
+    );
+  };
+
+  // Tính toán tiến độ hoàn thành
+  const completedStagesCount = stages.filter(s => s.status === 'Hoàn thành').length;
+  const completionPercentage = stages.length > 0 ? Math.round((completedStagesCount / stages.length) * 100) : 0;
 
   // Group data by doiTuongThuChi for pie chart
   const groupByDoiTuong = data.reduce((acc, item) => {
@@ -130,13 +144,14 @@ function Dashboard({ stats, data }) {
 
         <div className="stat-card giao-dich">
           <div className="stat-icon">
-            <FiClock />
+            <FiActivity />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Tiến Độ Hiện Tại</span>
-            <span className="stat-value" style={{ fontSize: "1.1rem" }}>
-              {currentStage}
-            </span>
+            <span className="stat-label">Tiến độ hoàn thành</span>
+            <div className="progress-bar-container">
+              <div className="progress-bar" style={{ width: `${completionPercentage}%` }}></div>
+            </div>
+            <span className="stat-value">{completionPercentage}%</span>
           </div>
         </div>
       </div>
@@ -242,6 +257,31 @@ function Dashboard({ stats, data }) {
           ) : (
             <div className="no-data">Chưa có dữ liệu</div>
           )}
+        </div>
+      </div>
+
+      {/* Progress Tracker Section */}
+      <div className="progress-tracker-section">
+        <h3 className="chart-title">Theo dõi tiến độ thi công</h3>
+        <div className="stages-grid">
+          {stages.map((stage) => (
+            <div key={stage.id} className="stage-card">
+              <span className="stage-name">
+                {stage.name.replace(/^\d+\.\s*/, "")}
+              </span>
+              <select
+                value={stage.status}
+                onChange={(e) => handleUpdateStatus(stage.id, e.target.value)}
+                className={`status-select status-${stage.status
+                  .toLowerCase()
+                  .replace(/\s+/g, "-")}`}
+              >
+                <option value="Chưa bắt đầu">Chưa bắt đầu</option>
+                <option value="Đang thi công">Đang thi công</option>
+                <option value="Hoàn thành">Hoàn thành</option>
+              </select>
+            </div>
+          ))}
         </div>
       </div>
     </div>

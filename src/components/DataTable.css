@@ -21,6 +21,25 @@
   font-weight: 600;
 }
 
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.export-btn:hover {
+  background: #e5e7eb;
+  color: #111827;
+}
+
 .table-summary {
   display: flex;
   gap: 16px;
@@ -138,6 +157,24 @@
 
 .amount-cell.chi {
   color: #dc2626;
+}
+
+.center-cell {
+  text-align: center;
+}
+
+.view-image-link {
+  color: #2563eb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.view-image-link:hover {
+  background: #eff6ff;
 }
 
 .note-cell {
@@ -287,10 +324,13 @@
     padding: 14px;
   }
 
+  .export-btn span {
+    display: none;
+  }
+
   .table-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+    flex-direction: row;
+    align-items: center;
   }
 
   .desktop-table {
@@ -426,6 +466,11 @@
   .detail-value {
     color: #1f2937;
     flex: 1;
+  }
+
+  .detail-link {
+    color: #2563eb;
+    text-decoration: none;
   }
 
   .card-actions {
