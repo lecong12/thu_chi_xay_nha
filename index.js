@@ -31,7 +31,7 @@ app.get('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
     // Thay 'ThuChi' bằng tên Tab (Sheet) thực tế của bạn
-    const range = 'data_thu_chi!A:E'; 
+    const range = 'GiaoDich!A:F'; 
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
@@ -130,7 +130,7 @@ app.post('/api/setup-sheets', async (req, res) => {
 app.post('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'data_thu_chi!A:E'; // Tên sheet và dải ô để ghi
+    const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
     const { values } = req.body;

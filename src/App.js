@@ -41,13 +41,31 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchDataFromAppSheet(process.env.REACT_APP_APPSHEET_APP_ID);
+      // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
+      const response = await fetch('/api/data');
+      const result = await response.json();
 
-      if (result.success && result.data) {
-        setData(result.data);
+      if (response.ok && result.data) {
+        // Chuyển đổi mảng 2 chiều từ Sheet thành Object cho React
+        // Cấu trúc Sheet GiaoDich: [Ngày, Hạng mục, Nội dung, Số tiền, Minh chứng, Ghi chú]
+        const formattedData = result.data.slice(1).map((row, index) => ({
+          id: `row_${index}`, // Tạo ID tạm
+          ngay: row[0] ? new Date(row[0]) : new Date(),
+          loaiThuChi: row[1] || "Khác",
+          noiDung: row[2] || "",
+          soTien: parseInt((row[3] || "0").replace(/\D/g, ''), 10), // Xóa ký tự không phải số
+          hinhAnh: row[4] || "",
+          ghiChu: row[5] || "",
+          // Các trường mặc định khác để tránh lỗi
+          nguoiCapNhat: "Admin", 
+          doiTuongThuChi: ""
+        }));
+        
+        // Đảo ngược để thấy cái mới nhất lên đầu
+        setData(formattedData.reverse());
         setLoading(false);
       } else {
-        throw new Error(result.message || "Không thể tải dữ liệu");
+        throw new Error(result.error || "Không thể tải dữ liệu từ Google Sheet");
       }
     } catch (err) {
       console.error("Fetch error details:", err);
