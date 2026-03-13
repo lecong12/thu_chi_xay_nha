@@ -89,8 +89,8 @@ function DataTable({ data, onEdit, onDelete }) {
               <th>STT</th>
               <th>Ngày</th>
               <th>Loại</th>
-              <th>Nội dung</th>
-              <th>Nhóm</th>
+              <th>Hạng mục</th>
+              <th>Giai đoạn</th>
               <th>Số tiền</th>
               <th>Người cập nhật</th>
               <th>Ghi chú</th>
@@ -203,7 +203,7 @@ function DataTable({ data, onEdit, onDelete }) {
                 </div>
                 <div className="detail-item">
                   <FiTag size={14} />
-                  <span className="detail-label">Nhóm:</span>
+                  <span className="detail-label">Giai đoạn:</span>
                   <span className="detail-value">
                     {item.doiTuongThuChi || "-"}
                   </span>

@@ -46,7 +46,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
         <FiSearch className="search-icon" />
         <input
           type="text"
-          placeholder="Tìm kiếm theo nội dung, ghi chú, người cập nhật..."
+            placeholder="Tìm hạng mục, vật tư, ghi chú..."
           value={filters.searchText}
           onChange={(e) => onFilterChange("searchText", e.target.value)}
           className="search-input"
@@ -100,7 +100,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
 
           {/* Đối tượng thu chi */}
           <div className="filter-group">
-            <label className="filter-label">Nhóm</label>
+            <label className="filter-label">Giai đoạn thi công</label>
             <select
               value={filters.doiTuongThuChi}
               onChange={(e) => onFilterChange("doiTuongThuChi", e.target.value)}

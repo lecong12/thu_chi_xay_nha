@@ -9,9 +9,9 @@ function Header({ onRefresh, loading, onLogout, onAdd }) {
         <div className="header-left">
           <div className="logo">
             <FiHome className="logo-icon" />
-            <span className="logo-text">Quản Lý Thu Chi</span>
+            <span className="logo-text">Sổ Tay Xây Nhà</span>
           </div>
-          <span className="subtitle">Dự án xây nhà</span>
+          <span className="subtitle">Theo dõi chi phí & Tiến độ</span>
         </div>
 
         <div className="header-right">

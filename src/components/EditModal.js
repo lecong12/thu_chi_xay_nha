@@ -2,6 +2,18 @@ import React, { useState, useEffect } from "react";
 import { FiX, FiSave } from "react-icons/fi";
 import "./EditModal.css";
 
+const CONSTRUCTION_STAGES = [
+  "1. Chuẩn bị (GPXD, Thiết kế)",
+  "2. Phần Móng & Ngầm",
+  "3. Phần Thân (Thô)",
+  "4. Điện - Nước (ME)",
+  "5. Trát, Ốp lát",
+  "6. Sơn bả & Thạch cao",
+  "7. Hoàn thiện & Nội thất",
+  "8. Sân vườn & Cổng",
+  "9. Chi phí khác"
+];
+
 function EditModal({ item, onClose, onSave }) {
   const [formData, setFormData] = useState({
     ngay: "",
@@ -20,9 +32,9 @@ function EditModal({ item, onClose, onSave }) {
           ? item.ngay.toISOString().split('T')[0] 
           : new Date(item.ngay).toISOString().split('T')[0],
         nguoiCapNhat: item.nguoiCapNhat || "",
-        loaiThuChi: item.loaiThuChi || "",
+        loaiThuChi: item.loaiThuChi || "Chi",
         noiDung: item.noiDung || "",
-        doiTuongThuChi: item.doiTuongThuChi || "",
+        doiTuongThuChi: item.doiTuongThuChi || CONSTRUCTION_STAGES[0],
         soTien: item.soTien || "",
         ghiChu: item.ghiChu || "",
       });
@@ -86,29 +98,35 @@ function EditModal({ item, onClose, onSave }) {
                 onChange={handleChange}
                 required
               >
-                <option value="">Chọn loại</option>
-                <option value="Thu">Thu</option>
-                <option value="Chi">Chi</option>
+                <option value="Chi">Chi (Chi phí)</option>
+                <option value="Thu">Thu (Nguồn tiền)</option>
               </select>
             </div>
             <div className="form-group">
-              <label>Nhóm</label>
-              <input
-                type="text"
+              <label>Giai đoạn thi công</label>
+              <select
                 name="doiTuongThuChi"
                 value={formData.doiTuongThuChi}
                 onChange={handleChange}
                 required
-              />
+              >
+                <option value="">Chọn giai đoạn</option>
+                {CONSTRUCTION_STAGES.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stage}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group full-width">
-              <label>Nội dung</label>
+              <label>Hạng mục chi tiết (Vật tư/Nhân công)</label>
               <input
                 type="text"
                 name="noiDung"
                 value={formData.noiDung}
                 onChange={handleChange}
                 required
+                placeholder="VD: Xi măng, Cát, Công thợ..."
               />
             </div>
             <div className="form-group">

@@ -91,7 +91,7 @@ function Dashboard({ stats, data }) {
             <FiTrendingUp />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Tổng Thu</span>
+            <span className="stat-label">Tổng Nguồn Tiền</span>
             <span className="stat-value">{formatCurrency(stats.tongThu)}</span>
           </div>
         </div>
@@ -101,7 +101,7 @@ function Dashboard({ stats, data }) {
             <FiTrendingDown />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Tổng Chi</span>
+            <span className="stat-label">Đã Chi Tiêu</span>
             <span className="stat-value">{formatCurrency(stats.tongChi)}</span>
           </div>
         </div>
@@ -111,7 +111,7 @@ function Dashboard({ stats, data }) {
             <FiDollarSign />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Cân Đối</span>
+            <span className="stat-label">Còn Dư</span>
             <span
               className={`stat-value ${
                 stats.canDoi >= 0 ? "positive" : "negative"
@@ -137,7 +137,7 @@ function Dashboard({ stats, data }) {
       <div className="charts-grid">
         {/* Pie Chart - Chi tiêu theo đối tượng */}
         <div className="chart-card">
-          <h3 className="chart-title">Chi tiêu theo nhóm</h3>
+          <h3 className="chart-title">Chi phí theo Giai đoạn</h3>
           {pieData.length > 0 ? (
             <div className="chart-container">
               <ResponsiveContainer width="100%" height={250}>
@@ -196,7 +196,7 @@ function Dashboard({ stats, data }) {
 
         {/* Bar Chart - Thu chi theo nội dung */}
         <div className="chart-card">
-          <h3 className="chart-title">Top 5 khoản mục</h3>
+          <h3 className="chart-title">Top 5 Hạng mục tốn kém nhất</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData} layout="vertical">
