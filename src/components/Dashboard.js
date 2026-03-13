@@ -4,6 +4,7 @@ import {
   FiTrendingDown,
   FiDollarSign,
   FiActivity,
+  FiClock,
 } from "react-icons/fi";
 import {
   PieChart,
@@ -41,6 +42,15 @@ const formatShortCurrency = (value) => {
 };
 
 function Dashboard({ stats, data }) {
+  // TÍNH TOÁN TIẾN ĐỘ: Tìm giao dịch chi mới nhất để xác định đang ở giai đoạn nào
+  const latestExpense = [...data]
+    .filter((item) => item.loaiThuChi === "Chi" && item.doiTuongThuChi)
+    .sort((a, b) => new Date(b.ngay) - new Date(a.ngay))[0];
+
+  const currentStage = latestExpense
+    ? latestExpense.doiTuongThuChi.split("(")[0].trim() // Lấy phần tên ngắn (bỏ phần trong ngoặc)
+    : "Chưa khởi công";
+
   // Group data by doiTuongThuChi for pie chart
   const groupByDoiTuong = data.reduce((acc, item) => {
     if (item.loaiThuChi === "Chi") {
@@ -52,8 +62,8 @@ function Dashboard({ stats, data }) {
 
   const pieData = Object.entries(groupByDoiTuong)
     .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
+    // Sắp xếp theo thứ tự giai đoạn (1 -> 9) để thể hiện trình tự xây dựng
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
   // Group data by noiDung for bar chart
   const groupByNoiDung = data.reduce((acc, item) => {
@@ -124,11 +134,13 @@ function Dashboard({ stats, data }) {
 
         <div className="stat-card giao-dich">
           <div className="stat-icon">
-            <FiActivity />
+            <FiClock />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Số Giao Dịch</span>
-            <span className="stat-value">{stats.soGiaoDich}</span>
+            <span className="stat-label">Tiến Độ Hiện Tại</span>
+            <span className="stat-value" style={{ fontSize: "1.1rem" }}>
+              {currentStage}
+            </span>
           </div>
         </div>
       </div>
