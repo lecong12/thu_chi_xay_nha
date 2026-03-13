@@ -210,7 +210,7 @@ function Dashboard({ stats, data }) {
 
         {/* Bar Chart - Thu chi theo nội dung */}
         <div className="chart-card">
-          <h3 className="chart-title">Top 5 Hạng mục tốn kém nhất</h3>
+          <h3 className="chart-title">Top 5 Hạng mục chi phí cao nhất</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData} layout="vertical">
