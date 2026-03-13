@@ -71,7 +71,7 @@ function EditModal({ item, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Chỉnh sửa giao dịch</h2>
+          <h2>{item && item.id ? "Chỉnh sửa giao dịch" : "Thêm mới giao dịch"}</h2>
           <button className="close-btn" onClick={onClose}>
             <FiX />
           </button>
