@@ -117,6 +117,36 @@ function App() {
   const showToast = (message, type = "success") => setToast({ message, type });
   const handleEdit = (item) => setEditingItem(item);
 
+  const handleSetup = async () => {
+    const isConfirmed = window.confirm(
+      "Bạn có chắc chắn muốn cấu hình lại Google Sheet?\nHệ thống sẽ tạo các Tab (GiaoDich, NganSach, TienDo...) nếu chưa có và điền công thức tự động."
+    );
+
+    if (!isConfirmed) return;
+
+    setLoading(true);
+    showToast("info", "Đang cấu hình hệ thống...");
+
+    try {
+      const response = await fetch('/api/setup-sheets', {
+        method: 'POST',
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        showToast("success", result.message);
+        fetchData(); // Tải lại toàn bộ dữ liệu sau khi cấu hình
+      } else {
+        throw new Error(result.error || "Có lỗi xảy ra.");
+      }
+    } catch (error) {
+      showToast(`Lỗi: ${error.message}`, "error");
+      console.error("Setup error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddNew = () => {
     setEditingItem({
       ngay: new Date().toISOString().split("T")[0], // Mặc định hôm nay
@@ -204,7 +234,13 @@ function App() {
 
   return (
     <div className="app">
-      <Header onRefresh={fetchData} loading={loading} onLogout={handleLogout} onAdd={handleAddNew} />
+      <Header
+        onRefresh={fetchData}
+        loading={loading}
+        onLogout={handleLogout}
+        onAdd={handleAddNew}
+        onSetup={handleSetup}
+      />
       <main className="main-content">
         {error && (
           <div className="error-banner">
@@ -219,7 +255,14 @@ function App() {
           </div>
         ) : (
           <>
-            {(activeTab === "dashboard" || activeTab === "all") && <Dashboard stats={stats} data={filteredData} />}
+            {(activeTab === "dashboard" || activeTab === "all") && (
+              <Dashboard
+                stats={stats}
+                data={filteredData}
+                appId={process.env.REACT_APP_APPSHEET_APP_ID}
+                showToast={showToast}
+              />
+            )}
             {(activeTab === "list" || activeTab === "all") && (
               <>
                 <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={handleFilterChange} onReset={resetFilters} />
