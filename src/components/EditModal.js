@@ -14,6 +14,8 @@ const CONSTRUCTION_STAGES = [
   "9. Chi phí khác"
 ];
 
+const UPDATER_OPTIONS = ["Ba", "Mẹ"];
+
 function EditModal({ item, onClose, onSave }) {
   const [formData, setFormData] = useState({
     ngay: "",
@@ -31,7 +33,7 @@ function EditModal({ item, onClose, onSave }) {
         ngay: item.ngay instanceof Date 
           ? item.ngay.toISOString().split('T')[0] 
           : new Date(item.ngay).toISOString().split('T')[0],
-        nguoiCapNhat: item.nguoiCapNhat || "",
+        nguoiCapNhat: item.nguoiCapNhat || UPDATER_OPTIONS[0],
         loaiThuChi: item.loaiThuChi || "Chi",
         noiDung: item.noiDung || "",
         doiTuongThuChi: item.doiTuongThuChi || CONSTRUCTION_STAGES[0],
@@ -82,13 +84,18 @@ function EditModal({ item, onClose, onSave }) {
             </div>
             <div className="form-group">
               <label>Người cập nhật</label>
-              <input
-                type="text"
+              <select
                 name="nguoiCapNhat"
                 value={formData.nguoiCapNhat}
                 onChange={handleChange}
                 required
-              />
+              >
+                {UPDATER_OPTIONS.map((updater) => (
+                  <option key={updater} value={updater}>
+                    {updater}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="form-group">
               <label>Loại</label>
