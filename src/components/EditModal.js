@@ -37,7 +37,8 @@ function EditModal({ item, onClose, onSave }) {
         loaiThuChi: item.loaiThuChi || "Chi",
         noiDung: item.noiDung || "",
         doiTuongThuChi: item.doiTuongThuChi || CONSTRUCTION_STAGES[0],
-        soTien: item.soTien || "",
+        // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
+        soTien: item.soTien ? new Intl.NumberFormat('vi-VN').format(item.soTien) : "",
         ghiChu: item.ghiChu || "",
       });
     }
@@ -45,19 +46,29 @@ function EditModal({ item, onClose, onSave }) {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    
+    if (name === "soTien") {
+      // Xóa tất cả ký tự không phải số
+      const rawValue = value.replace(/\D/g, "");
+      // Thêm dấu chấm phân cách hàng nghìn
+      const formattedValue = rawValue.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      setFormData((prev) => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Xóa dấu chấm để lấy giá trị số thực (VD: 1.000.000 => 1000000)
+    const rawSoTien = formData.soTien ? formData.soTien.toString().replace(/\./g, "") : "0";
+
     const finalData = {
       ...item,
       ...formData,
       ngay: new Date(formData.ngay),
-      soTien: parseFloat(formData.soTien) || 0,
+      soTien: parseFloat(rawSoTien) || 0,
     };
 
     // Nếu là khoản Thu, không áp dụng Giai đoạn thi công
@@ -149,12 +160,13 @@ function EditModal({ item, onClose, onSave }) {
             <div className="form-group">
               <label>Số tiền</label>
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
                 name="soTien"
                 value={formData.soTien}
                 onChange={handleChange}
                 required
-                min="0"
+                placeholder="0"
               />
             </div>
             <div className="form-group full-width">

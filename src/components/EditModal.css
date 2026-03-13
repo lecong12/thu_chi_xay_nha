@@ -197,3 +197,15 @@
     padding: 16px;
   }
 }
+
+/* Ẩn các nút tăng/giảm (spinners) trên ô nhập số tiền */
+input[name="soTien"]::-webkit-outer-spin-button,
+input[name="soTien"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Dành cho Firefox */
+input[name="soTien"][type="number"] {
+  -moz-appearance: textfield;
+}
