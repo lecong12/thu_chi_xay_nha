@@ -80,20 +80,17 @@ function DataTable({ data, onEdit, onDelete }) {
     <div className="data-table-container">
       <div className="table-header">
         <h3 className="table-title">Danh sách giao dịch</h3>
-        <div className="table-summary">
-          <span className="summary-item thu">
-            Tổng Thu (Trang): {formatCurrency(pageTotalThu)}
-          </span>
-          <span className="summary-item chi">
-            Tổng Chi (Trang): {formatCurrency(pageTotalChi)}
-          </span>
-        </div>
       </div>
 
       {/* Bảng Chi Phí */}
       {chiList.length > 0 && (
         <div className="section-container">
-          <h4 className="section-title chi-title">Bảng Chi Phí</h4>
+          <div className="section-header">
+            <h4 className="section-title chi-title">Bảng Chi Phí</h4>
+            <span className="summary-item chi">
+              Tổng Chi: {formatCurrency(pageTotalChi)}
+            </span>
+          </div>
           <div className="table-wrapper desktop-table">
             <table className="data-table">
               <thead>
@@ -219,7 +216,12 @@ function DataTable({ data, onEdit, onDelete }) {
       {/* Bảng Nguồn Thu */}
       {thuList.length > 0 && (
         <div className="section-container" style={{ marginTop: "24px" }}>
-          <h4 className="section-title thu-title">Bảng Nguồn Thu</h4>
+          <div className="section-header">
+            <h4 className="section-title thu-title">Bảng Nguồn Thu</h4>
+            <span className="summary-item thu">
+              Tổng Thu: {formatCurrency(pageTotalThu)}
+            </span>
+          </div>
           <div className="table-wrapper desktop-table">
             <table className="data-table">
               <thead>

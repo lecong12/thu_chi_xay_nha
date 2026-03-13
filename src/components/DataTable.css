@@ -43,10 +43,17 @@
   color: #dc2626;
 }
 
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .section-title {
   font-size: 14px;
   font-weight: 700;
-  margin: 0 0 10px 4px;
+  margin: 0;
   text-transform: uppercase;
 }
 
