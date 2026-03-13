@@ -72,7 +72,7 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.refresh-btn {
+.refresh-btn
   display: flex;
   align-items: center;
   gap: 8px;
@@ -87,7 +87,7 @@
   transition: all 0.3s ease;
 }
 
-.refresh-btn:hover:not(:disabled) {
+
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
@@ -99,6 +99,10 @@
 
 .refresh-btn.loading svg {
   animation: spin 1s linear infinite;
+}
+
+.setup-btn {
+  background: rgba(251, 146, 60, 0.8); /* Orange color */
 }
 
 .logout-btn {
@@ -167,12 +171,14 @@
 
   .refresh-btn span,
   .logout-btn span,
+  .setup-btn span,
   .clear-cache-btn span,
   .add-btn span {
     display: none;
   }
 
   .refresh-btn,
+  .setup-btn,
   .logout-btn,
   .clear-cache-btn,
   .add-btn {
