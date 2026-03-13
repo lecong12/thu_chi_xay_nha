@@ -22,7 +22,6 @@ function EditModal({ item, onClose, onSave }) {
   const [formData, setFormData] = useState({
     ngay: "",
     nguoiCapNhat: "",
-    loaiThuChi: "",
     noiDung: "",
     doiTuongThuChi: "",
     soTien: "",
@@ -38,7 +37,6 @@ function EditModal({ item, onClose, onSave }) {
           ? item.ngay.toISOString().split('T')[0] 
           : new Date(item.ngay).toISOString().split('T')[0],
         nguoiCapNhat: item.nguoiCapNhat || UPDATER_OPTIONS[0],
-        loaiThuChi: item.loaiThuChi || "Chi",
         noiDung: item.noiDung || "",
         doiTuongThuChi: item.doiTuongThuChi || BUDGET_CATEGORIES[0],
         // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
@@ -116,10 +114,6 @@ function EditModal({ item, onClose, onSave }) {
       soTien: parseFloat(rawSoTien) || 0,
     };
 
-    // Nếu là khoản Thu, không áp dụng Giai đoạn thi công
-    if (finalData.loaiThuChi === 'Thu') {
-      finalData.doiTuongThuChi = '';
-    }
     onSave(finalData);
   };
 
@@ -191,46 +185,30 @@ function EditModal({ item, onClose, onSave }) {
               </select>
             </div>
             <div className="form-group">
-              <label>Loại</label>
+              <label>Hạng mục (Ngân sách)</label>
               <select
-                name="loaiThuChi"
-                value={formData.loaiThuChi}
+                name="doiTuongThuChi"
+                value={formData.doiTuongThuChi}
                 onChange={handleChange}
                 required
               >
-                <option value="Chi">Chi (Chi phí)</option>
-                <option value="Thu">Thu (Nguồn tiền)</option>
+                <option value="">Chọn hạng mục</option>
+                {BUDGET_CATEGORIES.map((stage) => (
+                  <option key={stage} value={stage}>
+                    {stage}
+                  </option>
+                ))}
               </select>
             </div>
-            {formData.loaiThuChi === 'Chi' && (
-              <div className="form-group">
-                <label>Hạng mục (Ngân sách)</label>
-                <select
-                  name="doiTuongThuChi"
-                  value={formData.doiTuongThuChi}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Chọn hạng mục</option>
-                  {BUDGET_CATEGORIES.map((stage) => (
-                    <option key={stage} value={stage}>
-                      {stage}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <div className="form-group full-width">
-              <label>{formData.loaiThuChi === 'Thu' ? 'Nguồn tiền' : 'Hạng mục chi tiết (Vật tư/Nhân công)'}</label>
+              <label>Nội dung chi tiết (Vật tư/Nhân công)</label>
               <input
                 type="text"
                 name="noiDung"
                 value={formData.noiDung}
                 onChange={handleChange}
                 required
-                placeholder={
-                  formData.loaiThuChi === 'Thu' ? 'VD: Vốn tự có, Vay ngân hàng...' : 'VD: Xi măng, Cát, Công thợ...'
-                }
+                placeholder='VD: Xi măng, Cát, Công thợ...'
               />
             </div>
             <div className="form-group">

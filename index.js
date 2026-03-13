@@ -1,4 +1,7 @@
 const express = require('express');
+const dotenv = require('dotenv');
+dotenv.config(); // Tải các biến môi trường từ file .env
+
 const { google } = require('googleapis');
 const app = express();
 

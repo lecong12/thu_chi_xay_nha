@@ -101,12 +101,9 @@ function App() {
   }, [data, filters]);
 
   const stats = useMemo(() => {
-    const tongThu = filteredData
-      .filter((item) => item.loaiThuChi?.trim().toLowerCase() === "thu")
-      .reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
-    const tongChi = filteredData
-      .filter((item) => item.loaiThuChi?.trim().toLowerCase() === "chi")
-      .reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
+    // Sau khi tái cấu trúc, tất cả giao dịch đều là 'Chi'
+    const tongChi = filteredData.reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
+    const tongThu = 0; // Không còn quản lý Thu ở bảng này
     return { tongThu, tongChi, canDoi: tongThu - tongChi, soGiaoDich: filteredData.length };
   }, [filteredData]);
 
@@ -150,12 +147,12 @@ function App() {
   const handleAddNew = () => {
     setEditingItem({
       ngay: new Date().toISOString().split("T")[0], // Mặc định hôm nay
-      loaiThuChi: "Chi", // Mặc định là Chi
       soTien: "",
       noiDung: "",
       doiTuongThuChi: "",
       nguoiCapNhat: "",
-      ghiChu: ""
+      ghiChu: "",
+      hinhAnh: ""
     });
   };
 
@@ -178,7 +175,7 @@ function App() {
             id: updatedItem.id || updatedItem.appSheetId || `temp_${Date.now()}`, // Tạo ID tạm nếu là thêm mới
             appSheetId: updatedItem.appSheetId || updatedItem.id,
             ngay: updatedItem.ngay instanceof Date ? updatedItem.ngay : new Date(updatedItem.ngay),
-            soTien: Number(updatedItem.soTien?.toString().replace(/[.,]/g, "") || 0),
+            soTien: Number(updatedItem.soTien || 0),
             nguoiCapNhat: updatedItem.nguoiCapNhat || "",
             loaiThuChi: updatedItem.loaiThuChi || "Chi",
             noiDung: updatedItem.noiDung || "",

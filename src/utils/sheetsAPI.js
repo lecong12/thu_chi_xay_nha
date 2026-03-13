@@ -1,20 +1,20 @@
 // AppSheet API Configuration
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 // Ưu tiên lấy từ biến môi trường, nếu không có thì dùng giá trị mặc định
-const APPSHEET_TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_NAME || "data_thu_chi";
+const APPSHEET_TABLE_NAME = "GiaoDich";
 // Sử dụng encodeURIComponent để xử lý tên bảng có dấu cách hoặc ký tự đặc biệt
 const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
 
 // Helper để map tên cột tiếng Việt/Tiếng Anh sang chuẩn code (Đưa ra ngoài để tái sử dụng)
 const normalizeKey = (key) => {
   const k = key.toLowerCase().trim().replace(/:$/, "");
-  if (['ngay', 'ngày', 'date', 'time', 'thời gian', 'ngày tháng'].includes(k)) return 'ngay';
-  if (['sotien', 'so tien', 'số tiền', 'amount', 'price', 'giá', 'chi phí', 'thành tiền', 'trị giá', 'giá trị'].includes(k)) return 'soTien';
-  if (['loaithuchi', 'loai thu chi', 'loại thu chi', 'type', 'category', 'phân loại', 'loại', 'hạng mục'].includes(k)) return 'loaiThuChi';
-  if (['noidung', 'noi dung', 'nội dung', 'content', 'description', 'mô tả', 'diễn giải', 'chi tiết'].includes(k)) return 'noiDung';
-  if (['doituongthuchi', 'doi tuong thu chi', 'đối tượng thu chi', 'nguoichi', 'người chi', 'nguoinhan', 'người nhận', 'đối tượng', 'khách hàng', 'nhóm'].includes(k)) return 'doiTuongThuChi';
-  if (['ghichu', 'ghi chu', 'ghi chú', 'note', 'notes'].includes(k)) return 'ghiChu';
-  if (['nguoicapnhat', 'nguoi cap nhat', 'người cập nhật', 'user', 'người tạo', 'nhân viên'].includes(k)) return 'nguoiCapNhat';
+  if (['ngày', 'ngay', 'date'].includes(k)) return 'ngay';
+  if (['số tiền', 'so tien', 'sotien', 'amount'].includes(k)) return 'soTien';
+  if (['hạng mục', 'hang muc', 'category'].includes(k)) return 'doiTuongThuChi'; // Map 'Hạng mục' từ sheet -> 'doiTuongThuChi' trong app
+  if (['nội dung', 'noi dung', 'description'].includes(k)) return 'noiDung';
+  if (['minh chứng', 'minh chung', 'hinh anh', 'hình ảnh', 'image'].includes(k)) return 'hinhAnh';
+  if (['ghi chú', 'ghi chu', 'note'].includes(k)) return 'ghiChu';
+  if (['người cập nhật', 'nguoi cap nhat', 'user'].includes(k)) return 'nguoiCapNhat';
   return key.trim().replace(/:$/, ""); // Fallback: giữ nguyên hoặc chỉ trim
 };
 
@@ -79,8 +79,7 @@ export const fetchDataFromAppSheet = async (appId) => {
       const currentKeys = Object.keys(firstRow);
 
       // Kiểm tra các cột quan trọng
-      // Bỏ 'id' khỏi danh sách bắt buộc vì AppSheet có thể không trả về nếu chưa cấu hình Key
-      const requiredCols = ["ngay", "loaiThuChi", "soTien"];
+      const requiredCols = ["ngay", "soTien", "doiTuongThuChi"]; // Cột 'Hạng mục' được map thành 'doiTuongThuChi'
       const missingCols = requiredCols.filter(col => !currentKeys.includes(col));
 
       if (missingCols.length > 0) {
@@ -114,24 +113,18 @@ export const fetchDataFromAppSheet = async (appId) => {
     const transformedData = deduplicatedData.map((row, index) => ({
       id: row._RowNumber || row.id || `generated_id_${index}`,
       appSheetId: row.id,
-      ngay: row.ngay ? new Date(row.ngay) : new Date(),
+      ngay: row.ngay ? new Date(row.ngay) : new Date(), // Bắt buộc
+      loaiThuChi: "Chi", // Luôn là 'Chi' vì đọc từ bảng GiaoDich
       nguoiCapNhat: row.nguoiCapNhat ? row.nguoiCapNhat.toString().trim() : "",
-      loaiThuChi: (() => {
-        const val = row.loaiThuChi ? row.loaiThuChi.toString().trim() : "";
-        if (val.toLowerCase() === "thu") return "Thu";
-        if (val.toLowerCase() === "chi") return "Chi";
-        return val;
-      })(),
       noiDung: row.noiDung || "",
-      doiTuongThuChi: row.doiTuongThuChi ? row.doiTuongThuChi.toString().trim() : "",
+      doiTuongThuChi: row.doiTuongThuChi ? row.doiTuongThuChi.toString().trim() : "", // Map từ cột 'Hạng mục'
       soTien: (() => {
-        // Xử lý số tiền: loại bỏ cả dấu phẩy (,) và dấu chấm (.) để hỗ trợ định dạng tiền tệ Việt Nam/Mỹ
-        // Ví dụ: "1,000,000" hoặc "1.000.000" đều thành 1000000
         const val = row.soTien?.toString().replace(/[.,]/g, "") || "0";
         const number = parseFloat(val);
         return isNaN(number) ? 0 : number;
       })(),
       ghiChu: row.ghiChu || "",
+      hinhAnh: row.hinhAnh || "",
     }));
 
     return { success: true, data: transformedData };
@@ -147,20 +140,17 @@ export const fetchDataFromAppSheet = async (appId) => {
 
 export const updateRowInSheet = async (rowData, appId) => {
   try {
-    // Chuẩn bị data theo format AppSheet: [{id: ..., key: value, ...}]
+    // Chuẩn bị data với tên cột khớp với Google Sheet
     const editData = [
       {
-        id: rowData.appSheetId || rowData.id,
-        ngay:
-          rowData.ngay instanceof Date
-            ? rowData.ngay.toISOString().split("T")[0]
-            : rowData.ngay,
-        nguoiCapNhat: rowData.nguoiCapNhat,
-        loaiThuChi: rowData.loaiThuChi,
-        noiDung: rowData.noiDung,
-        doiTuongThuChi: rowData.doiTuongThuChi,
-        soTien: rowData.soTien ? rowData.soTien.toString() : "0",
-        ghiChu: rowData.ghiChu || "",
+        "_RowNumber": rowData.id, // Dùng _RowNumber để xác định dòng cần sửa
+        "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
+        "Hạng mục": rowData.doiTuongThuChi,
+        "Nội dung": rowData.noiDung,
+        "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
+        "Minh chứng": rowData.hinhAnh || "",
+        "Ghi chú": rowData.ghiChu || "",
+        // Không cần gửi 'Người cập nhật' nếu không muốn sửa
       },
     ];
 
@@ -195,16 +185,15 @@ export const updateRowInSheet = async (rowData, appId) => {
 
 export const addRowToSheet = async (rowData, appId) => {
   try {
-    // Chuẩn bị data. Không gửi ID để AppSheet tự sinh (theo công thức Initial Value)
+    // Chuẩn bị data với tên cột khớp với Google Sheet
     const addData = [
       {
-        ngay: rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
-        nguoiCapNhat: rowData.nguoiCapNhat,
-        loaiThuChi: rowData.loaiThuChi,
-        noiDung: rowData.noiDung,
-        doiTuongThuChi: rowData.doiTuongThuChi,
-        soTien: rowData.soTien ? rowData.soTien.toString() : "0",
-        ghiChu: rowData.ghiChu || "",
+        "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
+        "Hạng mục": rowData.doiTuongThuChi,
+        "Nội dung": rowData.noiDung,
+        "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
+        "Minh chứng": rowData.hinhAnh || "",
+        "Ghi chú": rowData.ghiChu || "",
       },
     ];
 
@@ -250,7 +239,7 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
         },
         Rows: [
           {
-            id: appSheetId || rowId,
+            "_RowNumber": appSheetId || rowId, // Dùng _RowNumber để xóa
           },
         ],
       }),

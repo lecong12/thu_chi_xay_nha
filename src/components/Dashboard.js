@@ -189,40 +189,14 @@ function Dashboard({ stats, data, appId, showToast }) {
   return (
     <div className="dashboard">
       {/* Stats Cards */}
-      <div className="stats-grid">
-        <div className="stat-card thu">
-          <div className="stat-icon">
-            <FiTrendingUp />
-          </div>
-          <div className="stat-info">
-            <span className="stat-label">Tổng Nguồn Tiền</span>
-            <span className="stat-value">{formatCurrency(stats.tongThu)}</span>
-          </div>
-        </div>
-
+      <div className="stats-grid-simplified">
         <div className="stat-card chi">
           <div className="stat-icon">
             <FiTrendingDown />
           </div>
           <div className="stat-info">
-            <span className="stat-label">Đã Chi Tiêu</span>
+            <span className="stat-label">Tổng Chi Phí</span>
             <span className="stat-value">{formatCurrency(stats.tongChi)}</span>
-          </div>
-        </div>
-
-        <div className="stat-card can-doi">
-          <div className="stat-icon">
-            <FiDollarSign />
-          </div>
-          <div className="stat-info">
-            <span className="stat-label">Còn Dư</span>
-            <span
-              className={`stat-value ${
-                stats.canDoi >= 0 ? "positive" : "negative"
-              }`}
-            >
-              {formatCurrency(stats.canDoi)}
-            </span>
           </div>
         </div>
 

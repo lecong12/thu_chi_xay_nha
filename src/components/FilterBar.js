@@ -64,23 +64,6 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
       {/* Expanded filters */}
       <div className={`filter-content ${isExpanded ? "expanded" : ""}`}>
         <div className="filter-grid">
-          {/* Loại thu chi */}
-          <div className="filter-group">
-            <label className="filter-label">Loại</label>
-            <select
-              value={filters.loaiThuChi}
-              onChange={(e) => onFilterChange("loaiThuChi", e.target.value)}
-              className="filter-select"
-            >
-              <option value="">Tất cả</option>
-              {filterOptions.loaiThuChi.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Người cập nhật */}
           <div className="filter-group">
             <label className="filter-label">Người cập nhật</label>
@@ -100,7 +83,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
 
           {/* Đối tượng thu chi */}
           <div className="filter-group">
-            <label className="filter-label">Giai đoạn thi công</label>
+            <label className="filter-label">Hạng mục</label>
             <select
               value={filters.doiTuongThuChi}
               onChange={(e) => onFilterChange("doiTuongThuChi", e.target.value)}

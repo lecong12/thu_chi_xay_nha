@@ -103,8 +103,7 @@ function DataTable({ data, onEdit, onDelete }) {
     .filter((item) => item.loaiThuChi === "Chi")
     .reduce((sum, item) => sum + item.soTien, 0);
 
-  const chiList = currentData.filter((item) => item.loaiThuChi === "Chi");
-  const thuList = currentData.filter((item) => item.loaiThuChi === "Thu");
+  const chiList = currentData; // Tất cả dữ liệu giờ là chi phí
 
   if (data.length === 0) {
     return (
@@ -152,7 +151,7 @@ function DataTable({ data, onEdit, onDelete }) {
               <tbody>
                 {chiList.map((item) => (
                   <tr key={item.id} className="row-chi">
-                    <td>{formatDate(item.ngay)}</td>
+                    <td style={{whiteSpace: 'nowrap'}}>{formatDate(item.ngay)}</td>
                     <td className="content-cell">{item.noiDung || "-"}</td>
                     <td>{formatStageName(item.doiTuongThuChi)}</td>
                     <td className="amount-cell chi">
@@ -220,151 +219,6 @@ function DataTable({ data, onEdit, onDelete }) {
                   </div>
                   <div className="card-amount chi">
                     -{formatCurrency(item.soTien)}
-                  </div>
-                </div>
-
-                {expandedRow === item.id && (
-                  <div className="card-details">
-                    <div className="detail-item">
-                      <FiUser size={14} />
-                      <span className="detail-label">Người cập nhật:</span>
-                      <span className="detail-value">
-                        {item.nguoiCapNhat || "-"}
-                      </span>
-                    </div>
-                    {item.hinhAnh && (
-                       <div className="detail-item">
-                         <FiImage size={14} />
-                         <span className="detail-label">Chứng từ:</span>
-                         <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="detail-link">Xem ảnh</a>
-                       </div>
-                    )}
-                    {item.ghiChu && (
-                      <div className="detail-item">
-                        <FiInfo size={14} />
-                        <span className="detail-label">Ghi chú:</span>
-                        <span className="detail-value">{item.ghiChu}</span>
-                      </div>
-                    )}
-                    <div className="card-actions">
-                      <button
-                        className="action-btn edit-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(item);
-                        }}
-                      >
-                        <FiEdit2 /> Sửa
-                      </button>
-                      <button
-                        className="action-btn delete-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(item.id);
-                        }}
-                      >
-                        <FiTrash2 /> Xóa
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Bảng Nguồn Thu */}
-      {thuList.length > 0 && (
-        <div className="section-container" style={{ marginTop: "24px" }}>
-          <div className="section-header">
-            <h4 className="section-title thu-title">Bảng Nguồn Thu</h4>
-            <span className="summary-item thu">
-              Tổng Thu: {formatCurrency(pageTotalThu)}
-            </span>
-          </div>
-          <div className="table-wrapper desktop-table">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Ngày</th>
-                  <th>Nguồn tiền</th>
-                  <th>Số tiền</th>
-                  <th>Người cập nhật</th>
-                  <th>Chứng từ</th>
-                  <th>Ghi chú</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody>
-                {thuList.map((item) => (
-                  <tr key={item.id} className="row-thu">
-                    <td>{formatDate(item.ngay)}</td>
-                    <td className="content-cell">{item.noiDung || "-"}</td>
-                    <td className="amount-cell thu">
-                      {formatCurrency(item.soTien)}
-                    </td>
-                    <td>{item.nguoiCapNhat || "-"}</td>
-                    <td className="center-cell">
-                      {item.hinhAnh ? (
-                        <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="view-image-link" title="Xem ảnh">
-                          <FiImage />
-                        </a>
-                      ) : (
-                        <span className="no-image">-</span>
-                      )}
-                    </td>
-                    <td className="note-cell">{item.ghiChu || "-"}</td>
-                    <td className="action-cell">
-                      <button
-                        className="action-btn edit-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(item);
-                        }}
-                      >
-                        <FiEdit2 />
-                      </button>
-                      <button
-                        className="action-btn delete-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(item.id);
-                        }}
-                      >
-                        <FiTrash2 />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Mobile Cards cho Thu */}
-          <div className="mobile-cards">
-            {thuList.map((item) => (
-              <div
-                key={item.id}
-                className={`transaction-card thu ${
-                  expandedRow === item.id ? "expanded" : ""
-                }`}
-                onClick={() => toggleRow(item.id)}
-              >
-                <div className="card-main">
-                  <div className="card-left">
-                    <div className="card-content">
-                      <span className="card-title">
-                        {item.noiDung || "Không có nội dung"}
-                      </span>
-                      <span className="card-subtitle">
-                        <FiCalendar size={12} />
-                        {formatDate(item.ngay)}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="card-amount thu">
-                    +{formatCurrency(item.soTien)}
                   </div>
                 </div>
 

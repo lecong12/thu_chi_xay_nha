@@ -9,6 +9,12 @@
   gap: 16px;
   margin-bottom: 24px;
 }
+.stats-grid-simplified {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
 
 .stat-card {
   background: white;
