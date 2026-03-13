@@ -241,8 +241,15 @@ function App() {
       <main className="main-content">
         {error && (
           <div className="error-banner">
-            <span>{error}</span>
-            <button onClick={fetchData}>Thử lại</button>
+            <h3>⚠️ Đã xảy ra lỗi tải dữ liệu</h3>
+            <p>{error}</p>
+            <p style={{ fontSize: '0.9em', color: '#666' }}>
+              Nếu đây là lần đầu chạy ứng dụng, bạn cần tạo các Sheet mẫu trước.
+            </p>
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={fetchData}>Thử lại</button>
+              <button onClick={handleSetup} style={{ backgroundColor: '#2563eb', color: 'white' }}>🛠️ Tạo Sheet mẫu & Cấu hình</button>
+            </div>
           </div>
         )}
         {loading ? (
