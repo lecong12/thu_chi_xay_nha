@@ -53,12 +53,18 @@ function EditModal({ item, onClose, onSave }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave({
+    const finalData = {
       ...item,
       ...formData,
       ngay: new Date(formData.ngay),
-      soTien: parseFloat(formData.soTien),
-    });
+      soTien: parseFloat(formData.soTien) || 0,
+    };
+
+    // Nếu là khoản Thu, không áp dụng Giai đoạn thi công
+    if (finalData.loaiThuChi === 'Thu') {
+      finalData.doiTuongThuChi = '';
+    }
+    onSave(finalData);
   };
 
   return (
@@ -109,31 +115,35 @@ function EditModal({ item, onClose, onSave }) {
                 <option value="Thu">Thu (Nguồn tiền)</option>
               </select>
             </div>
-            <div className="form-group">
-              <label>Giai đoạn thi công</label>
-              <select
-                name="doiTuongThuChi"
-                value={formData.doiTuongThuChi}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Chọn giai đoạn</option>
-                {CONSTRUCTION_STAGES.map((stage) => (
-                  <option key={stage} value={stage}>
-                    {stage}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {formData.loaiThuChi === 'Chi' && (
+              <div className="form-group">
+                <label>Giai đoạn thi công</label>
+                <select
+                  name="doiTuongThuChi"
+                  value={formData.doiTuongThuChi}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Chọn giai đoạn</option>
+                  {CONSTRUCTION_STAGES.map((stage) => (
+                    <option key={stage} value={stage}>
+                      {stage}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="form-group full-width">
-              <label>Hạng mục chi tiết (Vật tư/Nhân công)</label>
+              <label>{formData.loaiThuChi === 'Thu' ? 'Nguồn tiền' : 'Hạng mục chi tiết (Vật tư/Nhân công)'}</label>
               <input
                 type="text"
                 name="noiDung"
                 value={formData.noiDung}
                 onChange={handleChange}
                 required
-                placeholder="VD: Xi măng, Cát, Công thợ..."
+                placeholder={
+                  formData.loaiThuChi === 'Thu' ? 'VD: Vốn tự có, Vay ngân hàng...' : 'VD: Xi măng, Cát, Công thợ...'
+                }
               />
             </div>
             <div className="form-group">

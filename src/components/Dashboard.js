@@ -66,21 +66,17 @@ function Dashboard({ stats, data }) {
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
 
   // Group data by noiDung for bar chart
-  const groupByNoiDung = data.reduce((acc, item) => {
-    const key = item.noiDung || "Khác";
-    if (!acc[key]) {
-      acc[key] = { name: key.substring(0, 20), thu: 0, chi: 0 };
-    }
-    if (item.loaiThuChi === "Thu") {
-      acc[key].thu += item.soTien;
-    } else {
-      acc[key].chi += item.soTien;
+  const expenseItems = data.reduce((acc, item) => {
+    if (item.loaiThuChi === "Chi") {
+      const key = item.noiDung || "Hạng mục khác";
+      acc[key] = (acc[key] || 0) + item.soTien;
     }
     return acc;
   }, {});
 
-  const barData = Object.values(groupByNoiDung)
-    .sort((a, b) => b.thu + b.chi - (a.thu + a.chi))
+  const barData = Object.entries(expenseItems)
+    .map(([name, chi]) => ({ name: name.substring(0, 25), chi }))
+    .sort((a, b) => b.chi - a.chi)
     .slice(0, 5);
 
   const COLORS = [
@@ -210,7 +206,7 @@ function Dashboard({ stats, data }) {
 
         {/* Bar Chart - Thu chi theo nội dung */}
         <div className="chart-card">
-          <h3 className="chart-title">Top 5 Hạng mục chi phí cao nhất</h3>
+          <h3 className="chart-title">Top 5 Hạng mục chi tiêu nhiều nhất</h3>
           {barData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={barData} layout="vertical">
@@ -234,13 +230,6 @@ function Dashboard({ stats, data }) {
                     color: "#1f2937",
                     boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                   }}
-                />
-                <Legend wrapperStyle={{ color: "#1f2937" }} />
-                <Bar
-                  dataKey="thu"
-                  name="Thu"
-                  fill="#2d8e2b"
-                  radius={[0, 4, 4, 0]}
                 />
                 <Bar
                   dataKey="chi"
