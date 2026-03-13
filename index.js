@@ -155,3 +155,11 @@ app.post('/api/data', async (req, res) => {
 
 // Xuất app để Vercel biến nó thành Serverless Function
 module.exports = app;
+
+// Khởi động server nếu chạy trực tiếp (Localhost)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server đang chạy tại http://localhost:${PORT}`);
+  });
+}
