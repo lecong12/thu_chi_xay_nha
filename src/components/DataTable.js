@@ -28,6 +28,12 @@ const formatDate = (date) => {
   });
 };
 
+const formatStageName = (name) => {
+  if (!name) return "-";
+  // Cắt bỏ phần trong ngoặc và xóa số thứ tự đầu dòng (VD: "1. Chuẩn bị (GPXD)" -> "Chuẩn bị")
+  return name.split("(")[0].trim().replace(/^\d+\.\s*/, "");
+};
+
 function DataTable({ data, onEdit, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
@@ -115,7 +121,7 @@ function DataTable({ data, onEdit, onDelete }) {
                   </span>
                 </td>
                 <td className="content-cell">{item.noiDung || "-"}</td>
-                <td>{item.doiTuongThuChi || "-"}</td>
+                <td>{formatStageName(item.doiTuongThuChi)}</td>
                 <td
                   className={`amount-cell ${
                     item.loaiThuChi === "Thu" ? "thu" : "chi"
@@ -205,7 +211,7 @@ function DataTable({ data, onEdit, onDelete }) {
                   <FiTag size={14} />
                   <span className="detail-label">Giai đoạn:</span>
                   <span className="detail-value">
-                    {item.doiTuongThuChi || "-"}
+                    {formatStageName(item.doiTuongThuChi)}
                   </span>
                 </div>
                 {item.ghiChu && (

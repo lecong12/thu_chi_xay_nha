@@ -162,9 +162,11 @@ function Dashboard({ stats, data }) {
                     outerRadius={90}
                     paddingAngle={3}
                     dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name.substring(0, 10)} ${(percent * 100).toFixed(0)}%`
-                    }
+                    label={({ name, percent }) => {
+                      // Cắt bỏ phần trong ngoặc và xóa số thứ tự đầu dòng (VD: "1. " -> "")
+                      const shortName = name.split("(")[0].trim().replace(/^\d+\.\s*/, "");
+                      return `${shortName} ${(percent * 100).toFixed(0)}%`;
+                    }}
                     labelLine={false}
                   >
                     {pieData.map((entry, index) => (
