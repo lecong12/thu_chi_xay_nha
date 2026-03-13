@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FiTrendingUp,
   FiTrendingDown,
@@ -17,6 +17,8 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { fetchStages, updateStageInSheet } from "../utils/stagesAPI";
+import { fetchBudget } from "../utils/budgetAPI"; // Import API mới
 import "./Dashboard.css";
 
 const formatCurrency = (value) => {
@@ -40,25 +42,80 @@ const formatShortCurrency = (value) => {
   return value.toString();
 };
 
-const initialStages = [
-  { id: 1, name: "1. Chuẩn bị (GPXD, Thiết kế)", status: "Chưa bắt đầu" },
-  { id: 2, name: "2. Phần Móng & Ngầm", status: "Chưa bắt đầu" },
-  { id: 3, name: "3. Phần Thân (Thô)", status: "Chưa bắt đầu" },
-  { id: 4, name: "4. Điện - Nước (ME)", status: "Chưa bắt đầu" },
-  { id: 5, name: "5. Trát, Ốp lát", status: "Chưa bắt đầu" },
-  { id: 6, name: "6. Sơn bả & Thạch cao", status: "Chưa bắt đầu" },
-  { id: 7, name: "7. Hoàn thiện & Nội thất", status: "Chưa bắt đầu" },
-  { id: 8, name: "8. Sân vườn & Cổng", status: "Chưa bắt đầu" },
-  { id: 9, name: "9. Chi phí khác", status: "Chưa bắt đầu" },
-];
+// Helper function to calculate day difference
+const dayDiff = (date1, date2) => {
+  if (!date1 || !date2) return 0;
+  // Set hours to 0 to compare dates only
+  const d1 = new Date(date1);
+  d1.setHours(0, 0, 0, 0);
+  const d2 = new Date(date2);
+  d2.setHours(0, 0, 0, 0);
+  return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+};
 
-function Dashboard({ stats, data }) {
-  const [stages, setStages] = useState(initialStages);
-
-  const handleUpdateStatus = (stageId, newStatus) => {
-    setStages(
-      stages.map((s) => (s.id === stageId ? { ...s, status: newStatus } : s))
+// Custom Tooltip for Gantt Chart
+const GanttTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    return (
+      <div className="custom-tooltip">
+        <p className="tooltip-label">{`${data.name}`}</p>
+        <p className="tooltip-desc">{`Thời gian: ${data.duration} ngày (Từ ngày ${data.range[0]} đến ${data.range[1]})`}</p>
+      </div>
     );
+  }
+  return null;
+};
+
+function Dashboard({ stats, data, appId, showToast }) {
+  const [stages, setStages] = useState([]);
+  const [budget, setBudget] = useState([]);
+
+  // Lấy dữ liệu tiến độ từ Google Sheet khi component được mount
+  useEffect(() => {
+    if (!appId) return;
+    const loadStages = async () => {
+      const result = await fetchStages(appId);
+      if (result.success && result.data.length > 0) {
+        setStages(result.data);
+      } else if (!result.success) {
+        showToast("error", result.message || "Không thể tải dữ liệu tiến độ.");
+      }
+    };
+    loadStages();
+
+    // Tải dữ liệu ngân sách
+    const loadBudget = async () => {
+      const result = await fetchBudget(appId);
+      if (result.success) {
+        setBudget(result.data);
+      } else {
+        showToast("error", result.message || "Không thể tải dữ liệu ngân sách.");
+      }
+    };
+    loadBudget();
+  }, [appId, showToast]);
+
+  const handleUpdateStatus = async (stageId, newStatus) => {
+    const originalStages = [...stages];
+    const updatedStage = stages.find(s => s.id === stageId);
+
+    if (!updatedStage) return;
+
+    // Cập nhật UI trước để có trải nghiệm mượt mà
+    const newStages = stages.map((s) =>
+      s.id === stageId ? { ...s, status: newStatus } : s
+    );
+    setStages(newStages);
+
+    // Gọi API để lưu vào Google Sheet
+    const result = await updateStageInSheet({ ...updatedStage, status: newStatus }, appId);
+
+    if (!result.success) {
+      // Nếu lỗi, khôi phục lại trạng thái cũ và thông báo
+      setStages(originalStages);
+      showToast("error", result.message || "Lỗi khi cập nhật trạng thái.");
+    }
   };
 
   // Tính toán tiến độ hoàn thành
@@ -92,6 +149,33 @@ function Dashboard({ stats, data }) {
     .map(([name, chi]) => ({ name: name.substring(0, 25), chi }))
     .sort((a, b) => b.chi - a.chi)
     .slice(0, 5);
+
+  // --- GANTT CHART DATA PREPARATION ---
+  const ganttData = useMemo(() => {
+    const validStages = stages.filter(s => s.ngayBatDau && s.ngayKetThuc && s.ngayBatDau < s.ngayKetThuc);
+    if (validStages.length === 0) return [];
+
+    const projectStartDate = new Date(Math.min(...validStages.map(s => s.ngayBatDau.getTime())));
+
+    return validStages.map(stage => {
+      const startDay = dayDiff(projectStartDate, stage.ngayBatDau);
+      const duration = dayDiff(stage.ngayBatDau, stage.ngayKetThuc) + 1; // Add 1 to be inclusive
+      const name = stage.name.replace(/^\d+\.\s*/, "");
+
+      let color = "#a8a29e"; // Default color (stone) for 'Chưa bắt đầu'
+      if (stage.status === 'Đang thi công') color = '#3b82f6'; // Blue
+      if (stage.status === 'Hoàn thành') color = '#16a34a'; // Green
+
+      return {
+        name,
+        range: [startDay, startDay + duration - 1], // for tooltip
+        startDay, // transparent bar
+        duration, // colored bar
+        color,
+      };
+    });
+  }, [stages]);
+  // --- END GANTT CHART DATA PREPARATION ---
 
   const COLORS = [
     "#2d8e2b",
@@ -258,6 +342,81 @@ function Dashboard({ stats, data }) {
             <div className="no-data">Chưa có dữ liệu</div>
           )}
         </div>
+      </div>
+
+      {/* Budget Table Section */}
+      <div className="budget-section chart-card">
+        <h3 className="chart-title">Đối chiếu Ngân sách</h3>
+        <div className="budget-table-wrapper">
+          <table className="budget-table">
+            <thead>
+              <tr>
+                <th>Hạng mục</th>
+                <th>Dự kiến</th>
+                <th>Thực tế chi</th>
+                <th>Còn lại</th>
+                <th>Tình trạng</th>
+              </tr>
+            </thead>
+            <tbody>
+              {budget.map((item) => (
+                <tr key={item.hangMuc}>
+                  <td>{item.hangMuc}</td>
+                  <td>{formatCurrency(item.duKien)}</td>
+                  <td>{formatCurrency(item.thucTe)}</td>
+                  <td className={item.conLai < 0 ? 'negative' : 'positive'}>
+                    {formatCurrency(item.conLai)}
+                  </td>
+                  <td className="status-cell">
+                    <span className={`status-badge ${item.conLai < 0 ? 'over' : 'ok'}`}>
+                      {item.tinhTrang}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Gantt Chart Section */}
+      <div className="chart-card" style={{ marginTop: '20px' }}>
+        <h3 className="chart-title">Biểu đồ tiến độ (Gantt)</h3>
+        {ganttData.length > 0 ? (
+          <ResponsiveContainer width="100%" height={350}>
+            <BarChart
+              data={ganttData}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+            >
+              <XAxis 
+                type="number" 
+                domain={['dataMin', 'dataMax + 5']} 
+                tickFormatter={(tick) => `Ngày ${tick}`} 
+                tick={{ fill: "#6b7280", fontSize: 11 }} 
+              />
+              <YAxis 
+                type="category" 
+                dataKey="name" 
+                width={120} 
+                tick={{ fill: "#374151", fontSize: 12 }}
+                interval={0}
+              />
+              <Tooltip 
+                cursor={{fill: 'rgba(239, 246, 255, 0.5)'}}
+                content={<GanttTooltip />}
+              />
+              <Bar dataKey="startDay" stackId="a" fill="transparent" />
+              <Bar dataKey="duration" stackId="a" radius={[4, 4, 4, 4]}>
+                {ganttData.map((entry, index) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="no-data">Chưa có dữ liệu ngày bắt đầu/kết thúc để vẽ biểu đồ Gantt.</div>
+        )}
       </div>
 
       {/* Progress Tracker Section */}

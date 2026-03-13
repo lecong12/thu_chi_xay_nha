@@ -2,16 +2,14 @@ import React, { useState, useEffect } from "react";
 import { FiX, FiSave, FiCamera, FiImage, FiUploadCloud, FiLoader } from "react-icons/fi";
 import "./EditModal.css";
 
-const CONSTRUCTION_STAGES = [
-  "1. Chuẩn bị (GPXD, Thiết kế)",
-  "2. Phần Móng & Ngầm",
-  "3. Phần Thân (Thô)",
-  "4. Điện - Nước (ME)",
-  "5. Trát, Ốp lát",
-  "6. Sơn bả & Thạch cao",
-  "7. Hoàn thiện & Nội thất",
-  "8. Sân vườn & Cổng",
-  "9. Chi phí khác"
+// Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'
+const BUDGET_CATEGORIES = [
+  'Phần thô', 
+  'Nhân công', 
+  'Hoàn thiện', 
+  'Điện nước', 
+  'Nội thất', 
+  'Phát sinh'
 ];
 
 const UPDATER_OPTIONS = ["Ba", "Mẹ"];
@@ -42,7 +40,7 @@ function EditModal({ item, onClose, onSave }) {
         nguoiCapNhat: item.nguoiCapNhat || UPDATER_OPTIONS[0],
         loaiThuChi: item.loaiThuChi || "Chi",
         noiDung: item.noiDung || "",
-        doiTuongThuChi: item.doiTuongThuChi || CONSTRUCTION_STAGES[0],
+        doiTuongThuChi: item.doiTuongThuChi || BUDGET_CATEGORIES[0],
         // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
         soTien: item.soTien ? new Intl.NumberFormat('vi-VN').format(item.soTien) : "",
         hinhAnh: item.hinhAnh || "",
@@ -206,15 +204,15 @@ function EditModal({ item, onClose, onSave }) {
             </div>
             {formData.loaiThuChi === 'Chi' && (
               <div className="form-group">
-                <label>Giai đoạn thi công</label>
+                <label>Hạng mục (Ngân sách)</label>
                 <select
                   name="doiTuongThuChi"
                   value={formData.doiTuongThuChi}
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Chọn giai đoạn</option>
-                  {CONSTRUCTION_STAGES.map((stage) => (
+                  <option value="">Chọn hạng mục</option>
+                  {BUDGET_CATEGORIES.map((stage) => (
                     <option key={stage} value={stage}>
                       {stage}
                     </option>
