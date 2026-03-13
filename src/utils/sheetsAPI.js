@@ -172,9 +172,7 @@ export const updateRowInSheet = async (rowData, appId) => {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    // Edit action might return an empty body on success, so we handle it
-    const responseText = await response.text();
-    const result = responseText ? JSON.parse(responseText) : null;
+    await response.text();
 
     return { success: true, message: "Cập nhật thành công" };
   } catch (error) {

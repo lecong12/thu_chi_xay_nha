@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FiX, FiSave, FiCamera, FiImage, FiUploadCloud, FiLoader } from "react-icons/fi";
+import { FiX, FiSave, FiCamera, FiImage, FiLoader } from "react-icons/fi";
 import "./EditModal.css";
 
 // Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'

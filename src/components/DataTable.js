@@ -4,7 +4,6 @@ import {
   FiChevronRight,
   FiCalendar,
   FiUser,
-  FiTag,
   FiInfo,
   FiEdit2,
   FiTrash2,
@@ -93,11 +92,6 @@ function DataTable({ data, onEdit, onDelete }) {
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
   };
-
-  // Calculate total for current page
-  const pageTotalThu = currentData
-    .filter((item) => item.loaiThuChi === "Thu")
-    .reduce((sum, item) => sum + item.soTien, 0);
 
   const pageTotalChi = currentData
     .filter((item) => item.loaiThuChi === "Chi")

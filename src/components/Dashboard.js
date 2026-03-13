@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
-  FiTrendingUp,
   FiTrendingDown,
-  FiDollarSign,
   FiActivity,
 } from "react-icons/fi";
 import {
@@ -14,8 +12,7 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
-  Legend,
+  Tooltip
 } from "recharts";
 import { fetchStages, updateStageInSheet } from "../utils/stagesAPI";
 import { fetchBudget } from "../utils/budgetAPI"; // Import API mới
