@@ -1,6 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config(); // Tải các biến môi trường từ file .env
+const { fetchDataFromAppSheet } = require('./src/utils/sheetsAPI');
 
 const { google } = require('googleapis');
 const app = express();
@@ -26,20 +27,22 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running!' });
 });
 
-// Route lấy dữ liệu từ Sheet
+// Route lấy dữ liệu từ AppSheet
 app.get('/api/data', async (req, res) => {
   try {
-    const spreadsheetId = process.env.SPREADSHEET_ID;
-    // Thay 'ThuChi' bằng tên Tab (Sheet) thực tế của bạn
-    const range = 'GiaoDich!A:F'; 
+    const appId = process.env.REACT_APP_APPSHEET_APP_ID;
 
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range,
-    });
+    if (!appId) {
+      return res.status(500).json({ error: 'REACT_APP_APPSHEET_APP_ID is not configured.' });
+    }
+
+    const response = await fetchDataFromAppSheet(appId);
+    if (!response.success) {
+      return res.status(500).json({ error: response.message || 'Failed to fetch data from AppSheet' });
+    }
 
     res.json({ data: response.data.values });
-  } catch (error) {
+  } catch (error) {    
     console.error('Lỗi Google Sheet:', error);
     res.status(500).json({ error: error.message });
   }
@@ -185,17 +188,17 @@ app.post('/api/setup-sheets', async (req, res) => {
 // Route để thêm dữ liệu mới vào Sheet
 app.post('/api/data', async (req, res) => {
   try {
-    const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
+    // const spreadsheetId = process.env.SPREADSHEET_ID;
+    // const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
-    const { values } = req.body;
+    // const { values } = req.body;
 
-    if (!values || !Array.isArray(values)) {
-      return res.status(400).json({ error: 'Dữ liệu "values" không hợp lệ, phải là một mảng.' });
-    }
+    // if (!values || !Array.isArray(values)) {
+    //   return res.status(400).json({ error: 'Dữ liệu "values" không hợp lệ, phải là một mảng.' });
+    // }
 
-    await sheets.spreadsheets.values.append({
+    /*await sheets.spreadsheets.values.append({
       spreadsheetId,
       range,
       valueInputOption: 'USER_ENTERED', // Giúp Google Sheets tự định dạng (ngày, số)
@@ -203,7 +206,7 @@ app.post('/api/data', async (req, res) => {
     });
 
     res.status(201).json({ message: 'Thêm dữ liệu thành công!' });
-  } catch (error) {
+  } */catch (error) {
     console.error('Lỗi khi ghi vào Google Sheet:', error);
     res.status(500).json({ error: error.message });
   }
