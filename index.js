@@ -191,29 +191,29 @@ app.post('/api/setup-sheets', async (req, res) => {
 });
 // Route để thêm dữ liệu mới vào Sheet
 app.post('/api/data', async (req, res) => {
-  try {
-    // const spreadsheetId = process.env.SPREADSHEET_ID;
-    // const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
+  // try {
+  //   // const spreadsheetId = process.env.SPREADSHEET_ID;
+  //   // const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
 
-    // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
-     const { values } = req.body;
+  //   // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
+  //    const { values } = req.body;
 
-    // if (!values || !Array.isArray(values)) {
-    //   return res.status(400).json({ error: 'Dữ liệu "values" không hợp lệ, phải là một mảng.' });
-    // }
+  //   // if (!values || !Array.isArray(values)) {
+  //   //   return res.status(400).json({ error: 'Dữ liệu "values" không hợp lệ, phải là một mảng.' });
+  //   // }
 
-    /*await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range,
-      valueInputOption: 'USER_ENTERED', // Giúp Google Sheets tự định dạng (ngày, số)
-       resource: { values: [values] }, // Dữ liệu phải là một mảng 2 chiều
-    });
+  //   /*await sheets.spreadsheets.values.append({
+  //     spreadsheetId,
+  //     range,
+  //     valueInputOption: 'USER_ENTERED', // Giúp Google Sheets tự định dạng (ngày, số)
+  //      resource: { values: [values] }, // Dữ liệu phải là một mảng 2 chiều
+  //   });
 
-    res.status(201).json({ message: 'Thêm dữ liệu thành công!' });
-  } */catch (error) {
-    console.error('Lỗi khi ghi vào Google Sheet:', error);
-    res.status(500).json({ error: error.message });
-  }
+  //   res.status(201).json({ message: 'Thêm dữ liệu thành công!' });
+  // } catch (error) {
+  //   console.error('Lỗi khi ghi vào Google Sheet:', error);
+  //   res.status(500).json({ error: error.message });
+  // }
 });
 
 // Xuất app để Vercel biến nó thành Serverless Function
