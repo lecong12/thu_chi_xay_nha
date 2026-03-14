@@ -37,14 +37,18 @@ app.get('/api/data', async (req, res) => {
     }
 
     const response = await fetchDataFromAppSheet(appId);
+
     if (!response.success) {
       return res.status(500).json({ error: response.message || 'Failed to fetch data from AppSheet' });
     }
 
-    res.json({ data: response.data.values });
+     res.json({ data: response.data });
+
   } catch (error) {    
     console.error('Lỗi Google Sheet:', error);
     res.status(500).json({ error: error.message });
+
+
   }
 });
 
