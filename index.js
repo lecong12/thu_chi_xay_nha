@@ -192,7 +192,7 @@ app.post('/api/data', async (req, res) => {
     // const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
-    // const { values } = req.body;
+     const { values } = req.body;
 
     // if (!values || !Array.isArray(values)) {
     //   return res.status(400).json({ error: 'Dữ liệu "values" không hợp lệ, phải là một mảng.' });
@@ -202,7 +202,7 @@ app.post('/api/data', async (req, res) => {
       spreadsheetId,
       range,
       valueInputOption: 'USER_ENTERED', // Giúp Google Sheets tự định dạng (ngày, số)
-      resource: { values: [values] }, // Dữ liệu phải là một mảng 2 chiều
+       resource: { values: [values] }, // Dữ liệu phải là một mảng 2 chiều
     });
 
     res.status(201).json({ message: 'Thêm dữ liệu thành công!' });
