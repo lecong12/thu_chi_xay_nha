@@ -45,6 +45,56 @@ app.get('/api/data', async (req, res) => {
   }
 });
 
+// Hàm xử lý ghi đè và khởi tạo lại các Sheet
+const setupAndOverwriteSheet = async (spreadsheetId) => {
+  try {
+    console.log(`[LOG]: Bắt đầu ghi đè cấu trúc cho Sheet: ${spreadsheetId}`);
+
+    // 1. Lấy thông tin các sheet hiện có
+    const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
+    const existingSheets = sheetInfo.data.sheets.map(s => s.properties.title);
+
+    // 2. Xử lý Sheet GiaoDich (đổi tên hoặc tạo mới)
+    let giaoDichSheet = existingSheets.includes('data_thu_chi') ? 'data_thu_chi' : (existingSheets.includes('GiaoDich') ? 'GiaoDich' : null);
+    if (giaoDichSheet === 'data_thu_chi') {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: {
+          requests: [{ updateSheetProperties: { properties: { title: 'GiaoDich' }, fields: 'title', sheetId: sheetInfo.data.sheets.find(s => s.properties.title === 'data_thu_chi').properties.sheetId } }]
+        }
+      });
+      console.log("[LOG]: Đã đổi tên 'data_thu_chi' thành 'GiaoDich'");
+    } else if (!giaoDichSheet) {
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        resource: { requests: [{ addSheet: { properties: { title: 'GiaoDich' } } }] }
+      });
+      console.log("[LOG]: Đã tạo sheet 'GiaoDich'");
+    }
+
+    // 3. Tạo hoặc làm sạch các sheet NganSach, TienDo, TongQuan (nếu đã có)
+    const requiredSheets = ['NganSach', 'TienDo', 'TongQuan'];
+    for (const title of requiredSheets) {
+      if (existingSheets.includes(title)) {
+        const sheetId = sheetInfo.data.sheets.find(s => s.properties.title === title).properties.sheetId;
+        await sheets.spreadsheets.values.clear({ spreadsheetId, range: `${title}!A:Z` });
+        console.log(`[LOG]: Đã làm sạch sheet '${title}'`);
+      } else {
+        await sheets.spreadsheets.batchUpdate({
+          spreadsheetId,
+          resource: { requests: [{ addSheet: { properties: { title } } }] }
+        });
+        console.log(`[LOG]: Đã tạo sheet '${title}'`);
+      }
+    }
+
+    console.log("[LOG]: Hoàn tất cấu hình Sheet. Hệ thống đã sẵn sàng.");
+  } catch (error) {
+    console.error("Lỗi khi ghi đè và cấu hình Google Sheet:", error);
+    throw error; // Ném lỗi để route xử lý
+  }
+};
+
 // Route để tự động cấu hình các sheet
 app.post('/api/setup-sheets', async (req, res) => {
   const spreadsheetId = process.env.SPREADSHEET_ID;
@@ -54,7 +104,7 @@ app.post('/api/setup-sheets', async (req, res) => {
 
   console.log("Bắt đầu cấu hình hệ thống Sheet chuyên dụng...");
 
-  try {
+  /*try {
     // 1. Lấy thông tin các sheet hiện có
     const sheetInfo = await sheets.spreadsheets.get({ spreadsheetId });
     const existingSheets = sheetInfo.data.sheets.map(s => s.properties.title);
@@ -123,9 +173,15 @@ app.post('/api/setup-sheets', async (req, res) => {
   } catch (error) {
     console.error('Lỗi khi cấu hình Google Sheet:', error);
     res.status(500).json({ error: 'Lỗi khi cấu hình Google Sheet: ' + error.message });
+  }*/
+  try {
+    await setupAndOverwriteSheet(spreadsheetId);
+    res.status(200).json({ message: 'Ghi đè và cấu hình Sheet thành công! Vui lòng làm mới AppSheet và ứng dụng.' });
+  } catch (error) {
+    console.error("Lỗi tổng khi cấu hình:", error);
+    res.status(500).json({ error: 'Lỗi cấu hình: ' + error.message });
   }
 });
-
 // Route để thêm dữ liệu mới vào Sheet
 app.post('/api/data', async (req, res) => {
   try {
