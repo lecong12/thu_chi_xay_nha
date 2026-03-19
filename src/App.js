@@ -15,29 +15,8 @@ import {
 } from "./utils/sheetsAPI";
 import "./App.css";
 
-// --- HÀM HELPER XỬ LÝ NGÀY THÁNG AN TOÀN ---
-const parseSafeDate = (dateInput) => {
-  if (!dateInput) return new Date();
-  
-  // Trường hợp là đối tượng Date sẵn
-  if (dateInput instanceof Date && !isNaN(dateInput.getTime())) return dateInput;
-
-  // Trường hợp chuỗi định dạng VN: dd/mm/yyyy
-  if (typeof dateInput === 'string' && dateInput.includes('/')) {
-    const parts = dateInput.split('/');
-    if (parts.length === 3) {
-      const day = parseInt(parts[0], 10);
-      const month = parseInt(parts[1], 10) - 1;
-      const year = parseInt(parts[2], 10);
-      const d = new Date(year, month, day);
-      if (!isNaN(d.getTime())) return d;
-    }
-  }
-
-  // Trường hợp mặc định cho các định dạng chuẩn khác (ISO, YYYY-MM-DD)
-  const finalDate = new Date(dateInput);
-  return isNaN(finalDate.getTime()) ? new Date() : finalDate;
-};
+// Định nghĩa URL backend: Nếu chạy localhost, trỏ thẳng vào port 5000 để tránh lỗi Proxy
+const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -46,10 +25,12 @@ function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Dùng lazy initialization để chỉ tính toán window.innerWidth một lần lúc khởi tạo
   const [activeTab, setActiveTab] = useState(() => window.innerWidth > 768 ? "all" : "dashboard");
   const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
 
+  // Filter states
   const [filters, setFilters] = useState({
     loaiThuChi: "",
     nguoiCapNhat: "",
@@ -59,32 +40,42 @@ function App() {
     searchText: "",
   });
 
-  // --- 1. SỬA HÀM FETCH DATA ---
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch('/api/data');
+      // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
+      const response = await fetch(`${API_BASE_URL}/api/data`);
+      
+      // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Không thể kết nối Server (Port 5000). Hãy đảm bảo bạn đã chạy 'node index.js'.");
+      }
+
       const result = await response.json();
 
       if (response.ok && result.data) {
+        // Chuyển đổi mảng 2 chiều từ Sheet thành Object cho React
+        // Cấu trúc Sheet GiaoDich: [Ngày, Hạng mục, Nội dung, Số tiền, Minh chứng, Ghi chú]
         const formattedData = result.data.slice(1).map((row, index) => ({
-          id: `row_${index}`,
-          // Sửa lỗi: Sử dụng parseSafeDate để tránh lỗi pattern từ chuỗi Google Sheets
-          ngay: parseSafeDate(row[0]),
+          id: `row_${index}`, // Tạo ID tạm
+          ngay: row[0] ? new Date(row[0]) : new Date(),
           loaiThuChi: row[1] || "Khác",
           noiDung: row[2] || "",
-          soTien: parseInt((row[3] || "0").toString().replace(/\D/g, ''), 10) || 0,
+          soTien: parseInt((row[3] || "0").replace(/\D/g, ''), 10), // Xóa ký tự không phải số
           hinhAnh: row[4] || "",
           ghiChu: row[5] || "",
-          nguoiCapNhat: row[6] || "Admin", 
-          doiTuongThuChi: row[7] || ""
+          // Các trường mặc định khác để tránh lỗi
+          nguoiCapNhat: "Admin", 
+          doiTuongThuChi: ""
         }));
         
+        // Đảo ngược để thấy cái mới nhất lên đầu
         setData(formattedData.reverse());
         setLoading(false);
       } else {
-        throw new Error(result.error || "Không thể tải dữ liệu.");
+        throw new Error(result.error || "Không thể tải dữ liệu từ Google Sheet");
       }
     } catch (err) {
       console.error("Fetch error details:", err);
@@ -95,8 +86,9 @@ function App() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, []); // Mảng rỗng đảm bảo useEffect chỉ chạy một lần sau khi component mount
 
+  // Tự động chuyển sang chế độ hiển thị tất cả (Dashboard + List) khi ở màn hình lớn (Desktop)
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth > 768) setActiveTab("all");
@@ -105,6 +97,7 @@ function App() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Filter Options & Filtered Data logic (giữ nguyên vì không liên quan lỗi kết nối)
   const filterOptions = useMemo(() => ({
     loaiThuChi: [...new Set(data.map((item) => item.loaiThuChi).filter(Boolean))],
     nguoiCapNhat: [...new Set(data.map((item) => item.nguoiCapNhat).filter(Boolean))],
@@ -117,27 +110,29 @@ function App() {
       if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
       if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
       
-      // So sánh ngày an toàn
+      // item.ngay đã là Date object từ sheetsAPI, không cần new Date() lại
       if (filters.startDate && item.ngay < new Date(filters.startDate)) return false;
       if (filters.endDate) {
         const endDate = new Date(filters.endDate);
         endDate.setHours(23, 59, 59, 999);
         if (item.ngay > endDate) return false;
       }
-      
       if (filters.searchText) {
         const searchLower = filters.searchText.toLowerCase();
+        // Kiểm tra trực tiếp để tối ưu hiệu năng thay vì tạo mảng matchFields
         const content = item.noiDung?.toLowerCase() || "";
         const note = item.ghiChu?.toLowerCase() || "";
-        if (!content.includes(searchLower) && !note.includes(searchLower)) return false;
+        if (!content.includes(searchLower) && !note.includes(searchLower) && !item.nguoiCapNhat?.toLowerCase().includes(searchLower) && !item.doiTuongThuChi?.toLowerCase().includes(searchLower)) return false;
       }
       return true;
     });
   }, [data, filters]);
 
   const stats = useMemo(() => {
+    // Sau khi tái cấu trúc, tất cả giao dịch đều là 'Chi'
     const tongChi = filteredData.reduce((sum, item) => sum + (Number(item.soTien) || 0), 0);
-    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich: filteredData.length };
+    const tongThu = 0; // Không còn quản lý Thu ở bảng này
+    return { tongThu, tongChi, canDoi: tongThu - tongChi, soGiaoDich: filteredData.length };
   }, [filteredData]);
 
   const handleFilterChange = (name, value) => setFilters((prev) => ({ ...prev, [name]: value }));
@@ -148,22 +143,45 @@ function App() {
   const handleEdit = (item) => setEditingItem(item);
 
   const handleSetup = async () => {
-    if (!window.confirm("Cấu hình lại Google Sheet?")) return;
+    const isConfirmed = window.confirm(
+      "Bạn có chắc chắn muốn cấu hình lại Google Sheet?\nHệ thống sẽ tạo các Tab (GiaoDich, NganSach, TienDo...) nếu chưa có và điền công thức tự động."
+    );
+
+    if (!isConfirmed) return;
+
     setLoading(true);
+    showToast("info", "Đang cấu hình hệ thống...");
+
     try {
-      const response = await fetch('/api/setup-sheets', { method: 'POST' });
+      const response = await fetch(`${API_BASE_URL}/api/setup-sheets`, {
+        method: 'POST',
+      });
+
+      // Kiểm tra Content-Type
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Không thể kết nối Server (Port 5000).");
+      }
+
+      const result = await response.json();
+
       if (response.ok) {
-        showToast("Cấu hình thành công!", "success");
-        fetchData();
-      } else throw new Error("Lỗi setup");
+        showToast("success", result.message);
+        fetchData(); // Tải lại toàn bộ dữ liệu sau khi cấu hình
+      } else {
+        throw new Error(result.error || "Có lỗi xảy ra.");
+      }
     } catch (error) {
-      showToast(error.message, "error");
-    } finally { setLoading(false); }
+      showToast(`Lỗi: ${error.message}`, "error");
+      console.error("Setup error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAddNew = () => {
     setEditingItem({
-      ngay: new Date().toISOString().split("T")[0],
+      ngay: new Date().toISOString().split("T")[0], // Mặc định hôm nay
       soTien: "",
       noiDung: "",
       doiTuongThuChi: "",
@@ -173,58 +191,73 @@ function App() {
     });
   };
 
-  // --- 2. SỬA HÀM SAVE EDIT (OPTIMISTIC UPDATE) ---
   const handleSaveEdit = async (updatedItem) => {
     try {
       let result;
-      const appId = process.env.REACT_APP_APPSHEET_APP_ID;
-      
-      if (updatedItem.id && !updatedItem.id.startsWith('temp_')) {
-        result = await updateRowInSheet(updatedItem, appId);
+      // Kiểm tra nếu có ID (appSheetId) thì là Sửa, ngược lại là Thêm mới
+      if (updatedItem.id || updatedItem.appSheetId) {
+        result = await updateRowInSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
       } else {
-        result = await addRowToSheet(updatedItem, appId);
+        result = await addRowToSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
       }
 
       if (result.success) {
+        // Cập nhật giao diện NGAY LẬP TỨC (Optimistic Update) không cần chờ tải lại từ server
         setData((prevData) => {
-          // Chuẩn hóa dữ liệu với parseSafeDate để UI đồng nhất
+          // Chuẩn hóa dữ liệu vừa nhập để khớp với định dạng hiển thị (Date object, Number...)
           const newItem = {
             ...updatedItem,
-            id: updatedItem.id || `temp_${Date.now()}`,
-            ngay: parseSafeDate(updatedItem.ngay),
+            id: updatedItem.id || updatedItem.appSheetId || `temp_${Date.now()}`, // Tạo ID tạm nếu là thêm mới
+            appSheetId: updatedItem.appSheetId || updatedItem.id,
+            ngay: updatedItem.ngay instanceof Date ? updatedItem.ngay : new Date(updatedItem.ngay),
             soTien: Number(updatedItem.soTien || 0),
+            nguoiCapNhat: updatedItem.nguoiCapNhat || "",
+            loaiThuChi: updatedItem.loaiThuChi || "Chi",
+            noiDung: updatedItem.noiDung || "",
+            doiTuongThuChi: updatedItem.doiTuongThuChi || "",
+            ghiChu: updatedItem.ghiChu || ""
           };
 
-          if (updatedItem.id && !updatedItem.id.startsWith('temp_')) {
-            return prevData.map((item) => item.id === updatedItem.id ? newItem : item);
+          if (updatedItem.id || updatedItem.appSheetId) {
+            // Trường hợp Sửa: Tìm và thay thế dòng cũ
+            return prevData.map((item) => 
+              (item.id === updatedItem.id || item.appSheetId === updatedItem.appSheetId) ? newItem : item
+            );
           } else {
+            // Trường hợp Thêm: Đưa lên đầu danh sách
             return [newItem, ...prevData];
           }
         });
 
         setEditingItem(null);
-        showToast("Lưu thành công!", "success");
-        fetchData(); // Sync lại dữ liệu chuẩn từ server
+        showToast(result.message || "Thành công!", "success");
+        
+        // Tải lại dữ liệu thật từ server (chạy ngầm, không await để UI không bị đơ)
+        fetchData();
       } else {
         showToast(result.message || "Thất bại", "error");
       }
     } catch (error) {
       showToast("Có lỗi xảy ra", "error");
-      console.error("Error saving:", error);
+      console.error("Error saving edit:", error);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Xóa giao dịch này?")) {
+    if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
       try {
         const item = data.find(row => row.id === id);
         const result = await deleteRowFromSheet(id, item?.appSheetId, process.env.REACT_APP_APPSHEET_APP_ID);
+
         if (result.success) {
-          fetchData();
-          showToast("Xóa thành công!", "success");
+          await fetchData();
+          showToast(result.message || "Xóa thành công!", "success");
+        } else {
+          showToast(result.message || "Xóa thất bại", "error");
         }
       } catch (error) {
-        showToast("Lỗi khi xóa", "error");
+        showToast("Có lỗi xảy ra khi xóa", "error");
+        console.error("Error deleting:", error);
       }
     }
   };
@@ -233,20 +266,42 @@ function App() {
 
   return (
     <div className="app">
-      <Header onRefresh={fetchData} loading={loading} onLogout={handleLogout} onAdd={handleAddNew} onSetup={handleSetup} />
+      <Header
+        onRefresh={fetchData}
+        loading={loading}
+        onLogout={handleLogout}
+        onAdd={handleAddNew}
+        onSetup={handleSetup}
+      />
       <main className="main-content">
         {error && (
           <div className="error-banner">
             <h3>⚠️ Đã xảy ra lỗi tải dữ liệu</h3>
             <p>{error}</p>
-            <button onClick={handleSetup}>Tạo Sheet mẫu & Cấu hình</button>
+            <p style={{ fontSize: '0.9em', color: '#666' }}>
+              Nếu đây là lần đầu chạy ứng dụng, bạn cần tạo các Sheet mẫu trước.
+            </p>
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={fetchData}>Thử lại</button>
+              <button onClick={handleSetup} style={{ backgroundColor: '#2563eb', color: 'white' }}>🛠️ Tạo Sheet mẫu & Cấu hình</button>
+            </div>
           </div>
         )}
         {loading ? (
-          <div className="loading-container"><div className="loading-spinner"></div></div>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Đang tải dữ liệu...</p>
+          </div>
         ) : (
           <>
-            {(activeTab === "dashboard" || activeTab === "all") && <Dashboard stats={stats} data={filteredData} />}
+            {(activeTab === "dashboard" || activeTab === "all") && (
+              <Dashboard
+                stats={stats}
+                data={filteredData}
+                appId={process.env.REACT_APP_APPSHEET_APP_ID}
+                showToast={showToast}
+              />
+            )}
             {(activeTab === "list" || activeTab === "all") && (
               <>
                 <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={handleFilterChange} onReset={resetFilters} />

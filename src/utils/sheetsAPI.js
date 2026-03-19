@@ -19,7 +19,7 @@ const normalizeKey = (key) => {
 };
 
 // Fetch all data from AppSheet
-export const fetchDataFromAppSheet = async (appId) => {
+const fetchDataFromAppSheet = async (appId) => {
   try {
     // Kiểm tra cấu hình trước khi gọi API
     if (!APPSHEET_ACCESS_KEY) {
@@ -138,7 +138,7 @@ export const fetchDataFromAppSheet = async (appId) => {
   }
 };
 
-export const updateRowInSheet = async (rowData, appId) => {
+const updateRowInSheet = async (rowData, appId) => {
   try {
     // Chuẩn bị data với tên cột khớp với Google Sheet
     const editData = [
@@ -181,7 +181,7 @@ export const updateRowInSheet = async (rowData, appId) => {
   }
 };
 
-export const addRowToSheet = async (rowData, appId) => {
+const addRowToSheet = async (rowData, appId) => {
   try {
     // Chuẩn bị data với tên cột khớp với Google Sheet
     const addData = [
@@ -222,7 +222,7 @@ export const addRowToSheet = async (rowData, appId) => {
   }
 };
 
-export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
+const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
   try {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
@@ -253,4 +253,12 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
     console.error("Error deleting from AppSheet:", error);
     return { success: false, message: error.message };
   }
+};
+
+// Xuất module theo chuẩn CommonJS để chạy được cả trên Node.js (Backend) và React (Frontend)
+module.exports = {
+  fetchDataFromAppSheet,
+  updateRowInSheet,
+  addRowToSheet,
+  deleteRowFromSheet
 };
