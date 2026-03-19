@@ -8,7 +8,6 @@ import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
 import {
-  fetchDataFromAppSheet,
   updateRowInSheet,
   deleteRowFromSheet,
   addRowToSheet,
