@@ -49,7 +49,10 @@ function App() {
       // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Không thể kết nối Server Backend. Vui lòng kiểm tra Logs trên Vercel hoặc cấu hình API.");
+        // Đọc text trả về để biết lỗi gì (thường là trang 404 hoặc 500 của Vercel)
+        const text = await response.text(); 
+        console.error("Non-JSON response:", text);
+        throw new Error(`Lỗi kết nối Server Backend (${response.status}). Vui lòng kiểm tra Logs trên Vercel.`);
       }
 
       const result = await response.json();
