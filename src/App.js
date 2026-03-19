@@ -49,7 +49,7 @@ function App() {
       // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Không thể kết nối Server (Port 5000). Hãy đảm bảo bạn đã chạy 'node index.js'.");
+        throw new Error("Không thể kết nối Server Backend. Vui lòng kiểm tra Logs trên Vercel hoặc cấu hình API.");
       }
 
       const result = await response.json();
@@ -159,7 +159,7 @@ function App() {
       // Kiểm tra Content-Type
       const contentType = response.headers.get("content-type");
       if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Không thể kết nối Server (Port 5000).");
+        throw new Error("Không thể kết nối Server Backend.");
       }
 
       const result = await response.json();
