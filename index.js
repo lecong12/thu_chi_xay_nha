@@ -1,13 +1,22 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const path = require('path');
 dotenv.config(); // Tải các biến môi trường từ file .env
-const { fetchDataFromAppSheet } = require('./src/utils/sheetsAPI');
+const { fetchDataFromAppSheet } = require('./src/utils/sheetsAPI.js');
 
 const { google } = require('googleapis');
 const app = express();
 
 // Cho phép nhận JSON từ client
 app.use(express.json());
+
+// Cấu hình CORS thủ công (Cho phép Frontend gọi API)
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Trong thực tế nên để http://localhost:3000
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
 
 // Cấu hình xác thực Google Sheets
 // LƯU Ý: Các biến môi trường này phải được cài đặt trên Vercel
@@ -44,7 +53,7 @@ app.get('/api/data', async (req, res) => {
 
      res.json({ data: response.data });
 
-  } catch (error) {    
+  } catch (error) {
     console.error('Lỗi Google Sheet:', error);
     res.status(500).json({ error: error.message });
 
@@ -102,7 +111,7 @@ const setupAndOverwriteSheet = async (spreadsheetId) => {
   }
 };
 
-// Route để tự động cấu hình các sheet
+//  Route để tự động cấu hình các sheet
 app.post('/api/setup-sheets', async (req, res) => {
   const spreadsheetId = process.env.SPREADSHEET_ID;
   if (!spreadsheetId) {
@@ -214,6 +223,15 @@ app.post('/api/data', async (req, res) => {
     console.error('Lỗi khi ghi vào Google Sheet:', error);
     res.status(500).json({ error: error.message });
   }
+});
+
+// --- CẤU HÌNH PHỤC VỤ FRONTEND (REACT) ---
+// Express sẽ phục vụ các file tĩnh trong thư mục 'build' (được tạo ra khi chạy 'npm run build')
+app.use(express.static(path.join(__dirname, 'build')));
+
+// Mọi request không khớp với API sẽ trả về file index.html của React (để React Router xử lý)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
 // Xuất app để Vercel biến nó thành Serverless Function
