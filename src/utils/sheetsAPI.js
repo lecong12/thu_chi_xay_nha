@@ -255,8 +255,7 @@ const deleteRowFromSheet = async (rowId, appSheetId, appId) => {
   }
 };
 
-// Xuất module theo chuẩn CommonJS để chạy được cả trên Node.js (Backend) và React (Frontend)
-module.exports = {
+export {
   fetchDataFromAppSheet,
   updateRowInSheet,
   addRowToSheet,
