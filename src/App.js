@@ -11,6 +11,7 @@ import {
   updateRowInSheet,
   deleteRowFromSheet,
   addRowToSheet,
+  fetchDataFromAppSheet,
 } from "./utils/sheetsAPI";
 import "./App.css";
 
@@ -197,11 +198,14 @@ function App() {
     try {
       let result;
       // Kiểm tra nếu có ID (appSheetId) thì là Sửa, ngược lại là Thêm mới
-      if (updatedItem.id || updatedItem.appSheetId) {
-        result = await updateRowInSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
-      } else {
-        result = await addRowToSheet(updatedItem, process.env.REACT_APP_APPSHEET_APP_ID);
-      }
+       const response = await fetch(`${API_BASE_URL}/api/data`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedItem),
+    });
+     result = await response.json();
 
       if (result.success) {
         // Cập nhật giao diện NGAY LẬP TỨC (Optimistic Update) không cần chờ tải lại từ server
@@ -248,8 +252,13 @@ function App() {
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
       try {
-        const item = data.find(row => row.id === id);
-        const result = await deleteRowFromSheet(id, item?.appSheetId, process.env.REACT_APP_APPSHEET_APP_ID);
+         const response = await fetch(`${API_BASE_URL}/api/data/${id}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+            throw new Error('Không thể xóa mục này.');
+        }
 
         if (result.success) {
           await fetchData();
