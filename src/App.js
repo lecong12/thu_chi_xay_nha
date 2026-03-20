@@ -9,7 +9,6 @@ import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
 import "./App.css";
 
-// Cấu hình từ Vercel
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
@@ -21,7 +20,7 @@ function App() {
   const [toast, setToast] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
 
-  // State lưu trữ dữ liệu từ nhiều Sheet khác nhau
+  // --- DỮ LIỆU CÁC NHÓM (GROUPS) ---
   const [dataGiaoDich, setDataGiaoDich] = useState([]);
   const [dataNganSach, setDataNganSach] = useState([]);
   const [dataTienDo, setDataTienDo] = useState([]);
@@ -35,15 +34,10 @@ function App() {
     searchText: "",
   });
 
-  // 1. HÀM CHUẨN HÓA KEY (Dùng chung cho tất cả các Sheet)
+  // Hàm chuẩn hóa Key để không sợ sai tên cột trên Excel/Sheets
   const normalizeKey = useCallback((str) => {
     if (!str) return "";
-    return str
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/đ/g, "d")
-      .replace(/\s+/g, "");
+    return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
   }, []);
 
   const showToast = (message, type = "success") => {
@@ -51,7 +45,7 @@ function App() {
     setTimeout(() => setToast(null), 3000);
   };
 
-  // 2. HÀM GỌI API DÙNG CHUNG CHO MỌI TABLE
+  // Hàm gọi API tổng quát cho mọi bảng
   const fetchTableData = useCallback(async (tableName) => {
     try {
       const response = await fetch(
@@ -74,28 +68,28 @@ function App() {
       const result = await response.json();
       const rows = Array.isArray(result) ? result : (result.Rows || []);
 
-      // Chuẩn hóa toàn bộ hàng dữ liệu
-      return rows.map((row, index) => {
+      // Chuẩn hóa dữ liệu từng hàng
+      return rows.map((row) => {
         const cleanRow = {};
         Object.keys(row).forEach((k) => {
           cleanRow[normalizeKey(k)] = row[k];
         });
-        return { ...cleanRow, _original: row, tempId: `id_${tableName}_${index}` };
+        return cleanRow;
       });
     } catch (err) {
-      console.error(`Lỗi tải bảng ${tableName}:`, err);
+      console.error(`Lỗi bảng ${tableName}:`, err);
       return [];
     }
   }, [normalizeKey]);
 
-  // 3. TẢI TẤT CẢ DỮ LIỆU KHI KHỞI CHẠY
-  const loadAllData = useCallback(async () => {
-    if (!isLoggedIn || !APP_ID || !ACCESS_KEY) return;
+  // HÀM TẢI DỮ LIỆU TỔNG HỢP (LOAD ALL GROUPS)
+  const loadAllAppData = useCallback(async () => {
+    if (!isLoggedIn) return;
     setLoading(true);
     setError(null);
 
     try {
-      // Chạy song song 3 bảng để tối ưu tốc độ nạp web
+      // Gọi song song để tốc độ nhanh gấp 3 lần
       const [giaoDich, nganSach, tienDo] = await Promise.all([
         fetchTableData("GiaoDich"),
         fetchTableData("NganSach"),
@@ -105,21 +99,22 @@ function App() {
       setDataGiaoDich(giaoDich.reverse());
       setDataNganSach(nganSach);
       setDataTienDo(tienDo);
+      
+      console.log("Đã cập nhật dữ liệu từ 3 nhóm thành công.");
     } catch (err) {
-      setError("Không thể đồng bộ dữ liệu từ AppSheet.");
+      setError("Lỗi kết nối AppSheet. Vui lòng kiểm tra lại mạng.");
     } finally {
       setLoading(false);
     }
   }, [isLoggedIn, fetchTableData]);
 
   useEffect(() => {
-    loadAllData();
-  }, [loadAllData]);
+    loadAllAppData();
+  }, [loadAllAppData]);
 
-  // 4. LOGIC LỌC DỮ LIỆU (Áp dụng cho bảng GiaoDich hiển thị chính)
+  // Logic lọc cho bảng chính GiaoDich
   const filteredGiaoDich = useMemo(() => {
     return dataGiaoDich.filter((item) => {
-      // Lưu ý: Key ở đây dùng tên đã chuẩn hóa (noidung, loaithuchi...)
       if (filters.loaiThuChi && item.loaithuchi !== filters.loaiThuChi) return false;
       if (filters.startDate && new Date(item.ngay) < new Date(filters.startDate)) return false;
       if (filters.searchText) {
@@ -130,71 +125,37 @@ function App() {
     });
   }, [dataGiaoDich, filters]);
 
-  // 5. THỐNG KÊ (Dùng cho Dashboard)
   const stats = useMemo(() => {
     const tongChi = filteredGiaoDich.reduce((sum, item) => sum + (Number(item.sotien) || 0), 0);
-    const soGiaoDich = filteredGiaoDich.length;
-    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich };
+    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich: filteredGiaoDich.length };
   }, [filteredGiaoDich]);
 
-  // 6. XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
-  const handleLogin = () => {
-    localStorage.setItem("isLoggedIn", "true");
-    setIsLoggedIn(true);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
-  };
-
-  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
+  if (!isLoggedIn) return <Login onLogin={() => { localStorage.setItem("isLoggedIn", "true"); setIsLoggedIn(true); }} />;
 
   return (
     <div className="app">
-      <Header 
-        onRefresh={loadAllData} 
-        loading={loading} 
-        onLogout={handleLogout} 
-        onAdd={() => setEditingItem({})} 
-      />
-
+      <Header onRefresh={loadAllAppData} loading={loading} onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} onAdd={() => setEditingItem({})} />
+      
       <main className="main-content">
-        {error && (
-          <div className="error-banner">
-            <p>⚠️ {error}</p>
-            <button onClick={loadAllData}>Tải lại trang</button>
-          </div>
-        )}
+        {error && <div className="error-banner">⚠️ {error}</div>}
 
         {loading ? (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p>Đang đồng bộ dữ liệu đa bảng...</p>
-          </div>
+          <div className="loading-container"><div className="loading-spinner"></div><p>Đang tải dữ liệu...</p></div>
         ) : (
           <>
-            {/* TAB DASHBOARD: Hiển thị thống kê và có thể thêm biểu đồ Ngân sách/Tiến độ */}
             {(activeTab === "dashboard" || activeTab === "all") && (
               <Dashboard 
                 stats={stats} 
                 data={filteredGiaoDich}
-                extraData={{ nganSach: dataNganSach, tienDo: dataTienDo }} // Truyền thêm dữ liệu bảng khác vào đây
+                // CHÚ Ý: Truyền dữ liệu Ngân Sách và Tiến Độ vào đây
+                extraData={{ nganSach: dataNganSach, tienDo: dataTienDo }} 
               />
             )}
 
-            {/* TAB DANH SÁCH: Hiển thị bảng GiaoDich */}
             {(activeTab === "list" || activeTab === "all") && (
               <>
-                <FilterBar 
-                  filters={filters} 
-                  onFilterChange={(n, v) => setFilters(prev => ({ ...prev, [n]: v }))} 
-                />
-                <DataTable 
-                  data={filteredGiaoDich} 
-                  onEdit={setEditingItem} 
-                  onDelete={() => {}} 
-                />
+                <FilterBar filters={filters} onFilterChange={(n, v) => setFilters(prev => ({ ...prev, [n]: v }))} />
+                <DataTable data={filteredGiaoDich} onEdit={setEditingItem} onDelete={() => {}} />
               </>
             )}
           </>
@@ -202,15 +163,7 @@ function App() {
       </main>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-
-      {editingItem && (
-        <EditModal 
-          item={editingItem} 
-          onClose={() => setEditingItem(null)} 
-          onSave={() => showToast("Chức năng đang được cập nhật", "info")} 
-        />
-      )}
-
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={() => {}} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
