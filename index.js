@@ -35,8 +35,25 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running!' });
 });
 
-// Route lấy dữ liệu từ AppSheet đã được loại bỏ để tránh lỗi module.
-// Frontend sẽ gọi trực tiếp AppSheet API (Client-side fetching).
+// --- ROUTE API QUAN TRỌNG: Lấy dữ liệu cho Frontend ---
+// Route này phục vụ request GET /api/data từ App.js
+app.get('/api/data', async (req, res) => {
+  try {
+    const spreadsheetId = process.env.SPREADSHEET_ID;
+    const range = 'GiaoDich!A:F'; // Lấy dữ liệu từ cột A đến F
+
+    if (!spreadsheetId) {
+      return res.status(500).json({ error: 'SPREADSHEET_ID chưa được cấu hình trên server.' });
+    }
+
+    const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
+    const values = response.data.values || [];
+    res.json({ data: values });
+  } catch (error) {
+    console.error('Lỗi khi đọc Google Sheet:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Hàm xử lý ghi đè và khởi tạo lại các Sheet
 const setupAndOverwriteSheet = async (spreadsheetId) => {
