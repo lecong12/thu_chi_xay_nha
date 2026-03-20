@@ -57,6 +57,10 @@ const setupAndOverwriteSheet = async (spreadsheetId) => {
           requests: [{ updateSheetProperties: { properties: { title: 'GiaoDich' }, fields: 'title', sheetId: sheetInfo.data.sheets.find(s => s.properties.title === 'data_thu_chi').properties.sheetId } }]
         }
       });
+      // Cập nhật lại danh sách sau khi đổi tên
+      const existingIndex = existingSheets.indexOf('data_thu_chi');
+      if (existingIndex !== -1) existingSheets[existingIndex] = 'GiaoDich';
+      
       console.log("[LOG]: Đã đổi tên 'data_thu_chi' thành 'GiaoDich'");
     } else if (!giaoDichSheet) {
       // If neither 'data_thu_chi' nor 'GiaoDich' exists, create 'GiaoDich'
