@@ -259,6 +259,7 @@ function App() {
         if (!response.ok) {
             throw new Error('Không thể xóa mục này.');
         }
+         let result;
 
         if (result.success) {
           await fetchData();
@@ -275,6 +276,10 @@ function App() {
   };
 
   if (!isLoggedIn) return <Login onLogin={handleLogin} />;
+
+
+
+
 
 
   return (
