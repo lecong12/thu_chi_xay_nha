@@ -6,7 +6,6 @@ import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
-import Toast from "./components/Toast";
 import {
   updateRowInSheet,
   deleteRowFromSheet,
@@ -16,7 +15,7 @@ import {
 import "./App.css";
 
 // Định nghĩa URL backend: Nếu chạy localhost, trỏ thẳng vào port 5000 để tránh lỗi Proxy
-const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
+const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "/api";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -40,7 +39,7 @@ function App() {
     searchText: "",
   });
 
-  const fetchData = async () => {
+ const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -56,11 +55,10 @@ function App() {
         throw new Error(`Lỗi kết nối Server Backend (${response.status}). Vui lòng kiểm tra Logs trên Vercel.`);
       }
 
-      const result = await response.json();
-
+     const result = await response.json();
       if (response.ok && result.data) {
         // Chuyển đổi mảng 2 chiều từ Sheet thành Object cho React
-        // Cấu trúc Sheet GiaoDich: [Ngày, Hạng mục, Nội dung, Số tiền, Minh chứng, Ghi chú]
+         // Cấu trúc Sheet GiaoDich: [Ngày, Hạng mục, Nội dung, Số tiền, Minh chứng, Ghi chú]
         const formattedData = result.data.slice(1).map((row, index) => ({
           id: `row_${index}`, // Tạo ID tạm
           ngay: row[0] ? new Date(row[0]) : new Date(),
@@ -74,7 +72,6 @@ function App() {
           doiTuongThuChi: ""
         }));
         
-        // Đảo ngược để thấy cái mới nhất lên đầu
         setData(formattedData.reverse());
         setLoading(false);
       } else {
@@ -99,6 +96,12 @@ function App() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+ const showToast = (message, type = "success") => {
+    // Use a state variable to control the toast's visibility
+    setToast({ message, type });
+    // Automatically clear the toast after a delay
+  };
 
   // Filter Options & Filtered Data logic (giữ nguyên vì không liên quan lỗi kết nối)
   const filterOptions = useMemo(() => ({
@@ -142,7 +145,6 @@ function App() {
   const resetFilters = () => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" });
   const handleLogin = () => setIsLoggedIn(true);
   const handleLogout = () => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); };
-  const showToast = (message, type = "success") => setToast({ message, type });
   const handleEdit = (item) => setEditingItem(item);
 
   const handleSetup = async () => {
@@ -292,7 +294,7 @@ function App() {
         onSetup={handleSetup}
       />
       <main className="main-content">
-        {error && (
+         {error && (
           <div className="error-banner">
             <h3>⚠️ Đã xảy ra lỗi tải dữ liệu</h3>
             <p>{error}</p>
@@ -331,7 +333,7 @@ function App() {
       </main>
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
