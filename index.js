@@ -48,6 +48,7 @@ app.get('/api/data', async (req, res) => {
 
     const response = await sheets.spreadsheets.values.get({ spreadsheetId, range });
     const values = response.data.values || [];
+    res.header('Content-Type', 'application/json');
     res.json({ data: values });
   } catch (error) {
     console.error('Lỗi khi đọc Google Sheet:', error);
@@ -164,6 +165,7 @@ app.post('/api/setup-sheets', async (req, res) => {
 
   try {
     await setupAndOverwriteSheet(spreadsheetId);
+     res.header('Content-Type', 'application/json');
     res.status(200).json({ message: 'Ghi đè và cấu hình Sheet thành công! Vui lòng làm mới AppSheet và ứng dụng.' });
   } catch (error) {
     console.error("Lỗi tổng khi cấu hình:", error);
@@ -190,6 +192,7 @@ app.post('/api/data', async (req, res) => {
        resource: { values: [values] }, // Dữ liệu phải là một mảng 2 chiều
     });
 
+    res.header('Content-Type', 'application/json');
     res.status(201).json({ message: 'Thêm dữ liệu thành công!' });
   } catch (error) {
     console.error('Lỗi khi ghi vào Google Sheet:', error);

@@ -1,15 +1,10 @@
 {
   "version": 2,
   "rewrites": [
-   { "source": "/api/:path*", "destination": "/index.js" },
+   { "source": "/api/(.*)", "destination": "/index.js" },
     {
       "source": "/(.*)",
       "destination": "/index.html"
-    }
-  ],
-   "headers": [
-    {
-      "source": "/api/(.*)", "headers": [{"key": "Access-Control-Allow-Origin", "value": "*"}]
     }
   ]
 }
