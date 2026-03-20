@@ -2,7 +2,6 @@ const express = require('express');
 const dotenv = require('dotenv');
 const path = require('path');
 dotenv.config(); // Tải các biến môi trường từ file .env
-const { fetchDataFromAppSheet } = require('./src/utils/sheetsAPI.js');
 
 const { google } = require('googleapis');
 const app = express();
@@ -36,40 +35,8 @@ app.get('/api/status', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running!' });
 });
 
-// Route lấy dữ liệu từ AppSheet
-app.get('/api/data', async (req, res) => {
-  try {
-<<<<<<< HEAD
-    const spreadsheetId = process.env.SPREADSHEET_ID;
-    // Thay 'ThuChi' bằng tên Tab (Sheet) thực tế của bạn
-    const range = 'GiaoDich!A:E'; 
-=======
-    const appId = process.env.REACT_APP_APPSHEET_APP_ID;
->>>>>>> 466c2f097695c148ea182b13fcdbb46705b6a1a8
-
-    if (!appId) {
-      return res.status(500).json({ error: 'REACT_APP_APPSHEET_APP_ID is not configured.' });
-    }
-
-    const response = await fetchDataFromAppSheet(appId);
-
-    if (!response.success) {
-      return res.status(500).json({ error: response.message || 'Failed to fetch data from AppSheet' });
-    }
-
-     res.json({ data: response.data });
-
-<<<<<<< HEAD
-    res.json({ data: response.data.values || [] });
-=======
->>>>>>> 466c2f097695c148ea182b13fcdbb46705b6a1a8
-  } catch (error) {
-    console.error('Lỗi Google Sheet:', error);
-    res.status(500).json({ error: error.message });
-
-
-  }
-});
+// Route lấy dữ liệu từ AppSheet đã được loại bỏ để tránh lỗi module.
+// Frontend sẽ gọi trực tiếp AppSheet API (Client-side fetching).
 
 // Hàm xử lý ghi đè và khởi tạo lại các Sheet
 const setupAndOverwriteSheet = async (spreadsheetId) => {
@@ -186,11 +153,7 @@ app.post('/api/setup-sheets', async (req, res) => {
 app.post('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-<<<<<<< HEAD
-    const range = 'GiaoDich!A:E'; // Tên sheet và dải ô để ghi
-=======
     const range = 'GiaoDich!A:F'; // Tên sheet và dải ô để ghi
->>>>>>> 466c2f097695c148ea182b13fcdbb46705b6a1a8
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
      const { values } = req.body;
@@ -213,15 +176,6 @@ app.post('/api/data', async (req, res) => {
   }
 });
 
-<<<<<<< HEAD
-// Chạy server nếu ở môi trường local (không phải Serverless)
-if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`Backend Server is running on port ${PORT}`);
-  });
-}
-=======
 // --- CẤU HÌNH PHỤC VỤ FRONTEND (REACT) ---
 // Express sẽ phục vụ các file tĩnh trong thư mục 'build' (được tạo ra khi chạy 'npm run build')
 app.use(express.static(path.join(__dirname, 'build')));
@@ -230,7 +184,6 @@ app.use(express.static(path.join(__dirname, 'build')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
->>>>>>> 466c2f097695c148ea182b13fcdbb46705b6a1a8
 
 // Xuất app để Vercel biến nó thành Serverless Function
 module.exports = app;
