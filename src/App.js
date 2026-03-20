@@ -8,12 +8,14 @@ import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
 import {
-  fetchDataFromAppSheet,
   updateRowInSheet,
   deleteRowFromSheet,
   addRowToSheet,
 } from "./utils/sheetsAPI";
 import "./App.css";
+
+// Định nghĩa URL backend: Nếu chạy localhost, trỏ thẳng vào port 5000 để tránh lỗi Proxy
+const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
@@ -41,13 +43,41 @@ function App() {
     setLoading(true);
     setError(null);
     try {
-      const result = await fetchDataFromAppSheet(process.env.REACT_APP_APPSHEET_APP_ID);
+      // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
+      const response = await fetch(`${API_BASE_URL}/api/data`);
+      
+      // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        // Đọc text trả về để biết lỗi gì (thường là trang 404 hoặc 500 của Vercel)
+        const text = await response.text(); 
+        console.error("Non-JSON response:", text);
+        throw new Error(`Lỗi kết nối Server Backend (${response.status}). Vui lòng kiểm tra Logs trên Vercel.`);
+      }
 
-      if (result.success && result.data) {
-        setData(result.data);
+      const result = await response.json();
+
+      if (response.ok && result.data) {
+        // Chuyển đổi mảng 2 chiều từ Sheet thành Object cho React
+        // Cấu trúc Sheet GiaoDich: [Ngày, Hạng mục, Nội dung, Số tiền, Minh chứng, Ghi chú]
+        const formattedData = result.data.slice(1).map((row, index) => ({
+          id: `row_${index}`, // Tạo ID tạm
+          ngay: row[0] ? new Date(row[0]) : new Date(),
+          loaiThuChi: row[1] || "Khác",
+          noiDung: row[2] || "",
+          soTien: parseInt((row[3] || "0").replace(/\D/g, ''), 10), // Xóa ký tự không phải số
+          hinhAnh: row[4] || "",
+          ghiChu: row[5] || "",
+          // Các trường mặc định khác để tránh lỗi
+          nguoiCapNhat: "Admin", 
+          doiTuongThuChi: ""
+        }));
+        
+        // Đảo ngược để thấy cái mới nhất lên đầu
+        setData(formattedData.reverse());
         setLoading(false);
       } else {
-        throw new Error(result.message || "Không thể tải dữ liệu");
+        throw new Error(result.error || "Không thể tải dữ liệu từ Google Sheet");
       }
     } catch (err) {
       console.error("Fetch error details:", err);
@@ -125,9 +155,16 @@ function App() {
     showToast("info", "Đang cấu hình hệ thống...");
 
     try {
-      const response = await fetch('/api/setup-sheets', {
+      const response = await fetch(`${API_BASE_URL}/api/setup-sheets`, {
         method: 'POST',
       });
+
+      // Kiểm tra Content-Type
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Không thể kết nối Server Backend.");
+      }
+
       const result = await response.json();
 
       if (response.ok) {
@@ -241,8 +278,15 @@ function App() {
       <main className="main-content">
         {error && (
           <div className="error-banner">
-            <span>{error}</span>
-            <button onClick={fetchData}>Thử lại</button>
+            <h3>⚠️ Đã xảy ra lỗi tải dữ liệu</h3>
+            <p>{error}</p>
+            <p style={{ fontSize: '0.9em', color: '#666' }}>
+              Nếu đây là lần đầu chạy ứng dụng, bạn cần tạo các Sheet mẫu trước.
+            </p>
+            <div style={{ marginTop: '15px', display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button onClick={fetchData}>Thử lại</button>
+              <button onClick={handleSetup} style={{ backgroundColor: '#2563eb', color: 'white' }}>🛠️ Tạo Sheet mẫu & Cấu hình</button>
+            </div>
           </div>
         )}
         {loading ? (
