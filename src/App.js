@@ -16,7 +16,7 @@ import {
 import "./App.css";
 
 // Định nghĩa URL backend: Nếu chạy localhost, trỏ thẳng vào port 5000 để tránh lỗi Proxy
-const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "/api";
+const API_BASE_URL = window.location.hostname === "localhost" ? "http://localhost:5000" : "";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
