@@ -14,16 +14,14 @@ const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
+  const [data, setData] = useState([]); // Dữ liệu GiaoDich chính
+  const [nganSach, setNganSach] = useState([]); // Dữ liệu Ngân sách
+  const [tienDo, setTienDo] = useState([]); // Dữ liệu Tiến độ
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
-  const [toast, setToast] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
-
-  // --- DỮ LIỆU CÁC NHÓM (GROUPS) ---
-  const [dataGiaoDich, setDataGiaoDich] = useState([]);
-  const [dataNganSach, setDataNganSach] = useState([]);
-  const [dataTienDo, setDataTienDo] = useState([]);
+  const [toast, setToast] = useState(null);
 
   const [filters, setFilters] = useState({
     loaiThuChi: "",
@@ -34,128 +32,124 @@ function App() {
     searchText: "",
   });
 
-  // Hàm chuẩn hóa Key để không sợ sai tên cột trên Excel/Sheets
-  const normalizeKey = useCallback((str) => {
+  // Hàm chuẩn hóa Key để khớp với mọi cách đặt tên cột trên Sheets
+  const normalizeKey = (str) => {
     if (!str) return "";
     return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
-  }, []);
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // Hàm gọi API tổng quát cho mọi bảng
-  const fetchTableData = useCallback(async (tableName) => {
-    try {
-      const response = await fetch(
-        `https://api.appsheet.com/api/v2/apps/${APP_ID}/tables/${tableName}/Action`,
-        {
-          method: "POST",
-          headers: {
-            "ApplicationAccessKey": ACCESS_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            Action: "Find",
-            Properties: { Locale: "vi-VN" },
-            Rows: [],
-          }),
-        }
-      );
-
-      if (!response.ok) return [];
-      const result = await response.json();
-      const rows = Array.isArray(result) ? result : (result.Rows || []);
-
-      // Chuẩn hóa dữ liệu từng hàng
-      return rows.map((row) => {
-        const cleanRow = {};
-        Object.keys(row).forEach((k) => {
-          cleanRow[normalizeKey(k)] = row[k];
-        });
-        return cleanRow;
-      });
-    } catch (err) {
-      console.error(`Lỗi bảng ${tableName}:`, err);
-      return [];
-    }
-  }, [normalizeKey]);
-
-  // HÀM TẢI DỮ LIỆU TỔNG HỢP (LOAD ALL GROUPS)
-  const loadAllAppData = useCallback(async () => {
+  // Hàm gọi API khôi phục logic đổ dữ liệu trực tiếp
+  const fetchAllData = async () => {
     if (!isLoggedIn) return;
     setLoading(true);
     setError(null);
 
     try {
-      // Gọi song song để tốc độ nhanh gấp 3 lần
-      const [giaoDich, nganSach, tienDo] = await Promise.all([
-        fetchTableData("GiaoDich"),
-        fetchTableData("NganSach"),
-        fetchTableData("TienDo")
-      ]);
-
-      setDataGiaoDich(giaoDich.reverse());
-      setDataNganSach(nganSach);
-      setDataTienDo(tienDo);
+      // Danh sách các bảng cần lấy dữ liệu
+      const tables = ["GiaoDich", "NganSach", "TienDo"];
       
-      console.log("Đã cập nhật dữ liệu từ 3 nhóm thành công.");
+      const results = await Promise.all(
+        tables.map(async (tableName) => {
+          const response = await fetch(
+            `https://api.appsheet.com/api/v2/apps/${APP_ID}/tables/${tableName}/Action`,
+            {
+              method: "POST",
+              headers: {
+                "ApplicationAccessKey": ACCESS_KEY,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                Action: "Find",
+                Properties: { Locale: "vi-VN" },
+                Rows: [],
+              }),
+            }
+          );
+          if (!response.ok) return [];
+          const resJson = await response.json();
+          const rows = Array.isArray(resJson) ? resJson : (resJson.Rows || []);
+          
+          // Chuẩn hóa dữ liệu ngay khi đổ về
+          return rows.map((row, index) => {
+            const cleanRow = {};
+            Object.keys(row).forEach((k) => { cleanRow[normalizeKey(k)] = row[k]; });
+            return {
+              ...cleanRow,
+              // Ánh xạ các trường quan trọng cho GiaoDich
+              id: cleanRow.id || cleanRow.rownumber || `row_${index}`,
+              ngay: cleanRow.ngay ? new Date(cleanRow.ngay) : new Date(),
+              sotien: Number(String(cleanRow.sotien || 0).replace(/\D/g, "")),
+              noidung: cleanRow.noidung || "",
+              loaithuchi: cleanRow.loaithuchi || "Chi"
+            };
+          });
+        })
+      );
+
+      // Phân bổ dữ liệu về đúng các State
+      setData(results[0].reverse()); // GiaoDich
+      setNganSach(results[1]);       // NganSach
+      setTienDo(results[2]);         // TienDo
+
     } catch (err) {
-      setError("Lỗi kết nối AppSheet. Vui lòng kiểm tra lại mạng.");
+      console.error("Lỗi khôi phục dữ liệu:", err);
+      setError("Không thể tải dữ liệu. Vui lòng kiểm tra lại kết nối AppSheet.");
     } finally {
       setLoading(false);
     }
-  }, [isLoggedIn, fetchTableData]);
+  };
 
   useEffect(() => {
-    loadAllAppData();
-  }, [loadAllAppData]);
+    fetchAllData();
+  }, [isLoggedIn]);
 
-  // Logic lọc cho bảng chính GiaoDich
-  const filteredGiaoDich = useMemo(() => {
-    return dataGiaoDich.filter((item) => {
+  // Logic lọc dữ liệu cho DataTable
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
       if (filters.loaiThuChi && item.loaithuchi !== filters.loaiThuChi) return false;
       if (filters.startDate && new Date(item.ngay) < new Date(filters.startDate)) return false;
       if (filters.searchText) {
         const s = filters.searchText.toLowerCase();
-        return (item.noidung?.toLowerCase().includes(s) || item.ghichu?.toLowerCase().includes(s));
+        return item.noidung?.toLowerCase().includes(s) || item.ghichu?.toLowerCase().includes(s);
       }
       return true;
     });
-  }, [dataGiaoDich, filters]);
+  }, [data, filters]);
 
   const stats = useMemo(() => {
-    const tongChi = filteredGiaoDich.reduce((sum, item) => sum + (Number(item.sotien) || 0), 0);
-    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich: filteredGiaoDich.length };
-  }, [filteredGiaoDich]);
+    const tongChi = filteredData.reduce((sum, item) => sum + (item.sotien || 0), 0);
+    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich: filteredData.length };
+  }, [filteredData]);
 
   if (!isLoggedIn) return <Login onLogin={() => { localStorage.setItem("isLoggedIn", "true"); setIsLoggedIn(true); }} />;
 
   return (
     <div className="app">
-      <Header onRefresh={loadAllAppData} loading={loading} onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} onAdd={() => setEditingItem({})} />
+      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} onAdd={() => setEditingItem({})} />
       
       <main className="main-content">
         {error && <div className="error-banner">⚠️ {error}</div>}
 
         {loading ? (
-          <div className="loading-container"><div className="loading-spinner"></div><p>Đang tải dữ liệu...</p></div>
+          <div className="loading-container"><div className="loading-spinner"></div><p>Đang khôi phục dữ liệu...</p></div>
         ) : (
           <>
             {(activeTab === "dashboard" || activeTab === "all") && (
               <Dashboard 
                 stats={stats} 
-                data={filteredGiaoDich}
-                // CHÚ Ý: Truyền dữ liệu Ngân Sách và Tiến Độ vào đây
-                extraData={{ nganSach: dataNganSach, tienDo: dataTienDo }} 
+                data={filteredData} 
+                extraData={{ nganSach, tienDo }} 
               />
             )}
-
             {(activeTab === "list" || activeTab === "all") && (
               <>
                 <FilterBar filters={filters} onFilterChange={(n, v) => setFilters(prev => ({ ...prev, [n]: v }))} />
-                <DataTable data={filteredGiaoDich} onEdit={setEditingItem} onDelete={() => {}} />
+                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={() => {}} />
               </>
             )}
           </>
