@@ -40,7 +40,7 @@ function App() {
     setError(null);
     try {
       // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
-      let response;
+      let response = null;
       
       // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
       const contentType = response.headers.get("content-type");
@@ -156,6 +156,7 @@ function App() {
     showToast("info", "Đang cấu hình hệ thống...");
 
     try {
+       let response = null;
       const response = await fetch(`${API_BASE_URL}/api/setup-sheets`, {
         method: 'POST',
       });
