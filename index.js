@@ -40,7 +40,7 @@ app.get('/api/status', (req, res) => {
 app.get('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'GiaoDich!A:F'; // Lấy dữ liệu từ cột A đến F của sheet "GiaoDich"
+    const range = 'GiaoDich!A:F'; // Lấy dữ liệu từ cột A đến F of sheet "GiaoDich"
 
     if (!spreadsheetId) {
       return res.status(500).json({ error: 'SPREADSHEET_ID chưa được cấu hình trên server.' });
