@@ -27,7 +27,7 @@ function App() {
   // Dùng lazy initialization để chỉ tính toán window.innerWidth một lần lúc khởi tạo
   const [activeTab, setActiveTab] = useState(() => window.innerWidth > 768 ? "all" : "dashboard");
   const [editingItem, setEditingItem] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [toast, setToast] = useState(null); // Initialize toast to null
 
   // Filter states
   const [filters, setFilters] = useState({
@@ -147,7 +147,9 @@ function App() {
   const handleLogout = () => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); };
   const handleEdit = (item) => setEditingItem(item);
 
-  const handleSetup = async () => {
+ const handleSetup = async () => {
+    setToast(null); // Clear any previous toast
+
     const isConfirmed = window.confirm(
       "Bạn có chắc chắn muốn cấu hình lại Google Sheet?\nHệ thống sẽ tạo các Tab (GiaoDich, NganSach, TienDo...) nếu chưa có và điền công thức tự động."
     );
