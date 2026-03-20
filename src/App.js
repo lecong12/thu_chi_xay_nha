@@ -7,13 +7,7 @@ import Header from "./components/Header";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import Toast from "./components/Toast"; // Corrected import
-import {
-  updateRowInSheet,
-  deleteRowFromSheet,
-   fetchDataFromAppSheet,
-  addRowToSheet,
-  fetchDataFromAppSheet,
-} from "./utils/sheetsAPI";
+import { updateRowInSheet, deleteRowFromSheet, fetchDataFromAppSheet, addRowToSheet } from "./utils/sheetsAPI";
 import "./App.css";
 
 // Định nghĩa URL backend: Nếu chạy localhost, trỏ thẳng vào port 5000 để tránh lỗi Proxy
