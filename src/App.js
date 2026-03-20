@@ -177,7 +177,7 @@ function App() {
         throw new Error(result.error || "Có lỗi xảy ra.");
       }
     } catch (error) {
-      showToast(`Lỗi: ${error.message}`, "error");
+      showToast(`Lỗi: ${error.message}. Chi tiết: ${error}`, "error");
       console.error("Setup error:", error);
     } finally {
       setLoading(false);
