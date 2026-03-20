@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
 import FilterBar from "./components/FilterBar";
 import DataTable from "./components/DataTable";
@@ -9,19 +9,22 @@ import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
 import "./App.css";
 
-// Lấy biến môi trường từ Vercel
+// Cấu hình từ Vercel
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
-const TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_NAME || "GiaoDich";
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
-  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
-  const [editingItem, setEditingItem] = useState(null);
   const [toast, setToast] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+
+  // State lưu trữ dữ liệu từ nhiều Sheet khác nhau
+  const [dataGiaoDich, setDataGiaoDich] = useState([]);
+  const [dataNganSach, setDataNganSach] = useState([]);
+  const [dataTienDo, setDataTienDo] = useState([]);
 
   const [filters, setFilters] = useState({
     loaiThuChi: "",
@@ -32,35 +35,27 @@ function App() {
     searchText: "",
   });
 
-  // HÀM CHUẨN HÓA TIẾNG VIỆT: Xóa dấu, xóa khoảng trắng, chuyển chữ thường
-  const normalizeKey = (str) => {
+  // 1. HÀM CHUẨN HÓA KEY (Dùng chung cho tất cả các Sheet)
+  const normalizeKey = useCallback((str) => {
     if (!str) return "";
     return str
       .toLowerCase()
       .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Xóa dấu
+      .replace(/[\u0300-\u036f]/g, "")
       .replace(/đ/g, "d")
-      .replace(/\s+/g, ""); // Xóa khoảng trắng
-  };
+      .replace(/\s+/g, "");
+  }, []);
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchData = async () => {
-    if (!isLoggedIn) return;
-    if (!APP_ID || !ACCESS_KEY) {
-      setError("Thiếu cấu hình REACT_APP_APPSHEET_APP_ID hoặc ACCESS_KEY trên Vercel.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
+  // 2. HÀM GỌI API DÙNG CHUNG CHO MỌI TABLE
+  const fetchTableData = useCallback(async (tableName) => {
     try {
       const response = await fetch(
-        `https://api.appsheet.com/api/v2/apps/${APP_ID}/tables/${TABLE_NAME}/Action`,
+        `https://api.appsheet.com/api/v2/apps/${APP_ID}/tables/${tableName}/Action`,
         {
           method: "POST",
           headers: {
@@ -75,94 +70,147 @@ function App() {
         }
       );
 
-      if (!response.ok) throw new Error(`Lỗi kết nối Server: ${response.status}`);
-
+      if (!response.ok) return [];
       const result = await response.json();
       const rows = Array.isArray(result) ? result : (result.Rows || []);
 
-      const formattedData = rows.map((row, index) => {
-        // Tạo một object mới đã chuẩn hóa tất cả các Keys từ AppSheet
+      // Chuẩn hóa toàn bộ hàng dữ liệu
+      return rows.map((row, index) => {
         const cleanRow = {};
         Object.keys(row).forEach((k) => {
           cleanRow[normalizeKey(k)] = row[k];
         });
-
-        // Ánh xạ dữ liệu dựa trên các key đã chuẩn hóa
-        return {
-          id: cleanRow.id || cleanRow.rownumber || `row_${index}`,
-          ngay: cleanRow.ngay ? new Date(cleanRow.ngay) : new Date(),
-          loaiThuChi: cleanRow.loaithuchi || "Chi",
-          noiDung: cleanRow.noidung || "",
-          soTien: Number(String(cleanRow.sotien || 0).replace(/\D/g, "")),
-          hinhAnh: cleanRow.hinhanh || "",
-          ghiChu: cleanRow.ghichu || "",
-          nguoiCapNhat: cleanRow.nguoicapnhat || "Admin",
-          doiTuongThuChi: cleanRow.doituongthuchi || "",
-        };
+        return { ...cleanRow, _original: row, tempId: `id_${tableName}_${index}` };
       });
-
-      setData(formattedData.reverse());
     } catch (err) {
-      console.error("Fetch Error:", err);
-      setError("Không thể tải dữ liệu. Hãy kiểm tra tên bảng và kết nối API.");
+      console.error(`Lỗi tải bảng ${tableName}:`, err);
+      return [];
+    }
+  }, [normalizeKey]);
+
+  // 3. TẢI TẤT CẢ DỮ LIỆU KHI KHỞI CHẠY
+  const loadAllData = useCallback(async () => {
+    if (!isLoggedIn || !APP_ID || !ACCESS_KEY) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Chạy song song 3 bảng để tối ưu tốc độ nạp web
+      const [giaoDich, nganSach, tienDo] = await Promise.all([
+        fetchTableData("GiaoDich"),
+        fetchTableData("NganSach"),
+        fetchTableData("TienDo")
+      ]);
+
+      setDataGiaoDich(giaoDich.reverse());
+      setDataNganSach(nganSach);
+      setDataTienDo(tienDo);
+    } catch (err) {
+      setError("Không thể đồng bộ dữ liệu từ AppSheet.");
     } finally {
       setLoading(false);
     }
-  };
+  }, [isLoggedIn, fetchTableData]);
 
   useEffect(() => {
-    fetchData();
-  }, [isLoggedIn]);
+    loadAllData();
+  }, [loadAllData]);
 
-  const filteredData = useMemo(() => {
-    if (!Array.isArray(data)) return [];
-    return data.filter((item) => {
-      if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
+  // 4. LOGIC LỌC DỮ LIỆU (Áp dụng cho bảng GiaoDich hiển thị chính)
+  const filteredGiaoDich = useMemo(() => {
+    return dataGiaoDich.filter((item) => {
+      // Lưu ý: Key ở đây dùng tên đã chuẩn hóa (noidung, loaithuchi...)
+      if (filters.loaiThuChi && item.loaithuchi !== filters.loaiThuChi) return false;
       if (filters.startDate && new Date(item.ngay) < new Date(filters.startDate)) return false;
       if (filters.searchText) {
         const s = filters.searchText.toLowerCase();
-        return item.noiDung?.toLowerCase().includes(s) || item.ghiChu?.toLowerCase().includes(s);
+        return (item.noidung?.toLowerCase().includes(s) || item.ghichu?.toLowerCase().includes(s));
       }
       return true;
     });
-  }, [data, filters]);
+  }, [dataGiaoDich, filters]);
 
+  // 5. THỐNG KÊ (Dùng cho Dashboard)
   const stats = useMemo(() => {
-    const tongChi = filteredData.reduce((sum, item) => sum + (item.soTien || 0), 0);
-    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich: filteredData.length };
-  }, [filteredData]);
+    const tongChi = filteredGiaoDich.reduce((sum, item) => sum + (Number(item.sotien) || 0), 0);
+    const soGiaoDich = filteredGiaoDich.length;
+    return { tongThu: 0, tongChi, canDoi: -tongChi, soGiaoDich };
+  }, [filteredGiaoDich]);
 
-  if (!isLoggedIn) return <Login onLogin={() => { localStorage.setItem("isLoggedIn", "true"); setIsLoggedIn(true); }} />;
+  // 6. XỬ LÝ ĐĂNG NHẬP / ĐĂNG XUẤT
+  const handleLogin = () => {
+    localStorage.setItem("isLoggedIn", "true");
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
 
   return (
     <div className="app">
-      <Header onRefresh={fetchData} loading={loading} onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} onAdd={() => setEditingItem({})} />
+      <Header 
+        onRefresh={loadAllData} 
+        loading={loading} 
+        onLogout={handleLogout} 
+        onAdd={() => setEditingItem({})} 
+      />
+
       <main className="main-content">
         {error && (
-          <div className="error-banner" style={{ color: 'red', textAlign: 'center', padding: '20px' }}>
+          <div className="error-banner">
             <p>⚠️ {error}</p>
-            <button onClick={fetchData}>Thử lại</button>
+            <button onClick={loadAllData}>Tải lại trang</button>
           </div>
         )}
+
         {loading ? (
-          <div className="loading-container" style={{ textAlign: 'center', padding: '50px' }}>
+          <div className="loading-container">
             <div className="loading-spinner"></div>
-            <p>Đang tải dữ liệu...</p>
+            <p>Đang đồng bộ dữ liệu đa bảng...</p>
           </div>
         ) : (
           <>
-            {(activeTab === "dashboard" || activeTab === "all") && <Dashboard stats={stats} data={filteredData} />}
+            {/* TAB DASHBOARD: Hiển thị thống kê và có thể thêm biểu đồ Ngân sách/Tiến độ */}
+            {(activeTab === "dashboard" || activeTab === "all") && (
+              <Dashboard 
+                stats={stats} 
+                data={filteredGiaoDich}
+                extraData={{ nganSach: dataNganSach, tienDo: dataTienDo }} // Truyền thêm dữ liệu bảng khác vào đây
+              />
+            )}
+
+            {/* TAB DANH SÁCH: Hiển thị bảng GiaoDich */}
             {(activeTab === "list" || activeTab === "all") && (
               <>
-                <FilterBar filters={filters} onFilterChange={(n, v) => setFilters({ ...filters, [n]: v })} />
-                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={() => {}} />
+                <FilterBar 
+                  filters={filters} 
+                  onFilterChange={(n, v) => setFilters(prev => ({ ...prev, [n]: v }))} 
+                />
+                <DataTable 
+                  data={filteredGiaoDich} 
+                  onEdit={setEditingItem} 
+                  onDelete={() => {}} 
+                />
               </>
             )}
           </>
         )}
       </main>
+
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={() => {}} />}
+
+      {editingItem && (
+        <EditModal 
+          item={editingItem} 
+          onClose={() => setEditingItem(null)} 
+          onSave={() => showToast("Chức năng đang được cập nhật", "info")} 
+        />
+      )}
+
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
