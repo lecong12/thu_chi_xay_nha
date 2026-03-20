@@ -271,6 +271,7 @@ function App() {
         console.error("Error deleting:", error);
       }
     }
+
   };
 
   if (!isLoggedIn) return <Login onLogin={handleLogin} />;
