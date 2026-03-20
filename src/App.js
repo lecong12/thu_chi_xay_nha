@@ -40,7 +40,7 @@ function App() {
     setError(null);
     try {
       // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
-      let response;
+      let response = null;
       
       // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
       const contentType = response.headers.get("content-type");
