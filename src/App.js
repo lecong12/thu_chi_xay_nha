@@ -14,7 +14,7 @@ const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
-  const [data, setData] = useState([]); // Giao dịch
+  const [data, setData] = useState([]); // Đây là bảng GiaoDich
   const [nganSach, setNganSach] = useState([]); 
   const [tienDo, setTienDo] = useState([]); 
   const [loading, setLoading] = useState(false);
@@ -32,15 +32,9 @@ function App() {
     searchText: "",
   });
 
-  // Hàm chuẩn hóa Key để khớp với Sheets (Xóa dấu, khoảng cách, viết thường)
   const normalizeKey = (str) => {
     if (!str) return "";
     return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, "");
-  };
-
-  const showToast = (message, type = "success") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
   };
 
   const fetchAllData = async () => {
@@ -49,9 +43,8 @@ function App() {
     setError(null);
 
     try {
-      // Gọi chính xác 3 bảng bạn đã đổi tên
+      // Gọi 3 bảng song song
       const tables = ["GiaoDich", "Ngansach", "TienDo"];
-      
       const [resGD, resNS, resTD] = await Promise.all(
         tables.map(async (tableName) => {
           const response = await fetch(
@@ -62,13 +55,13 @@ function App() {
               body: JSON.stringify({ Action: "Find", Properties: { Locale: "vi-VN" }, Rows: [] }),
             }
           );
-          if (!response.ok) throw new Error(`Lỗi bảng ${tableName}`);
+          if (!response.ok) return [];
           const resJson = await response.json();
           return Array.isArray(resJson) ? resJson : (resJson.Rows || []);
         })
       );
 
-      // 1. Xử lý dữ liệu GiaoDich
+      // 1. Xử lý GiaoDich (Nguồn cho Top 5 và Biểu đồ)
       const cleanGD = resGD.map((row, index) => {
         const c = {};
         Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
@@ -77,20 +70,20 @@ function App() {
           id: c.id || c.rownumber || `gd_${index}`,
           ngay: c.ngay ? new Date(c.ngay) : new Date(),
           sotien: Number(String(c.sotien || 0).replace(/\D/g, "")),
-          loaithuchi: c.loaithuchi || "Khác",
+          loaithuchi: c.loaithuchi || "Khác", // Cột này dùng để phân loại Top 5
           noidung: c.noidung || ""
         };
       });
-      setData(cleanGD.reverse());
+      setData(cleanGD.sort((a, b) => b.ngay - a.ngay));
 
-      // 2. Xử lý Ngân Sách
+      // 2. Xử lý Ngân Sách (Lấy từ sheet Ngansach)
       setNganSach(resNS.map(row => {
         const c = {};
         Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
         return { hangMuc: c.hangmuc || "Hạng mục", soTien: Number(String(c.sotien || 0).replace(/\D/g, "")) };
       }));
 
-      // 3. Xử lý Tiến Độ
+      // 3. Xử lý Tiến Độ (Lấy từ sheet TienDo)
       setTienDo(resTD.map(row => {
         const c = {};
         Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
@@ -98,8 +91,7 @@ function App() {
       }));
 
     } catch (err) {
-      console.error(err);
-      setError("Không thể tải dữ liệu. Hãy đảm bảo đã bấm 'Save' và 'Regenerate' trên AppSheet Editor.");
+      setError("Lỗi nạp dữ liệu. Hãy kiểm tra tên bảng và App ID.");
     } finally {
       setLoading(false);
     }
@@ -109,71 +101,65 @@ function App() {
     fetchAllData();
   }, [isLoggedIn]);
 
-  // --- LOGIC TÍNH TOÁN CHO DASHBOARD ---
+  // --- LOGIC XỬ LÝ DỮ LIỆU DASHBOARD ---
   const extraData = useMemo(() => {
-    // 1. Tính Top 5 chi tiêu nhiều nhất (Gom theo loại)
-    const categoryTotals = data.reduce((acc, item) => {
+    // TÍNH TOP 5 TỪ BẢNG GIAODICH
+    const categoryMap = data.reduce((acc, item) => {
       const cat = item.loaithuchi;
       acc[cat] = (acc[cat] || 0) + item.sotien;
       return acc;
     }, {});
 
-    const top5 = Object.entries(categoryTotals)
+    const top5 = Object.entries(categoryMap)
       .map(([label, value]) => ({ label, value }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 
-    // 2. Tính chi phí theo tháng (Giai đoạn)
-    const monthlyTotals = data.reduce((acc, item) => {
-      const month = `${item.ngay.getMonth() + 1}/${item.ngay.getFullYear()}`;
-      acc[month] = (acc[month] || 0) + item.sotien;
+    // TÍNH BIỂU ĐỒ THEO THÁNG TỪ BẢNG GIAODICH
+    const monthMap = data.reduce((acc, item) => {
+      const m = `${item.ngay.getMonth() + 1}/${item.ngay.getFullYear()}`;
+      acc[m] = (acc[m] || 0) + item.sotien;
       return acc;
     }, {});
 
-    const chartData = Object.entries(monthlyTotals).map(([name, value]) => ({ name, value }));
+    const chartData = Object.entries(monthMap)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => {
+          const [m1, y1] = a.name.split('/');
+          const [m2, y2] = b.name.split('/');
+          return new Date(y1, m1-1) - new Date(y2, m2-1);
+      });
 
     return { top5, chartData, nganSach, tienDo };
   }, [data, nganSach, tienDo]);
 
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      if (filters.loaiThuChi && item.loaithuchi !== filters.loaiThuChi) return false;
-      if (filters.searchText) return item.noidung?.toLowerCase().includes(filters.searchText.toLowerCase());
-      return true;
-    });
-  }, [data, filters]);
-
   const stats = useMemo(() => {
-    const tongChi = filteredData.reduce((sum, item) => sum + item.sotien, 0);
-    return { tongThu: 0, tongChi, soGiaoDich: filteredData.length };
-  }, [filteredData]);
+    const tongChi = data.reduce((sum, item) => sum + item.sotien, 0);
+    return { tongThu: 0, tongChi, soGiaoDich: data.length };
+  }, [data]);
 
-  if (!isLoggedIn) return <Login onLogin={() => { localStorage.setItem("isLoggedIn", "true"); setIsLoggedIn(true); }} />;
+  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
     <div className="app">
-      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} onAdd={() => setEditingItem({})} />
+      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={() => setEditingItem({})} />
       <main className="main-content">
-        {error && <div className="error-banner">⚠️ {error} <button onClick={fetchAllData}>Thử lại</button></div>}
         {loading ? (
           <div className="loading-container"><p>Đang đồng bộ dữ liệu...</p></div>
         ) : (
           <>
             {(activeTab === "dashboard" || activeTab === "all") && (
-              <Dashboard stats={stats} data={filteredData} extraData={extraData} />
+              <Dashboard stats={stats} data={data} extraData={extraData} />
             )}
             {(activeTab === "list" || activeTab === "all") && (
-              <>
-                <FilterBar filters={filters} onFilterChange={(n, v) => setFilters(prev => ({ ...prev, [n]: v }))} />
-                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={() => {}} />
-              </>
+              <DataTable data={data} onEdit={setEditingItem} onDelete={() => {}} />
             )}
           </>
         )}
       </main>
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={() => {}} />}
-      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} />}
+      {toast && <Toast message={toast.message} onClose={() => setToast(null)} />}
     </div>
   );
 }
