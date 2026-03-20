@@ -6,10 +6,11 @@ import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
-import Toast from "./components/Toast";
+import Toast from "./components/Toast"; // Corrected import
 import {
   updateRowInSheet,
   deleteRowFromSheet,
+   fetchDataFromAppSheet,
   addRowToSheet,
   fetchDataFromAppSheet,
 } from "./utils/sheetsAPI";
@@ -45,7 +46,6 @@ function App() {
     setError(null);
     try {
       // GỌI API TỪ SERVER NODE.JS CỦA BẠN THAY VÌ APPSHEET
-      const response = await fetch(`${API_BASE_URL}/api/data`);
       
       // Kiểm tra Content-Type: Nếu trả về HTML (lỗi) thay vì JSON
       const contentType = response.headers.get("content-type");
