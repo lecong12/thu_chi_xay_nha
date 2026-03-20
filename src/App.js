@@ -6,6 +6,7 @@ import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
+import Toast from "./components/Toast";
 import {
   updateRowInSheet,
   deleteRowFromSheet,
