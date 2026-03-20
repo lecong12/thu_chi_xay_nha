@@ -31,14 +31,14 @@ app.get('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
     // Thay 'ThuChi' bằng tên Tab (Sheet) thực tế của bạn
-    const range = 'data_thu_chi!A:E'; 
+    const range = 'GiaoDich!A:E'; 
 
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId,
       range,
     });
 
-    res.json({ data: response.data.values });
+    res.json({ data: response.data.values || [] });
   } catch (error) {
     console.error('Lỗi Google Sheet:', error);
     res.status(500).json({ error: error.message });
@@ -130,7 +130,7 @@ app.post('/api/setup-sheets', async (req, res) => {
 app.post('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'data_thu_chi!A:E'; // Tên sheet và dải ô để ghi
+    const range = 'GiaoDich!A:E'; // Tên sheet và dải ô để ghi
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
     const { values } = req.body;
@@ -152,6 +152,14 @@ app.post('/api/data', async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
+// Chạy server nếu ở môi trường local (không phải Serverless)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Backend Server is running on port ${PORT}`);
+  });
+}
 
 // Xuất app để Vercel biến nó thành Serverless Function
 module.exports = app;
