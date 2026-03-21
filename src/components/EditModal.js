@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { FiX, FiSave, FiCamera, FiImage, FiLoader } from "react-icons/fi";
+import Tesseract from 'tesseract.js';
 import "./EditModal.css";
 
 // Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'
@@ -29,6 +30,7 @@ function EditModal({ item, onClose, onSave }) {
     ghiChu: "",
   });
   const [uploading, setUploading] = useState(false);
+  const [ocrScanning, setOcrScanning] = useState(false);
 
   useEffect(() => {
     if (item) {
@@ -102,9 +104,60 @@ function EditModal({ item, onClose, onSave }) {
     }
   };
 
-  // Giả lập tính năng OCR (Cần tích hợp thư viện Tesseract.js sau này)
-  const handleOCR = () => {
-    alert("Tính năng OCR (Quét hóa đơn) đang được phát triển. Vui lòng nhập tay hoặc upload ảnh.");
+  // Xử lý OCR (Quét hóa đơn)
+  const handleOCR = async () => {
+    if (!formData.hinhAnh) {
+      alert("Vui lòng tải ảnh lên hoặc chọn ảnh hóa đơn trước khi quét.");
+      return;
+    }
+
+    setOcrScanning(true);
+    try {
+      const result = await Tesseract.recognize(
+        formData.hinhAnh,
+        'vie', // Sử dụng ngôn ngữ tiếng Việt
+        { logger: m => console.log(m) } // Log tiến độ ra console
+      );
+
+      const text = result.data.text;
+      console.log("Kết quả OCR:", text);
+
+      const parsedData = {};
+
+      // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy)
+      const dateRegex = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/;
+      const dateMatch = text.match(dateRegex);
+      if (dateMatch) {
+        const day = dateMatch[1].padStart(2, '0');
+        const month = dateMatch[2].padStart(2, '0');
+        const year = dateMatch[3];
+        parsedData.ngay = `${year}-${month}-${day}`;
+      }
+
+      // 2. Tìm Số tiền (Lấy số lớn nhất tìm thấy trong văn bản)
+      // Regex tìm các chuỗi số (VD: 1.000.000 hoặc 1,000,000)
+      const numbers = text.match(/\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?/g);
+      if (numbers) {
+        let maxVal = 0;
+        numbers.forEach(numStr => {
+          const cleanNum = parseFloat(numStr.replace(/[.,]/g, '')); // Loại bỏ dấu chấm/phẩy để so sánh
+          if (!isNaN(cleanNum) && cleanNum > 10000 && cleanNum < 10000000000) {
+            if (cleanNum > maxVal) maxVal = cleanNum;
+          }
+        });
+        if (maxVal > 0) {
+          parsedData.soTien = maxVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+        }
+      }
+
+      setFormData(prev => ({ ...prev, ...parsedData }));
+      alert("Quét thành công! Vui lòng kiểm tra lại thông tin.");
+    } catch (error) {
+      console.error("OCR Error:", error);
+      alert("Lỗi khi quét OCR: " + error.message);
+    } finally {
+      setOcrScanning(false);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -246,8 +299,9 @@ function EditModal({ item, onClose, onSave }) {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn-ocr" onClick={handleOCR}>
-              <FiImage /> Quét OCR
+            <button type="button" className="btn-ocr" onClick={handleOCR} disabled={ocrScanning || uploading}>
+              {ocrScanning ? <FiLoader className="spin" /> : <FiImage />} 
+              {ocrScanning ? " Đang xử lý..." : " Quét OCR"}
             </button>
             <div className="spacer"></div>
             <button type="button" className="btn-cancel" onClick={onClose}>
