@@ -68,7 +68,7 @@ const GanttTooltip = ({ active, payload }) => {
   return null;
 };
 
-function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
+function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
   // Lấy dữ liệu đã được fetch và xử lý từ component cha (App.js)
   const stages = extraData.tienDo || [];
   const budget = extraData.nganSach || [];
@@ -184,6 +184,9 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
           </div>
         </div>
       </div>
+
+      {/* Hiển thị Danh sách giao dịch (nếu được truyền vào từ App.js) */}
+      {children}
 
       {/* Charts */}
       <div className="charts-grid">
