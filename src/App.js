@@ -195,6 +195,14 @@ function App() {
       if (isEdit) {
         result = await updateRowInSheet(updatedItem, APP_ID, ACCESS_KEY);
       } else {
+        // LOGIC TÍNH ID TỰ TĂNG: Lấy max(id) hiện có + 1
+        const maxId = data.reduce((max, item) => {
+          const val = parseInt(item.keyId, 10);
+          return !isNaN(val) && val > max ? val : max;
+        }, 0);
+        const newId = maxId + 1;
+        
+        updatedItem.id = newId; // Gán ID mới vào item
         result = await addRowToSheet(updatedItem, APP_ID, ACCESS_KEY);
       }
 

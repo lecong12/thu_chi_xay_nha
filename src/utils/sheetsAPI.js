@@ -96,9 +96,8 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
  */
 export const addRowToSheet = async (rowData, appId, accessKey) => {
   try {
-    // Tạo ID ngẫu nhiên cho dòng mới (vì AppSheet yêu cầu cột Key 'id' phải có giá trị)
-    // ID ngắn gọn (8 ký tự) để dễ nhìn hơn trong sheet
-    const newId = Math.random().toString(36).substring(2, 10);
+    // Sử dụng ID đã được tính toán từ App.js (Max + 1)
+    const newId = rowData.id;
 
     // Khi thêm mới, KHÔNG gửi _RowNumber
     const addData = [{
