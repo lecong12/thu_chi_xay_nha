@@ -187,31 +187,27 @@ function App() {
     <div className="app">
       <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={handleAddNew} />
       <main className="main-content">
-        {loading ? (
-          <div className="loading-container"><p>Đang đồng bộ dữ liệu...</p></div>
-        ) : (
-          <>
-            {(activeTab === "dashboard" || activeTab === "all") && (
-              <Dashboard 
-                stats={stats} 
-                data={data}
-                extraData={extraData} 
-                onUpdateStageStatus={handleUpdateStageStatus}
-                showToast={showToast}
-              >
-                {activeTab === "all" && (
-                  <div style={{ marginTop: '20px' }}>
-                    <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
-                    <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
-                  </div>
-                )}
-              </Dashboard>
-            )}
-            {activeTab === "list" && (
-              <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
-            )}
-          </>
-        )}
+        <>
+          {(activeTab === "dashboard" || activeTab === "all") && (
+            <Dashboard 
+              stats={stats} 
+              data={data}
+              extraData={extraData} 
+              onUpdateStageStatus={handleUpdateStageStatus}
+              showToast={showToast}
+            >
+              {activeTab === "all" && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
+                  <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
+                </div>
+              )}
+            </Dashboard>
+          )}
+          {activeTab === "list" && (
+            <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
+          )}
+        </>
       </main>
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
