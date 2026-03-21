@@ -14,8 +14,6 @@ import {
   YAxis,
   Tooltip
 } from "recharts";
-import { fetchStages, updateStageInSheet } from "../utils/stagesAPI";
-import { fetchBudget } from "../utils/budgetAPI"; // Import API mới
 import "./Dashboard.css";
 
 const formatCurrency = (value) => {
@@ -64,55 +62,14 @@ const GanttTooltip = ({ active, payload }) => {
   return null;
 };
 
-function Dashboard({ stats, data, appId, showToast }) {
-  const [stages, setStages] = useState([]);
-  const [budget, setBudget] = useState([]);
-
-  // Lấy dữ liệu tiến độ từ Google Sheet khi component được mount
-  useEffect(() => {
-    if (!appId) return;
-    const loadStages = async () => {
-      const result = await fetchStages(appId);
-      if (result.success && result.data.length > 0) {
-        setStages(result.data);
-      } else if (!result.success) {
-        showToast("error", result.message || "Không thể tải dữ liệu tiến độ.");
-      }
-    };
-    loadStages();
-
-    // Tải dữ liệu ngân sách
-    const loadBudget = async () => {
-      const result = await fetchBudget(appId);
-      if (result.success) {
-        setBudget(result.data);
-      } else {
-        showToast("error", result.message || "Không thể tải dữ liệu ngân sách.");
-      }
-    };
-    loadBudget();
-  }, [appId, showToast]);
+function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
+  // Lấy dữ liệu đã được fetch và xử lý từ component cha (App.js)
+  const stages = extraData.tienDo || [];
+  const budget = extraData.nganSach || [];
 
   const handleUpdateStatus = async (stageId, newStatus) => {
-    const originalStages = [...stages];
-    const updatedStage = stages.find(s => s.id === stageId);
-
-    if (!updatedStage) return;
-
-    // Cập nhật UI trước để có trải nghiệm mượt mà
-    const newStages = stages.map((s) =>
-      s.id === stageId ? { ...s, status: newStatus } : s
-    );
-    setStages(newStages);
-
-    // Gọi API để lưu vào Google Sheet
-    const result = await updateStageInSheet({ ...updatedStage, status: newStatus }, appId);
-
-    if (!result.success) {
-      // Nếu lỗi, khôi phục lại trạng thái cũ và thông báo
-      setStages(originalStages);
-      showToast("error", result.message || "Lỗi khi cập nhật trạng thái.");
-    }
+    // Gọi hàm được truyền từ App.js để xử lý logic cập nhật
+    onUpdateStageStatus(stageId, newStatus);
   };
 
   // Tính toán tiến độ hoàn thành
@@ -120,8 +77,8 @@ function Dashboard({ stats, data, appId, showToast }) {
   const completionPercentage = stages.length > 0 ? Math.round((completedStagesCount / stages.length) * 100) : 0;
 
   // Group data by doiTuongThuChi for pie chart
-  const groupByDoiTuong = data.reduce((acc, item) => {
-    if (item.loaiThuChi === "Chi") {
+  const groupByDoiTuong = (data || []).reduce((acc, item) => {
+    if (item.loaiThuChi === "Chi" && item.soTien > 0) {
       const key = item.doiTuongThuChi || "Khác";
       acc[key] = (acc[key] || 0) + item.soTien;
     }
@@ -130,12 +87,11 @@ function Dashboard({ stats, data, appId, showToast }) {
 
   const pieData = Object.entries(groupByDoiTuong)
     .map(([name, value]) => ({ name, value }))
-    // Sắp xếp theo thứ tự giai đoạn (1 -> 9) để thể hiện trình tự xây dựng
-    .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+    .sort((a, b) => b.value - a.value);
 
   // Group data by noiDung for bar chart
-  const expenseItems = data.reduce((acc, item) => {
-    if (item.loaiThuChi === "Chi") {
+  const expenseItems = (data || []).reduce((acc, item) => {
+    if (item.loaiThuChi === "Chi" && item.soTien > 0) {
       const key = item.noiDung || "Hạng mục khác";
       acc[key] = (acc[key] || 0) + item.soTien;
     }
@@ -149,7 +105,7 @@ function Dashboard({ stats, data, appId, showToast }) {
 
   // --- GANTT CHART DATA PREPARATION ---
   const ganttData = useMemo(() => {
-    const validStages = stages.filter(s => s.ngayBatDau && s.ngayKetThuc && s.ngayBatDau < s.ngayKetThuc);
+    const validStages = stages.filter(s => s.ngayBatDau && s.ngayKetThuc);
     if (validStages.length === 0) return [];
 
     const projectStartDate = new Date(Math.min(...validStages.map(s => s.ngayBatDau.getTime())));
@@ -325,7 +281,7 @@ function Dashboard({ stats, data, appId, showToast }) {
                 <th>Hạng mục</th>
                 <th>Dự kiến</th>
                 <th>Thực tế chi</th>
-                <th>Còn lại</th>
+                <th style={{minWidth: '120px'}}>Còn lại</th>
                 <th>Tình trạng</th>
               </tr>
             </thead>
@@ -333,13 +289,13 @@ function Dashboard({ stats, data, appId, showToast }) {
               {budget.map((item) => (
                 <tr key={item.hangMuc}>
                   <td>{item.hangMuc}</td>
-                  <td>{formatCurrency(item.duKien)}</td>
-                  <td>{formatCurrency(item.thucTe)}</td>
-                  <td className={item.conLai < 0 ? 'negative' : 'positive'}>
-                    {formatCurrency(item.conLai)}
+                  <td>{formatCurrency(item.duKien || 0)}</td>
+                  <td>{formatCurrency(item.thucTe || 0)}</td>
+                  <td className={Number(item.conLai) < 0 ? 'negative' : 'positive'}>
+                    {formatCurrency(Number(item.conLai))}
                   </td>
                   <td className="status-cell">
-                    <span className={`status-badge ${item.conLai < 0 ? 'over' : 'ok'}`}>
+                    <span className={`status-badge ${Number(item.conLai) < 0 ? 'over' : 'ok'}`}>
                       {item.tinhTrang}
                     </span>
                   </td>
