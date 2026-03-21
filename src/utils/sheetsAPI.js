@@ -60,7 +60,6 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
       "Minh chứng": rowData.hinhAnh || "",
       "Ghi chú": rowData.ghiChu || "",
-      "Người cập nhật": rowData.nguoiCapNhat || ""
     }];
 
     const response = await fetch(getApiUrl(appId), {
@@ -108,7 +107,6 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
       "Minh chứng": rowData.hinhAnh || "",
       "Ghi chú": rowData.ghiChu || "",
-      "Người cập nhật": rowData.nguoiCapNhat || "",
     }];
 
     const response = await fetch(getApiUrl(appId), {
