@@ -13,6 +13,7 @@ const getApiUrl = (appId) =>
 export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
     const editData = [{
+      "id": rowData.keyId, // Bắt buộc: Key column để xác định dòng
       "_RowNumber": rowData.appSheetId, // QUAN TRỌNG: Dùng appSheetId (chính là _RowNumber) để sửa đúng dòng
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
@@ -60,8 +61,12 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
  */
 export const addRowToSheet = async (rowData, appId, accessKey) => {
   try {
+    // Tạo ID ngẫu nhiên cho dòng mới (vì AppSheet yêu cầu cột Key 'id' phải có giá trị)
+    const newId = Math.random().toString(36).substring(2, 10);
+
     // Khi thêm mới, KHÔNG gửi _RowNumber
     const addData = [{
+      "id": newId, 
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
