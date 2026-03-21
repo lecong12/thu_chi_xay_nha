@@ -61,7 +61,7 @@ const GanttTooltip = ({ active, payload }) => {
     return (
       <div className="custom-tooltip">
         <p className="tooltip-label">{`${data.name}`}</p>
-        <p className="tooltip-desc">{`Thời gian: ${data.duration} ngày (Từ ngày ${data.range[0]} đến ${data.range[1]})`}</p>
+        <p className="tooltip-desc">{`Thời gian: ${data.duration} ngày (${data.dateRange})`}</p>
       </div>
     );
   }
@@ -111,23 +111,35 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
 
   // --- GANTT CHART DATA PREPARATION ---
   const ganttData = useMemo(() => {
-    const validStages = stages.filter(s => s.ngayBatDau && s.ngayKetThuc);
+    // 1. Lọc kỹ các giai đoạn có ngày hợp lệ (tránh NaN)
+    const validStages = stages.filter(s => {
+      const d1 = new Date(s.ngayBatDau);
+      const d2 = new Date(s.ngayKetThuc);
+      return s.ngayBatDau && s.ngayKetThuc && !isNaN(d1.getTime()) && !isNaN(d2.getTime());
+    });
+
     if (validStages.length === 0) return [];
 
-    const projectStartDate = new Date(Math.min(...validStages.map(s => s.ngayBatDau.getTime())));
+    const projectStartDate = new Date(Math.min(...validStages.map(s => new Date(s.ngayBatDau).getTime())));
 
     return validStages.map(stage => {
-      const startDay = dayDiff(projectStartDate, stage.ngayBatDau);
-      const duration = dayDiff(stage.ngayBatDau, stage.ngayKetThuc) + 1; // Add 1 to be inclusive
+      const dStart = new Date(stage.ngayBatDau);
+      const dEnd = new Date(stage.ngayKetThuc);
+      
+      const startDay = dayDiff(projectStartDate, dStart);
+      const duration = dayDiff(dStart, dEnd) + 1; // Add 1 to be inclusive
       const name = stage.name.replace(/^\d+\.\s*/, "");
 
       let color = "#a8a29e"; // Default color (stone) for 'Chưa bắt đầu'
       if (stage.status === 'Đang thi công') color = '#3b82f6'; // Blue
       if (stage.status === 'Hoàn thành') color = '#16a34a'; // Green
 
+      // Format ngày để hiển thị tooltip đẹp hơn
+      const dateRange = `${dStart.toLocaleDateString('vi-VN')} - ${dEnd.toLocaleDateString('vi-VN')}`;
+
       return {
         name,
-        range: [startDay, startDay + duration - 1], // for tooltip
+        dateRange, // Dữ liệu hiển thị ngày cụ thể
         startDay, // transparent bar
         duration, // colored bar
         color,
