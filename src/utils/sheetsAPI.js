@@ -1,4 +1,5 @@
-const APPSHEET_TABLE_NAME = "GiaoDich"; // Tên bảng trong AppSheet, đảm bảo khớp với AppSheet
+const APPSHEET_TABLE_NAME = "GiaoDich";
+const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 const getApiUrl = (appId, tableName = APPSHEET_TABLE_NAME) => 
   `https://api.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
@@ -11,7 +12,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey,
+        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -52,7 +53,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
     const editData = [{
       "id": rowData.keyId, // Bắt buộc: Key column để xác định dòng
-      "_RowNumber": rowData.appSheetId, // QUAN TRỌNG: Dùng appSheetId để sửa đúng dòng
+      // "_RowNumber": rowData.appSheetId, // Bỏ RowNumber, chỉ dùng ID (Key) để update cho an toàn giống hàm Xóa
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
@@ -65,7 +66,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey,
+        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -113,7 +114,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey,
+        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -146,7 +147,7 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) =>
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey,
+        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
