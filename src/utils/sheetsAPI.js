@@ -16,7 +16,7 @@ export const updateRowInSheet = async (rowData, appId) => {
       "Số tiền": rowData.soTien ? String(rowData.soTien) : "0",
       "Minh chứng": rowData.hinhAnh || "",
       "Ghi chú": rowData.ghiChu || "",
-      // "Người cập nhật": rowData.nguoiCapNhat || "" // Tạm ẩn vì sheet chưa có cột này
+      "Người cập nhật": rowData.nguoiCapNhat || ""
     }];
 
     const response = await fetch(getApiUrl(appId), {
@@ -52,6 +52,7 @@ export const addRowToSheet = async (rowData, appId) => {
       "Số tiền": rowData.soTien ? String(rowData.soTien) : "0",
       "Minh chứng": rowData.hinhAnh || "",
       "Ghi chú": rowData.ghiChu || "",
+      "Người cập nhật": rowData.nguoiCapNhat || "",
     }];
 
     const response = await fetch(getApiUrl(appId), {

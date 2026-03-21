@@ -91,8 +91,8 @@ function App() {
         const c = {};
         Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
         return {
-          id: c.id || c.rowNumber || `gd_${index}`,
-          appSheetId: c.id || c.rowNumber,
+          id: row._RowNumber || `gd_${index}`, // Lấy trực tiếp _RowNumber từ AppSheet làm ID
+          appSheetId: row._RowNumber, // Đảm bảo ID cho API luôn là _RowNumber
           ngay: c.ngay ? new Date(c.ngay) : new Date(),
           soTien: Number(String(c.soTien || 0).replace(/\D/g, "")),
           loaiThuChi: c.loaiThuChi || "Chi",
@@ -110,7 +110,7 @@ function App() {
         const c = {};
         Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
         return { 
-          hangMuc: c.hangMuc || "Hạng mục", 
+          hangMuc: c.hangMuc || c.doiTuongThuChi || "Hạng mục", 
           duKien: Number(String(c.duKien || 0).replace(/\D/g, "")),
           thucTe: Number(String(c.thucTe || 0).replace(/\D/g, "")),
           conLai: c.conLai, // Giữ nguyên giá trị có thể âm
