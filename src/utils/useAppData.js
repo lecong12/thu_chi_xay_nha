@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { updateStageInSheet } from "../utils/stagesAPI";
-import { fetchTableData } from "../utils/sheetsAPI";
+import { updateStageInSheet } from "./stagesAPI";
+import { fetchTableData } from "./sheetsAPI";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
