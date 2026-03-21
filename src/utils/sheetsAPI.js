@@ -4,6 +4,7 @@ const APPSHEET_TABLE_NAME = "GiaoDich"; // Tên bảng trong AppSheet
 const getApiUrl = (appId) => 
   `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
 
+// Không sử dụng module.exports, chỉ dùng export const
 export const updateRowInSheet = async (rowData, appId) => {
   try {
     // Chuẩn bị dữ liệu gửi đi (Map key theo tên cột trong AppSheet)
