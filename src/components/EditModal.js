@@ -71,7 +71,8 @@ function EditModal({ item, onClose, onSave }) {
     }
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      alert("Vui lòng cấu hình Cloudinary trong file .env trước!");
+      console.error("Thiếu cấu hình Cloudinary:", { CLOUD_NAME, UPLOAD_PRESET });
+      alert(`Chưa nhận được cấu hình Cloudinary!\n- Cloud Name: ${CLOUD_NAME || "TRỐNG"}\n- Upload Preset: ${UPLOAD_PRESET || "TRỐNG"}\n\nLƯU Ý: Nếu vừa sửa file .env, bạn cần tắt và CHẠY LẠI server.`);
       return;
     }
 
