@@ -16,12 +16,18 @@ import {
 } from "recharts";
 import "./Dashboard.css";
 
+// Hàm an toàn để chuyển đổi số, tránh lỗi NaN
+const safeNumber = (val) => {
+  const num = Number(val);
+  return isNaN(num) ? 0 : num;
+};
+
 const formatCurrency = (value) => {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(safeNumber(value));
 };
 
 const formatShortCurrency = (value) => {
@@ -78,9 +84,9 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
 
   // Group data by doiTuongThuChi for pie chart
   const groupByDoiTuong = (data || []).reduce((acc, item) => {
-    if (item.loaiThuChi === "Chi" && item.soTien > 0) {
+    if (item.loaiThuChi === "Chi" && safeNumber(item.soTien) > 0) {
       const key = item.doiTuongThuChi || "Khác";
-      acc[key] = (acc[key] || 0) + item.soTien;
+      acc[key] = (acc[key] || 0) + safeNumber(item.soTien);
     }
     return acc;
   }, {});
@@ -91,9 +97,9 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
 
   // Group data by noiDung for bar chart
   const expenseItems = (data || []).reduce((acc, item) => {
-    if (item.loaiThuChi === "Chi" && item.soTien > 0) {
+    if (item.loaiThuChi === "Chi" && safeNumber(item.soTien) > 0) {
       const key = item.noiDung || "Hạng mục khác";
-      acc[key] = (acc[key] || 0) + item.soTien;
+      acc[key] = (acc[key] || 0) + safeNumber(item.soTien);
     }
     return acc;
   }, {});
@@ -289,13 +295,13 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus }) {
               {budget.map((item) => (
                 <tr key={item.hangMuc}>
                   <td>{item.hangMuc}</td>
-                  <td>{formatCurrency(item.duKien || 0)}</td>
-                  <td>{formatCurrency(item.thucTe || 0)}</td>
-                  <td className={Number(item.conLai) < 0 ? 'negative' : 'positive'}>
-                    {formatCurrency(Number(item.conLai))}
+                  <td>{formatCurrency(safeNumber(item.duKien))}</td>
+                  <td>{formatCurrency(safeNumber(item.thucTe))}</td>
+                  <td className={safeNumber(item.conLai) < 0 ? 'negative' : 'positive'}>
+                    {formatCurrency(safeNumber(item.conLai))}
                   </td>
                   <td className="status-cell">
-                    <span className={`status-badge ${Number(item.conLai) < 0 ? 'over' : 'ok'}`}>
+                    <span className={`status-badge ${safeNumber(item.conLai) < 0 ? 'over' : 'ok'}`}>
                       {item.tinhTrang}
                     </span>
                   </td>

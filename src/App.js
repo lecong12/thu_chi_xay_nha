@@ -8,6 +8,7 @@ import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import Toast from "./components/Toast";
 import { updateStageInSheet } from "./utils/stagesAPI";
+import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import "./App.css";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
@@ -38,6 +39,7 @@ function App() {
     const s = str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
     
     if (s.includes("row number")) return "rowNumber";
+    if (s.includes("rownumber")) return "rowNumber"; // Bắt trường hợp _RowNumber từ AppSheet
     if (s.includes("ngay bat dau")) return "ngayBatDau";
     if (s.includes("ngay ket thuc")) return "ngayKetThuc";
     if (s.includes("anh nghiem thu")) return "anhNghiemThu";
@@ -166,6 +168,46 @@ function App() {
     }
   };
 
+  // --- XỬ LÝ THÊM / SỬA / XÓA ---
+  const handleSaveEdit = async (updatedItem) => {
+    // Nếu có appSheetId thì là Sửa, không có thì là Thêm mới
+    const isEdit = !!updatedItem.appSheetId;
+
+    showToast("Đang xử lý dữ liệu...", "info");
+
+    let result;
+    if (isEdit) {
+      result = await updateRowInSheet(updatedItem, APP_ID);
+    } else {
+      result = await addRowToSheet(updatedItem, APP_ID);
+    }
+
+    if (result.success) {
+      showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
+      setEditingItem(null); // Đóng modal
+      fetchAllData(); // Tải lại dữ liệu mới nhất
+    } else {
+      showToast(`Lỗi: ${result.message}`, "error");
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) return;
+
+    const itemToDelete = data.find(item => item.id === id);
+    if (!itemToDelete) return;
+
+    showToast("Đang xóa...", "info");
+    const result = await deleteRowFromSheet(null, itemToDelete.appSheetId, APP_ID);
+
+    if (result.success) {
+      showToast("Đã xóa thành công!", "success");
+      fetchAllData();
+    } else {
+      showToast(`Lỗi xóa: ${result.message}`, "error");
+    }
+  };
+
   // --- LOGIC XỬ LÝ DỮ LIỆU DASHBOARD ---
   const extraData = useMemo(() => {
     const categoryMap = data.reduce((acc, item) => {
@@ -221,13 +263,13 @@ function App() {
               />
             )}
             {(activeTab === "list" || activeTab === "all") && (
-              <DataTable data={data} onEdit={setEditingItem} onDelete={() => {}} />
+              <DataTable data={data} onEdit={setEditingItem} onDelete={handleDelete} />
             )}
           </>
         )}
       </main>
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} />}
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );

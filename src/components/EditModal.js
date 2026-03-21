@@ -66,6 +66,12 @@ function EditModal({ item, onClose, onSave }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Kiểm tra định dạng file ảnh
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chỉ chọn file ảnh (JPG, PNG, JPEG).");
+      return;
+    }
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       alert("Vui lòng cấu hình Cloudinary trong file .env trước!");
       return;
@@ -104,14 +110,15 @@ function EditModal({ item, onClose, onSave }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    // Xóa dấu chấm để lấy giá trị số thực (VD: 1.000.000 => 1000000)
-    const rawSoTien = formData.soTien ? formData.soTien.toString().replace(/\./g, "") : "0";
+    // Xử lý số tiền an toàn hơn
+    const rawSoTien = formData.soTien ? formData.soTien.toString().replace(/[^0-9]/g, "") : "0";
+    const parsedSoTien = parseFloat(rawSoTien);
 
     const finalData = {
       ...item,
       ...formData,
       ngay: new Date(formData.ngay),
-      soTien: parseFloat(rawSoTien) || 0,
+      soTien: isNaN(parsedSoTien) ? 0 : parsedSoTien,
     };
 
     onSave(finalData);
@@ -131,12 +138,14 @@ function EditModal({ item, onClose, onSave }) {
         <div className="image-upload-section">
           <div className="image-preview">
             {formData.hinhAnh ? (
-              <div className="preview-container">
+              <div className="preview-container" onClick={() => !uploading && document.getElementById('file-upload').click()}>
                 <img src={formData.hinhAnh} alt="Chứng từ" />
+                {/* Overlay khi đang upload lại */}
+                {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
                 <button 
                   type="button" 
-                  className="remove-image-btn"
-                  onClick={() => setFormData(prev => ({...prev, hinhAnh: ""}))}
+                  className="remove-image-btn" 
+                  onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, hinhAnh: ""})) }}
                 >
                   <FiX />
                 </button>
