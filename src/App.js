@@ -93,6 +93,7 @@ function App() {
         return {
           id: row._RowNumber || `gd_${index}`, // Lấy trực tiếp _RowNumber từ AppSheet làm ID
           appSheetId: row._RowNumber, // Đảm bảo ID cho API luôn là _RowNumber
+          keyId: c.id || row.id, // Lưu giá trị cột 'id' (Key) thực sự từ AppSheet
           ngay: c.ngay ? new Date(c.ngay) : new Date(),
           soTien: Number(String(c.soTien || 0).replace(/\D/g, "")),
           loaiThuChi: c.loaiThuChi || "Chi",
@@ -226,7 +227,7 @@ function App() {
     }
 
     showToast("Đang xóa...", "info");
-    const result = await deleteRowFromSheet(null, item.appSheetId, APP_ID, ACCESS_KEY);
+    const result = await deleteRowFromSheet(item.keyId, item.appSheetId, APP_ID, ACCESS_KEY);
 
     if (result.success) {
       showToast("Đã xóa thành công!", "success");
