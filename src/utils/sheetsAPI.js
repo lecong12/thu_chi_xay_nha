@@ -4,6 +4,41 @@ const getApiUrl = (appId) =>
   `https://api.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
 
 /**
+ * Lấy dữ liệu từ AppSheet (Để có _RowNumber và Key chuẩn)
+ */
+export const fetchDataFromAppSheet = async (appId, accessKey) => {
+  try {
+    const response = await fetch(getApiUrl(appId), {
+      method: "POST",
+      headers: {
+        "ApplicationAccessKey": accessKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        Action: "Find",
+        Properties: {
+          Locale: "vi-VN",
+          Timezone: "Asia/Ho_Chi_Minh",
+        },
+        Rows: [], // Lấy toàn bộ dòng
+      }),
+    });
+
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${text}`);
+    }
+
+    const data = await response.json();
+    // AppSheet trả về mảng object hoặc object rỗng nếu lỗi
+    return { success: true, data: Array.isArray(data) ? data : [] };
+  } catch (error) {
+    console.error("Error fetching from AppSheet:", error);
+    return { success: false, message: error.message };
+  }
+};
+
+/**
  * Cập nhật một dòng trong bảng AppSheet.
  * @param {object} rowData - Dữ liệu của dòng cần cập nhật. Phải chứa `appSheetId`.
  * @param {string} appId - App ID của AppSheet.
