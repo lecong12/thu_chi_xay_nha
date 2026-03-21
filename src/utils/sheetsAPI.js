@@ -117,7 +117,8 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) =>
         Properties: { Locale: "vi-VN" },
         Rows: [{
           "id": rowId, // AppSheet bắt buộc phải có giá trị của cột Key (ở đây là 'id')
-          "_RowNumber": appSheetId 
+          // Không gửi _RowNumber khi xóa để tránh lỗi xung đột dòng
+          // Không gửi _RowNumber khi xóa để tránh lỗi xung đột dòng
         }],
       }),
     });
