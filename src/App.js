@@ -169,6 +169,19 @@ function App() {
     }
   };
 
+  const handleAddNew = () => {
+    setEditingItem({
+      ngay: new Date(),
+      soTien: 0,
+      loaiThuChi: "Chi",
+      noiDung: "",
+      doiTuongThuChi: "",
+      nguoiCapNhat: "",
+      ghiChu: "",
+      hinhAnh: ""
+    });
+  };
+
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
@@ -179,9 +192,9 @@ function App() {
 
       let result;
       if (isEdit) {
-        result = await updateRowInSheet(updatedItem, APP_ID);
+        result = await updateRowInSheet(updatedItem, APP_ID, ACCESS_KEY);
       } else {
-        result = await addRowToSheet(updatedItem, APP_ID);
+        result = await addRowToSheet(updatedItem, APP_ID, ACCESS_KEY);
       }
 
       if (result && result.success) {
@@ -213,7 +226,7 @@ function App() {
     }
 
     showToast("Đang xóa...", "info");
-    const result = await deleteRowFromSheet(null, item.appSheetId, APP_ID);
+    const result = await deleteRowFromSheet(null, item.appSheetId, APP_ID, ACCESS_KEY);
 
     if (result.success) {
       showToast("Đã xóa thành công!", "success");
@@ -263,7 +276,7 @@ function App() {
 
   return (
     <div className="app">
-      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={() => setEditingItem({})} />
+      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={handleAddNew} />
       <main className="main-content">
         {loading ? (
           <div className="loading-container"><p>Đang đồng bộ dữ liệu...</p></div>
