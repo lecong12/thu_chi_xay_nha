@@ -18,7 +18,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Find",
         Properties: {
-          Locale: "vi-VN",
+          Locale: "en-US", // Chuyển sang en-US để AppSheet trả về định dạng ngày chuẩn (YYYY-MM-DD hoặc MM/DD/YYYY) dễ xử lý hơn
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: [], // Lấy toàn bộ dòng
@@ -72,7 +72,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Edit",
         Properties: {
-          Locale: "vi-VN",
+          Locale: "en-US", // Quan trọng: en-US hỗ trợ tốt định dạng ngày YYYY-MM-DD
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: editData,
@@ -120,7 +120,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Add",
         Properties: {
-          Locale: "vi-VN",
+          Locale: "en-US", // Đồng bộ Locale
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: addData,
