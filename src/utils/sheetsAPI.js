@@ -110,7 +110,10 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) =>
       body: JSON.stringify({
         Action: "Delete",
         Properties: { Locale: "vi-VN" },
-        Rows: [{ "_RowNumber": appSheetId }],
+        Rows: [{
+          "id": rowId, // AppSheet bắt buộc phải có giá trị của cột Key (ở đây là 'id')
+          "_RowNumber": appSheetId 
+        }],
       }),
     });
 
