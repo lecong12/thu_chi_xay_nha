@@ -1,14 +1,14 @@
 const APPSHEET_TABLE_NAME = "GiaoDich"; // Tên bảng trong AppSheet, đảm bảo khớp với AppSheet
 
-const getApiUrl = (appId) => 
-  `https://api.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(APPSHEET_TABLE_NAME)}/Action`;
+const getApiUrl = (appId, tableName = APPSHEET_TABLE_NAME) => 
+  `https://api.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
 
 /**
- * Lấy dữ liệu từ AppSheet (Để có _RowNumber và Key chuẩn)
+ * Hàm lấy dữ liệu chung cho bất kỳ bảng nào từ AppSheet
  */
-export const fetchDataFromAppSheet = async (appId, accessKey) => {
+export const fetchTableData = async (tableName, appId, accessKey) => {
   try {
-    const response = await fetch(getApiUrl(appId), {
+    const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -41,7 +41,7 @@ export const fetchDataFromAppSheet = async (appId, accessKey) => {
 /**
  * Giữ lại hàm này để tương thích ngược nếu cần, nhưng trỏ về hàm chung
  */
-export const fetchDataFromAppSheet = async (appId, accessKey) => {
+export const fetchDataFromAppSheet = (appId, accessKey) => {
   return fetchTableData(APPSHEET_TABLE_NAME, appId, accessKey);
 };
 
@@ -62,7 +62,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       "Người cập nhật": rowData.nguoiCapNhat || ""
     }];
 
-    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
+    const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -110,7 +110,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       "Người cập nhật": rowData.nguoiCapNhat || "",
     }];
 
-    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
+    const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -143,7 +143,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
  */
 export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) => {
   try {
-    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
+    const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -159,16 +159,6 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) =>
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
-    }
-
-    return { success: true, message: "Xóa thành công" };
-  } catch (error) {
-    console.error("Error deleting from AppSheet:", error);
-    return { success: false, message: `Lỗi khi xóa: ${error.message}` };
-  }
-};
       const errorText = await response.text();
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }
