@@ -298,9 +298,16 @@ function App() {
                 extraData={extraData} 
                 onUpdateStageStatus={handleUpdateStageStatus}
                 showToast={showToast}
-              />
+              >
+                {activeTab === "all" && (
+                  <div style={{ marginTop: '20px' }}>
+                    <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
+                    <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
+                  </div>
+                )}
+              </Dashboard>
             )}
-            {(activeTab === "list" || activeTab === "all") && (
+            {activeTab === "list" && (
               <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
             )}
           </>
