@@ -104,12 +104,12 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
   }
 };
 
-const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) => {
+export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) => {
   try {
     const response = await fetch(getApiUrl(appId), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": accessKey,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
