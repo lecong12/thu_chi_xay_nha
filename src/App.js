@@ -55,7 +55,6 @@ function App() {
       loaiThuChi: "Chi",
       noiDung: "",
       doiTuongThuChi: "",
-      nguoiCapNhat: "",
       ghiChu: "",
       hinhAnh: ""
     });
