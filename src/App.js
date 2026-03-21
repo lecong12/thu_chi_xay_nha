@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import Dashboard from "./components/Dashboard";
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -109,6 +109,7 @@ function App() {
 
         showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
         setEditingItem(null); // Đóng modal
+        await fetchAllData(); // Tải lại dữ liệu thật từ server để đảm bảo đã ghi thành công
       } else {
         showToast(`Lỗi: ${result?.message || "Không có phản hồi từ server"}`, "error");
       }
@@ -139,6 +140,7 @@ function App() {
     if (result.success) {
       setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
       showToast("Đã xóa thành công!", "success");
+      await fetchAllData(); // Đồng bộ lại với server
     } else {
       showToast(`Lỗi xóa: ${result.message}`, "error");
     }
