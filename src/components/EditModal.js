@@ -13,8 +13,6 @@ const BUDGET_CATEGORIES = [
   'Phát sinh'
 ];
 
-const UPDATER_OPTIONS = ["Ba", "Mẹ"];
-
 // Cấu hình Cloudinary (Lấy từ biến môi trường)
 const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
@@ -22,7 +20,6 @@ const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
 function EditModal({ item, onClose, onSave }) {
   const [formData, setFormData] = useState({
     ngay: "",
-    nguoiCapNhat: "",
     noiDung: "",
     doiTuongThuChi: "",
     soTien: "",
@@ -38,7 +35,6 @@ function EditModal({ item, onClose, onSave }) {
         ngay: item.ngay instanceof Date 
           ? item.ngay.toISOString().split('T')[0] 
           : new Date(item.ngay).toISOString().split('T')[0],
-        nguoiCapNhat: item.nguoiCapNhat || UPDATER_OPTIONS[0],
         noiDung: item.noiDung || "",
         doiTuongThuChi: item.doiTuongThuChi || BUDGET_CATEGORIES[0],
         // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
@@ -230,21 +226,6 @@ function EditModal({ item, onClose, onSave }) {
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div className="form-group">
-              <label>Người cập nhật</label>
-              <select
-                name="nguoiCapNhat"
-                value={formData.nguoiCapNhat}
-                onChange={handleChange}
-                required
-              >
-                {UPDATER_OPTIONS.map((updater) => (
-                  <option key={updater} value={updater}>
-                    {updater}
-                  </option>
-                ))}
-              </select>
             </div>
             <div className="form-group">
               <label>Hạng mục (Ngân sách)</label>

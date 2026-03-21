@@ -22,7 +22,6 @@ const normalizeKey = (str) => {
     if (s.includes("con lai")) return "conLai";
     if (s.includes("tinh trang")) return "tinhTrang";
     if (s.includes("loai thu chi")) return "loaiThuChi";
-    if (s.includes("nguoi cap nhat")) return "nguoiCapNhat";
     if (s.includes("doi tuong thu chi")) return "doiTuongThuChi";
     if (s.includes("so tien")) return "soTien";
     if (s.includes("noi dung")) return "noiDung";
@@ -66,7 +65,6 @@ export const useAppData = (isLoggedIn) => {
                     loaiThuChi: c.loaiThuChi || "Chi",
                     noiDung: c.noiDung || "",
                     doiTuongThuChi: c.doiTuongThuChi || "Khác",
-                    nguoiCapNhat: c.nguoiCapNhat || "",
                     ghiChu: c.ghiChu || "",
                     hinhAnh: c.hinhAnh || "",
                 };

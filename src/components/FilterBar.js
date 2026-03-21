@@ -64,22 +64,6 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
       {/* Expanded filters */}
       <div className={`filter-content ${isExpanded ? "expanded" : ""}`}>
         <div className="filter-grid">
-          {/* Người cập nhật */}
-          <div className="filter-group">
-            <label className="filter-label">Người cập nhật</label>
-            <select
-              value={filters.nguoiCapNhat}
-              onChange={(e) => onFilterChange("nguoiCapNhat", e.target.value)}
-              className="filter-select"
-            >
-              <option value="">Tất cả</option>
-              {filterOptions.nguoiCapNhat.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
 
           {/* Đối tượng thu chi */}
           <div className="filter-group">
