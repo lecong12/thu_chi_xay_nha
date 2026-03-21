@@ -39,11 +39,14 @@ export const fetchDataFromAppSheet = async (appId, accessKey) => {
 };
 
 /**
+ * Giữ lại hàm này để tương thích ngược nếu cần, nhưng trỏ về hàm chung
+ */
+export const fetchDataFromAppSheet = async (appId, accessKey) => {
+  return fetchTableData(APPSHEET_TABLE_NAME, appId, accessKey);
+};
+
+/**
  * Cập nhật một dòng trong bảng AppSheet.
- * @param {object} rowData - Dữ liệu của dòng cần cập nhật. Phải chứa `appSheetId`.
- * @param {string} appId - App ID của AppSheet.
- * @param {string} accessKey - Application Access Key của AppSheet.
- * @returns {Promise<{success: boolean, message: string}>}
  */
 export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
@@ -59,7 +62,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       "Người cập nhật": rowData.nguoiCapNhat || ""
     }];
 
-    const response = await fetch(getApiUrl(appId), {
+    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -89,10 +92,6 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
 
 /**
  * Thêm một dòng mới vào bảng AppSheet.
- * @param {object} rowData - Dữ liệu của dòng mới.
- * @param {string} appId - App ID của AppSheet.
- * @param {string} accessKey - Application Access Key của AppSheet.
- * @returns {Promise<{success: boolean, message: string}>}
  */
 export const addRowToSheet = async (rowData, appId, accessKey) => {
   try {
@@ -111,7 +110,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       "Người cập nhật": rowData.nguoiCapNhat || "",
     }];
 
-    const response = await fetch(getApiUrl(appId), {
+    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -141,14 +140,10 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
 
 /**
  * Xóa một dòng khỏi bảng AppSheet.
- * @param {string} rowId - Giá trị cột Key (id) của dòng cần xóa.
- * @param {string} appSheetId - (Không dùng nữa) _RowNumber.
- * @param {string} appId - App ID.
- * @param {string} accessKey - Access Key.
  */
 export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) => {
   try {
-    const response = await fetch(getApiUrl(appId), {
+    const response = await fetch(getApiUrl(appId, APPSHEET_TABLE_NAME), {
       method: "POST",
       headers: {
         "ApplicationAccessKey": accessKey,
@@ -164,6 +159,16 @@ export const deleteRowFromSheet = async (rowId, appSheetId, appId, accessKey) =>
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+    }
+
+    return { success: true, message: "Xóa thành công" };
+  } catch (error) {
+    console.error("Error deleting from AppSheet:", error);
+    return { success: false, message: `Lỗi khi xóa: ${error.message}` };
+  }
+};
       const errorText = await response.text();
       throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
     }

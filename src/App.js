@@ -64,7 +64,8 @@ function App() {
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Nếu có appSheetId thì là Sửa, không có thì là Thêm mới
+      // Nếu item có appSheetId tức là đã tồn tại -> Sửa. Ngược lại -> Thêm mới
+      // Lưu ý: updatedItem ở đây là object từ EditModal, nó kế thừa các trường từ item gốc
       const isEdit = !!updatedItem.appSheetId;
 
       showToast("Đang xử lý dữ liệu...", "info");
@@ -74,6 +75,7 @@ function App() {
         result = await updateRowInSheet(updatedItem, APP_ID, ACCESS_KEY);
       } else {
         // LOGIC TÍNH ID TỰ TĂNG: Lấy max(id) hiện có + 1
+        // Đảm bảo data đã được tải và có trường keyId
         const maxId = data.reduce((max, item) => {
           const val = parseInt(item.keyId, 10);
           return !isNaN(val) && val > max ? val : max;
