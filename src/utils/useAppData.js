@@ -128,5 +128,5 @@ export const useAppData = (isLoggedIn) => {
         return result;
     };
 
-    return { data, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus };
+    return { data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus };
 };

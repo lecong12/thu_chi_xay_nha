@@ -72,7 +72,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Edit",
         Properties: {
-          Locale: "vi-VN",
+          Locale: "en-US", // Sử dụng en-US để tránh lỗi format ngày YYYY-MM-DD
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: editData,
@@ -120,7 +120,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Add",
         Properties: {
-          Locale: "vi-VN",
+          Locale: "en-US",
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: addData,

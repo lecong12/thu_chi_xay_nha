@@ -20,7 +20,7 @@ function App() {
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
   const { 
-    data, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus: updateStageStatus 
+    data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus: updateStageStatus 
   } = useAppData(isLoggedIn);
 
   // State cho UI, không liên quan đến data fetching
@@ -87,9 +87,27 @@ function App() {
       }
 
       if (result && result.success) {
+        // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
+        const newItem = {
+          ...updatedItem,
+          id: updatedItem.id || updatedItem.appSheetId || `temp_${Date.now()}`,
+          appSheetId: updatedItem.appSheetId || updatedItem.id, // Đảm bảo có ID để key không bị lỗi
+          keyId: updatedItem.id, // Lưu keyId mới
+          ngay: new Date(updatedItem.ngay), // Đảm bảo là Date object
+          soTien: Number(updatedItem.soTien),
+        };
+
+        setData(prevData => {
+          if (isEdit) {
+            return prevData.map(item => (item.id === newItem.id || item.appSheetId === newItem.appSheetId) ? newItem : item);
+          } else {
+            return [newItem, ...prevData];
+          }
+        });
+        // -----------------------------------------------------------
+
         showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
         setEditingItem(null); // Đóng modal
-        fetchAllData(); // Tải lại dữ liệu mới nhất
       } else {
         showToast(`Lỗi: ${result?.message || "Không có phản hồi từ server"}`, "error");
       }
@@ -118,8 +136,8 @@ function App() {
     const result = await deleteRowFromSheet(item.keyId, item.appSheetId, APP_ID, ACCESS_KEY);
 
     if (result.success) {
+      setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
       showToast("Đã xóa thành công!", "success");
-      fetchAllData();
     } else {
       showToast(`Lỗi xóa: ${result.message}`, "error");
     }
