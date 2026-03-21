@@ -52,7 +52,7 @@ export const fetchDataFromAppSheet = (appId, accessKey) => {
 export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
     const editData = [{
-      "id": rowData.keyId, // Bắt buộc: Key column để xác định dòng
+      "id": rowData.keyId || rowData.id, // Fallback: Nếu không có keyId thì dùng id
       // "_RowNumber": rowData.appSheetId, // Bỏ RowNumber, chỉ dùng ID (Key) để update cho an toàn giống hàm Xóa
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,

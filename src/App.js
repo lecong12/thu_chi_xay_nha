@@ -77,7 +77,7 @@ function App() {
         // LOGIC TÍNH ID TỰ TĂNG: Lấy max(id) hiện có + 1
         // Đảm bảo data đã được tải và có trường keyId
         const maxId = data.reduce((max, item) => {
-          const val = parseInt(item.keyId, 10);
+          const val = parseInt(item.keyId || item.id, 10);
           return !isNaN(val) && val > max ? val : max;
         }, 0);
         const newId = maxId + 1;
@@ -90,9 +90,10 @@ function App() {
         // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
         const newItem = {
           ...updatedItem,
-          id: updatedItem.id || updatedItem.appSheetId || `temp_${Date.now()}`,
-          appSheetId: updatedItem.appSheetId || updatedItem.id, // Đảm bảo có ID để key không bị lỗi
-          keyId: updatedItem.id, // Lưu keyId mới
+          // Nếu là thêm mới, updatedItem.id đã được gán newId ở trên
+          id: updatedItem.id || updatedItem.appSheetId, 
+          appSheetId: updatedItem.appSheetId, // Giữ nguyên appSheetId nếu có (khi sửa)
+          keyId: updatedItem.id, // Quan trọng: Cập nhật keyId để các thao tác sau (Sửa/Xóa) hoạt động đúng
           ngay: new Date(updatedItem.ngay), // Đảm bảo là Date object
           soTien: Number(updatedItem.soTien),
         };
