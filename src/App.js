@@ -46,7 +46,7 @@ function App() {
     if (s.includes("anh nghiem thu")) return "anhNghiemThu";
     if (s.includes("ten cong viec") || s.includes("giai doan")) return "name";
     if (s.includes("trang thai")) return "status";
-    if (s.includes("hang muc")) return "hangMuc";
+    if (s.includes("hang muc")) return "doiTuongThuChi"; // Map đúng về biến doiTuongThuChi
     if (s.includes("du kien")) return "duKien";
     if (s.includes("thuc te")) return "thucTe";
     if (s.includes("con lai")) return "conLai";
