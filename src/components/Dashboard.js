@@ -185,9 +185,6 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
         </div>
       </div>
 
-      {/* Hiển thị Danh sách giao dịch (nếu được truyền vào từ App.js) */}
-      {children}
-
       {/* Charts */}
       <div className="charts-grid">
         {/* Pie Chart - Chi tiêu theo đối tượng */}
@@ -368,7 +365,7 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
       </div>
 
       {/* Progress Tracker Section */}
-      <div className="progress-tracker-section">
+      <div className="progress-tracker-section" style={{ marginTop: '20px' }}>
         <h3 className="chart-title">Theo dõi tiến độ thi công</h3>
         <div className="stages-grid">
           {stages.map((stage) => (
@@ -391,6 +388,9 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
           ))}
         </div>
       </div>
+
+      {/* Hiển thị Danh sách giao dịch (nếu được truyền vào từ App.js) - Đưa xuống cuối để gọn giao diện */}
+      {children}
     </div>
   );
 }
