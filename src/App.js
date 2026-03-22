@@ -9,7 +9,7 @@ import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
 import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
-import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchDataFromAppSheet } from "./utils/sheetsAPI";
+import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import "./App.css";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
