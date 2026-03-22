@@ -40,7 +40,7 @@ const exportToCSV = (data, fileName) => {
   if (!data || !data.length) return;
 
   // Tiêu đề cột
-  const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Ghi chú", "Link Ảnh"];
+  const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
   
   // Chuyển đổi dữ liệu
   const csvRows = data.map(item => {
@@ -54,6 +54,7 @@ const exportToCSV = (data, fileName) => {
       escape(item.noiDung),
       escape(item.doiTuongThuChi),
       item.soTien,
+      escape(item.nguoiCapNhat),
       escape(item.ghiChu),
       escape(item.hinhAnh || "")
     ].join(",");
@@ -132,9 +133,10 @@ function DataTable({ data, onEdit, onDelete }) {
               <thead>
                 <tr>
                   <th>Ngày</th>
+                  <th>Nội dung giao dịch</th>
                   <th>Hạng mục</th>
-                  <th>Nội dung</th>
                   <th>Số tiền</th>
+                  <th>Người cập nhật</th>
                   <th>Chứng từ</th>
                   <th>Ghi chú</th>
                   <th>Thao tác</th>
@@ -144,11 +146,12 @@ function DataTable({ data, onEdit, onDelete }) {
                 {chiList.map((item) => (
                   <tr key={item.id} className="row-chi">
                     <td style={{whiteSpace: 'nowrap'}}>{formatDate(item.ngay)}</td>
-                    <td>{formatStageName(item.doiTuongThuChi)}</td>
                     <td className="content-cell">{item.noiDung || "-"}</td>
+                    <td>{formatStageName(item.doiTuongThuChi)}</td>
                     <td className="amount-cell chi">
                       {formatCurrency(item.soTien)}
                     </td>
+                    <td>{item.nguoiCapNhat || "-"}</td>
                     <td className="center-cell">
                       {item.hinhAnh ? (
                         <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="view-image-link" title="Xem ảnh">
