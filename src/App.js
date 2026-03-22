@@ -11,6 +11,8 @@ import Toast from "./components/Toast";
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchDataFromAppSheet } from "./utils/sheetsAPI";
 import "./App.css";
 
+const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
+
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
@@ -72,11 +74,11 @@ function App() {
       let result;
       if (isEdit) {
         // Gọi API qua sheetsAPI (đã trỏ về Proxy)
-        result = await updateRowInSheet(updatedItem);
+        result = await updateRowInSheet(updatedItem, APP_ID);
       } else {
         // AppSheet xử lý thêm mới
         // Đảm bảo updatedItem có ID nếu AppSheet yêu cầu Client gửi ID
-        result = await addRowToSheet(updatedItem);
+        result = await addRowToSheet(updatedItem, APP_ID);
       }
 
       if (result && result.success) {
@@ -129,7 +131,7 @@ function App() {
 
     showToast("Đang xóa...", "info");
     // Gọi API xóa, chỉ cần truyền ID (keyId)
-    const result = await deleteRowFromSheet(item.keyId || item.id);
+    const result = await deleteRowFromSheet(item.keyId || item.id, item.appSheetId, APP_ID);
 
     if (result.success) {
       setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
