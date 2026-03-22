@@ -133,7 +133,7 @@ function DataTable({ data, onEdit, onDelete }) {
                 <tr>
                   <th>Ngày</th>
                   <th>Hạng mục</th>
-                  <th>Giai đoạn</th>
+                  <th>Nội dung</th>
                   <th>Số tiền</th>
                   <th>Chứng từ</th>
                   <th>Ghi chú</th>
@@ -144,8 +144,8 @@ function DataTable({ data, onEdit, onDelete }) {
                 {chiList.map((item) => (
                   <tr key={item.id} className="row-chi">
                     <td style={{whiteSpace: 'nowrap'}}>{formatDate(item.ngay)}</td>
-                    <td className="content-cell">{item.noiDung || "-"}</td>
                     <td>{formatStageName(item.doiTuongThuChi)}</td>
+                    <td className="content-cell">{item.noiDung || "-"}</td>
                     <td className="amount-cell chi">
                       {formatCurrency(item.soTien)}
                     </td>
