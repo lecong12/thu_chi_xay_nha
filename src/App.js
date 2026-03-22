@@ -71,10 +71,11 @@ function App() {
 
       let result;
       if (isEdit) {
-        // Không cần truyền APP_ID, ACCESS_KEY nữa vì Backend đã xử lý
+        // Gọi API qua sheetsAPI (đã trỏ về Proxy)
         result = await updateRowInSheet(updatedItem);
       } else {
-        // Backend sẽ tự sinh ID
+        // AppSheet xử lý thêm mới
+        // Đảm bảo updatedItem có ID nếu AppSheet yêu cầu Client gửi ID
         result = await addRowToSheet(updatedItem);
       }
 
