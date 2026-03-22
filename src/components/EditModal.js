@@ -20,6 +20,13 @@ const UPDATER_OPTIONS = [
   'Khác'
 ];
 
+// Danh sách gợi ý nội dung theo hạng mục
+const SUGGESTION_MAP = {
+  'Nhân công': ['Công thợ chính', 'Công phụ hồ', 'Tiền cơm thợ', 'Thưởng thợ'],
+  'Phần thô': ['Xi măng', 'Cát xây', 'Cát bê tông', 'Đá 1x2', 'Gạch ống', 'Sắt thép', 'Đinh kẽm'],
+  'Điện nước': ['Ống nước Bình Minh', 'Dây điện Cadivi', 'Co/Lơi/Nối', 'Keo dán ống'],
+};
+
 // Cấu hình Cloudinary (Lấy từ biến môi trường)
 const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
@@ -183,6 +190,9 @@ function EditModal({ item, onClose, onSave }) {
     onSave(finalData);
   };
 
+  // Lấy danh sách gợi ý dựa trên hạng mục đang chọn
+  const activeSuggestions = SUGGESTION_MAP[formData.doiTuongThuChi] || [];
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -292,6 +302,25 @@ function EditModal({ item, onClose, onSave }) {
                 required
                 placeholder='VD: Xi măng, Cát, Công thợ...'
               />
+              {/* Hiển thị gợi ý nếu có */}
+              {activeSuggestions.length > 0 && (
+                <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                  {activeSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, noiDung: suggestion }))}
+                      style={{
+                        background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '20px',
+                        padding: '4px 10px', fontSize: '0.8rem', color: '#1e40af', cursor: 'pointer'
+                      }}
+                      title="Chọn nhanh nội dung này"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Hàng 4: Ghi chú */}
