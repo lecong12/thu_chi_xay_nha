@@ -246,7 +246,7 @@ function App() {
               showToast={showToast}
             >
               {activeTab === "all" && (
-                <div style={{ marginTop: '20px' }}>
+                <div style={{ marginTop: '30px', marginBottom: '80px' }}>
                   <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
                   <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                     <FilterBar 
@@ -265,7 +265,7 @@ function App() {
             </Dashboard>
           )}
           {activeTab === "list" && (
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '20px', marginBottom: '80px' }}>
               <FilterBar 
                 filters={filters} 
                 filterOptions={filterOptions} 
