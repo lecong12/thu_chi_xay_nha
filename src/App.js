@@ -8,17 +8,17 @@ import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
 import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
-import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
+import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchDataFromAppSheet } from "./utils/sheetsAPI";
 import "./App.css";
-
-const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
-const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
+  // Lưu ý: Nếu useAppData chưa được cập nhật để dùng API mới, bạn nên cập nhật nó hoặc
+  // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
+  // Dưới đây giả định logic trong App.js là chính.
   const { 
     data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus: updateStageStatus 
   } = useAppData(isLoggedIn);
@@ -71,18 +71,11 @@ function App() {
 
       let result;
       if (isEdit) {
-        result = await updateRowInSheet(updatedItem, APP_ID, ACCESS_KEY);
+        // Không cần truyền APP_ID, ACCESS_KEY nữa vì Backend đã xử lý
+        result = await updateRowInSheet(updatedItem);
       } else {
-        // LOGIC TÍNH ID TỰ TĂNG: Lấy max(id) hiện có + 1
-        // Đảm bảo data đã được tải và có trường keyId
-        const maxId = data.reduce((max, item) => {
-          const val = parseInt(item.keyId || item.id, 10);
-          return !isNaN(val) && val > max ? val : max;
-        }, 0);
-        const newId = maxId + 1;
-        
-        updatedItem.id = newId; // Gán ID mới vào item
-        result = await addRowToSheet(updatedItem, APP_ID, ACCESS_KEY);
+        // Backend sẽ tự sinh ID
+        result = await addRowToSheet(updatedItem);
       }
 
       if (result && result.success) {
@@ -134,7 +127,8 @@ function App() {
     }
 
     showToast("Đang xóa...", "info");
-    const result = await deleteRowFromSheet(item.keyId, item.appSheetId, APP_ID, ACCESS_KEY);
+    // Gọi API xóa, chỉ cần truyền ID (keyId)
+    const result = await deleteRowFromSheet(item.keyId || item.id);
 
     if (result.success) {
       setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
