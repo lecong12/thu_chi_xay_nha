@@ -107,6 +107,45 @@ function App() {
     });
   };
 
+  // --- LOGIC XUẤT EXCEL (CSV) ---
+  const exportToCSV = (data, fileName) => {
+    if (!data || !data.length) {
+      showToast("Không có dữ liệu để xuất!", "warning");
+      return;
+    }
+
+    const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
+    
+    // Helper format tên giai đoạn cho gọn (giống trong DataTable)
+    const formatStage = (name) => name ? name.split("(")[0].trim().replace(/^\d+\.\s*/, "") : "-";
+
+    const csvRows = data.map(item => {
+      const date = item.ngay instanceof Date ? item.ngay.toLocaleDateString("vi-VN") : item.ngay;
+      const escape = (text) => text ? `"${text.toString().replace(/"/g, '""')}"` : "";
+      
+      return [
+        escape(date),
+        escape(item.loaiThuChi),
+        escape(item.noiDung),
+        escape(formatStage(item.doiTuongThuChi)),
+        item.soTien,
+        escape(item.nguoiCapNhat),
+        escape(item.ghiChu),
+        escape(item.hinhAnh || "")
+      ].join(",");
+    });
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...csvRows].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${fileName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
@@ -256,6 +295,7 @@ function App() {
                       onReset={handleResetFilters} 
                       isExpanded={isFilterExpanded}
                       onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                      onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
                     />
                     <div style={{ borderBottom: '1px solid #e5e7eb' }} />
                     <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
@@ -273,6 +313,7 @@ function App() {
                 onReset={handleResetFilters} 
                 isExpanded={isFilterExpanded}
                 onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
               />
               <div style={{ borderBottom: '1px solid #e5e7eb' }} />
               <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />

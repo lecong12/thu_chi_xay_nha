@@ -7,7 +7,6 @@ import {
   FiInfo,
   FiEdit2,
   FiTrash2,
-  FiDownload,
   FiImage,
 } from "react-icons/fi";
 import "./DataTable.css";
@@ -33,45 +32,6 @@ const formatStageName = (name) => {
   if (!name) return "-";
   // Cắt bỏ phần trong ngoặc và xóa số thứ tự đầu dòng (VD: "1. Chuẩn bị (GPXD)" -> "Chuẩn bị")
   return name.split("(")[0].trim().replace(/^\d+\.\s*/, "");
-};
-
-// Hàm xuất dữ liệu ra CSV (Excel-compatible)
-const exportToCSV = (data, fileName) => {
-  if (!data || !data.length) return;
-
-  // Tiêu đề cột
-  const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
-  
-  // Chuyển đổi dữ liệu
-  const csvRows = data.map(item => {
-    const date = item.ngay instanceof Date ? item.ngay.toLocaleDateString("vi-VN") : item.ngay;
-    // Escape dấu phẩy và dấu ngoặc kép để tránh lỗi CSV
-    const escape = (text) => text ? `"${text.toString().replace(/"/g, '""')}"` : "";
-    
-    return [
-      escape(date),
-      escape(item.loaiThuChi),
-      escape(item.noiDung),
-      escape(item.doiTuongThuChi),
-      item.soTien,
-      escape(item.nguoiCapNhat),
-      escape(item.ghiChu),
-      escape(item.hinhAnh || "")
-    ].join(",");
-  });
-
-  // Thêm BOM (\uFEFF) để Excel hiển thị đúng tiếng Việt
-  const csvContent = "\uFEFF" + [headers.join(","), ...csvRows].join("\n");
-  
-  // Tạo link tải về
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `${fileName}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
 };
 
 function DataTable({ data, onEdit, onDelete }) {

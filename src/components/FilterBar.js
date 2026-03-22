@@ -3,12 +3,13 @@ import {
   FiFilter,
   FiSearch,
   FiX,
+  FiDownload,
   FiChevronDown,
   FiChevronUp,
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand }) {
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport }) {
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
@@ -27,6 +28,10 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
               <span>Xóa lọc</span>
             </button>
           )}
+          <button className="toggle-btn" onClick={onExport} title="Xuất Excel">
+            <FiDownload />
+            <span className="toggle-text">Excel</span>
+          </button>
           <button
             className="toggle-btn"
             onClick={onToggleExpand}
