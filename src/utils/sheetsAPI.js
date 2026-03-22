@@ -58,7 +58,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
-      "Minh chứng": rowData.hinhAnh || "",
+      "Chứng từ": rowData.hinhAnh || "", /* Đổi từ 'Minh chứng' sang 'Chứng từ' để khớp với Google Sheet */
       "Ghi chú": rowData.ghiChu || "",
       "Người cập nhật": rowData.nguoiCapNhat || "",
     }];
@@ -106,7 +106,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
-      "Minh chứng": rowData.hinhAnh || "",
+      "Chứng từ": rowData.hinhAnh || "", /* Đổi từ 'Minh chứng' sang 'Chứng từ' */
       "Ghi chú": rowData.ghiChu || "",
       "Người cập nhật": rowData.nguoiCapNhat || "",
     }];

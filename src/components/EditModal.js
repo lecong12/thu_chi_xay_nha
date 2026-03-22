@@ -41,8 +41,11 @@ const SUGGESTION_MAP = {
 };
 
 // Cấu hình Cloudinary (Lấy từ biến môi trường)
-const CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME;
-const UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET;
+// Loại bỏ dấu ngoặc kép nếu người dùng lỡ nhập trong file .env (ví dụ: "myname" -> myname)
+const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
+const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
+
+console.log("Cloudinary Config Loaded:", { cloudName: CLOUD_NAME ? "OK" : "MISSING", preset: UPLOAD_PRESET ? "OK" : "MISSING" });
 
 function EditModal({ item, onClose, onSave }) {
   const [formData, setFormData] = useState({
@@ -101,7 +104,7 @@ function EditModal({ item, onClose, onSave }) {
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       console.error("Thiếu cấu hình Cloudinary:", { CLOUD_NAME, UPLOAD_PRESET });
-      alert(`Chưa nhận được cấu hình Cloudinary!\n- Cloud Name: ${CLOUD_NAME || "TRỐNG"}\n- Upload Preset: ${UPLOAD_PRESET || "TRỐNG"}\n\nLƯU Ý: Nếu vừa sửa file .env, bạn cần tắt và CHẠY LẠI server.`);
+      alert(`Lỗi cấu hình Cloudinary (Vercel/Local)!\n\n1. Kiểm tra biến môi trường REACT_APP_CLOUDINARY_... đã đặt chưa.\n2. Nếu trên Vercel: Hãy vào Deployments -> Redeploy để cập nhật.\n3. Cloud Name hiện tại: ${CLOUD_NAME || "TRỐNG"}`);
       return;
     }
 
