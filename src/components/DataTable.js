@@ -105,11 +105,6 @@ function DataTable({ data, onEdit, onDelete }) {
 
   return (
     <div className="data-table-container">
-      <div className="table-header">
-        <button className="export-btn" onClick={() => exportToCSV(data, "so-tay-xay-nha")}>
-          <FiDownload /> Xuất Excel
-        </button>
-      </div>
 
       {/* Bảng Chi Phí */}
       {chiList.length > 0 && (
