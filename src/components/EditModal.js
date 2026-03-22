@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { FiX, FiSave, FiCamera, FiImage, FiLoader } from "react-icons/fi";
 import Tesseract from 'tesseract.js';
 import "./EditModal.css";
@@ -48,6 +48,7 @@ const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").rep
 console.log("Cloudinary Config Loaded:", { cloudName: CLOUD_NAME ? "OK" : "MISSING", preset: UPLOAD_PRESET ? "OK" : "MISSING" });
 
 function EditModal({ item, onClose, onSave }) {
+  const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     ngay: "",
     noiDung: "",
@@ -223,6 +224,11 @@ function EditModal({ item, onClose, onSave }) {
     onSave(finalData);
   };
 
+  // Hàm focus chọn toàn bộ text khi click vào ô số tiền
+  const handleFocus = (e) => {
+    e.target.select();
+  };
+
   // Lấy danh sách gợi ý dựa trên hạng mục đang chọn
   const activeSuggestions = SUGGESTION_MAP[formData.doiTuongThuChi] || [];
 
@@ -240,7 +246,7 @@ function EditModal({ item, onClose, onSave }) {
         <div className="image-upload-section">
           <div className="image-preview">
             {formData.hinhAnh ? (
-              <div className="preview-container" onClick={() => !uploading && document.getElementById('file-upload').click()}>
+              <div className="preview-container" onClick={() => !uploading && fileInputRef.current.click()}>
                 <img src={formData.hinhAnh} alt="Chứng từ" />
                 {/* Overlay khi đang upload lại */}
                 {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
@@ -253,14 +259,14 @@ function EditModal({ item, onClose, onSave }) {
                 </button>
               </div>
             ) : (
-              <div className="upload-placeholder" onClick={() => document.getElementById('file-upload').click()}>
+              <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
                 {uploading ? <FiLoader className="spin" /> : <FiCamera size={32} />}
                 <span>{uploading ? "Đang tải lên..." : "Chụp hoặc chọn ảnh hóa đơn"}</span>
               </div>
             )}
           </div>
           <input 
-            id="file-upload" 
+            ref={fileInputRef}
             type="file" 
             accept="image/*" 
             onChange={handleFileUpload} 
@@ -289,6 +295,7 @@ function EditModal({ item, onClose, onSave }) {
                 name="soTien"
                 value={formData.soTien}
                 onChange={handleChange}
+                onFocus={handleFocus}
                 required
                 placeholder="0"
               />
