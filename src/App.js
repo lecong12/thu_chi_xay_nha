@@ -305,7 +305,7 @@ function App() {
             </Dashboard>
           )}
           {activeTab === "list" && (
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '20px', marginBottom: '80px' }}>
+            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px', marginBottom: '80px' }}>
               <FilterBar 
                 filters={filters} 
                 filterOptions={filterOptions} 

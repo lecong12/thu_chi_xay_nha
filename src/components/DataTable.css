@@ -1,9 +1,9 @@
 .data-table-container {
-  background: white;
-  border-radius: 16px;
-  padding: 20px;
+  background: transparent;
+  border-radius: 0;
+  padding: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: none;
 }
 
 .table-header {
@@ -66,7 +66,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .section-title {
@@ -86,27 +86,32 @@
 
 /* Desktop Table */
 .table-wrapper {
-  overflow-x: auto;
+  overflow: auto; /* Cho phép cuộn cả ngang và dọc khi cần */
+  max-height: 65vh; /* Giới hạn chiều cao của bảng để bật thanh cuộn */
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
+  border-spacing: 0; /* Cần thiết để sticky header hoạt động đúng */
 }
 
 .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1; /* Đảm bảo header luôn nằm trên nội dung cuộn */
   background: #f9fafb;
   color: #6b7280;
   font-weight: 600;
   text-align: left;
-  padding: 12px 10px;
+  padding: 8px 10px;
   white-space: nowrap;
   border-bottom: 2px solid #e5e7eb;
 }
 
 .data-table td {
-  padding: 12px 10px;
+  padding: 8px 10px;
   color: #1f2937;
   border-bottom: 1px solid #f3f4f6;
   vertical-align: middle;

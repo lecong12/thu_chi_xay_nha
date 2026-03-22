@@ -1,9 +1,9 @@
 .filter-bar {
-  background: white;
-  border-radius: 16px;
-  padding: 16px;
-  margin-bottom: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background: transparent;
+  border-radius: 0;
+  padding: 12px 12px 8px 12px;
+  margin-bottom: 0;
+  box-shadow: none;
 }
 
 .filter-header {
@@ -75,7 +75,7 @@
 /* Search */
 .search-container {
   position: relative;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .search-icon {
