@@ -22,9 +22,22 @@ const UPDATER_OPTIONS = [
 
 // Danh sách gợi ý nội dung theo hạng mục
 const SUGGESTION_MAP = {
-  'Nhân công': ['Công thợ chính', 'Công phụ hồ', 'Tiền cơm thợ', 'Thưởng thợ'],
-  'Phần thô': ['Xi măng', 'Cát xây', 'Cát bê tông', 'Đá 1x2', 'Gạch ống', 'Sắt thép', 'Đinh kẽm'],
-  'Điện nước': ['Ống nước Bình Minh', 'Dây điện Cadivi', 'Co/Lơi/Nối', 'Keo dán ống'],
+  'Nhân công': [
+    { label: 'Công thợ chính', amount: 600000 },
+    { label: 'Công phụ hồ', amount: 400000 },
+    { label: 'Tiền cơm thợ', amount: 30000 },
+    { label: 'Thưởng thợ', amount: 50000 }
+  ],
+  'Phần thô': [
+    { label: 'Xi măng' }, { label: 'Cát xây' }, { label: 'Cát bê tông' }, 
+    { label: 'Đá 1x2' }, { label: 'Gạch ống' }, { label: 'Sắt thép' }, { label: 'Đinh kẽm' }
+  ],
+  'Điện nước': [
+    { label: 'Ống nước Bình Minh' }, { label: 'Dây điện Cadivi' }, { label: 'Co/Lơi/Nối' }, { label: 'Keo dán ống' }
+  ],
+  'Khác': [
+    { label: 'Mua nước uống' }, { label: 'Tiền xăng' }
+  ]
 };
 
 // Cấu hình Cloudinary (Lấy từ biến môi trường)
@@ -176,9 +189,21 @@ function EditModal({ item, onClose, onSave }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     
+    // 1. Validation: Kiểm tra Hạng mục
+    if (!formData.doiTuongThuChi) {
+      alert("Vui lòng chọn Hạng mục chi tiêu!");
+      return;
+    }
+
     // Xử lý số tiền an toàn hơn
     const rawSoTien = formData.soTien ? formData.soTien.toString().replace(/[^0-9]/g, "") : "0";
     const parsedSoTien = parseFloat(rawSoTien);
+
+    // 2. Validation: Kiểm tra Số tiền
+    if (parsedSoTien <= 0) {
+      alert("Vui lòng nhập Số tiền hợp lệ (lớn hơn 0)!");
+      return;
+    }
 
     const finalData = {
       ...item,
@@ -307,16 +332,22 @@ function EditModal({ item, onClose, onSave }) {
                 <div style={{ marginTop: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   {activeSuggestions.map((suggestion) => (
                     <button
-                      key={suggestion}
+                      key={suggestion.label}
                       type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, noiDung: suggestion }))}
+                      onClick={() => setFormData(prev => ({ 
+                        ...prev, 
+                        noiDung: suggestion.label,
+                        // Nếu gợi ý có số tiền mặc định thì điền luôn, format định dạng 1.000.000
+                        soTien: suggestion.amount ? new Intl.NumberFormat('vi-VN').format(suggestion.amount) : prev.soTien
+                      }))}
                       style={{
                         background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '20px',
                         padding: '4px 10px', fontSize: '0.8rem', color: '#1e40af', cursor: 'pointer'
                       }}
                       title="Chọn nhanh nội dung này"
                     >
-                      {suggestion}
+                      {suggestion.label}
+                      {suggestion.amount ? ` (${new Intl.NumberFormat('vi-VN').format(suggestion.amount)})` : ''}
                     </button>
                   ))}
                 </div>
