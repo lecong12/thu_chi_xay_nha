@@ -104,7 +104,7 @@ function EditModal({ item, onClose, onSave }) {
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       console.error("Thiếu cấu hình Cloudinary:", { CLOUD_NAME, UPLOAD_PRESET });
-      alert(`Lỗi cấu hình Cloudinary (Vercel/Local)!\n\n1. Kiểm tra biến môi trường REACT_APP_CLOUDINARY_... đã đặt chưa.\n2. Nếu trên Vercel: Hãy vào Deployments -> Redeploy để cập nhật.\n3. Cloud Name hiện tại: ${CLOUD_NAME || "TRỐNG"}`);
+      alert(`Lỗi cấu hình Cloudinary!\n\n- Cloud Name: ${CLOUD_NAME || "TRỐNG"}\n- Upload Preset: ${UPLOAD_PRESET || "TRỐNG"}\n\nCách khắc phục:\n1. Kiểm tra file .env có dòng: REACT_APP_CLOUDINARY_UPLOAD_PRESET=...\n2. Nếu chạy Local: Tắt server rồi npm start lại.\n3. Nếu trên Vercel: Vào Settings -> Environment Variables thêm biến, sau đó Redeploy.`);
       return;
     }
 
@@ -123,7 +123,12 @@ function EditModal({ item, onClose, onSave }) {
       if (fileData.secure_url) {
         setFormData((prev) => ({ ...prev, hinhAnh: fileData.secure_url }));
       } else {
-        alert("Lỗi upload ảnh: " + (fileData.error?.message || "Không rõ lỗi"));
+        const errorMsg = fileData.error?.message || "Không rõ lỗi";
+        if (errorMsg.includes("unsigned uploads")) {
+          alert(`LỖI CẤU HÌNH CLOUDINARY:\nPreset "${UPLOAD_PRESET}" đang ở chế độ "Signed" (Cần chữ ký).\n\nCÁCH KHẮC PHỤC:\n1. Vào Cloudinary -> Settings -> Upload -> Upload presets.\n2. Sửa preset này và chuyển "Signing Mode" sang "Unsigned".\n3. Lưu lại và thử lại.`);
+        } else {
+          alert("Lỗi upload ảnh: " + errorMsg);
+        }
       }
     } catch (error) {
       console.error("Upload error:", error);
