@@ -293,7 +293,7 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
       </div>
 
       {/* Budget Table Section */}
-      <div className="budget-section chart-card">
+      <div className="budget-section chart-card" style={{ marginTop: '20px' }}>
         <h3 className="chart-title">Đối chiếu Ngân sách</h3>
         <div className="budget-table-wrapper">
           <table className="budget-table">
