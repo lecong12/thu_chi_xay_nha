@@ -3,6 +3,7 @@ import Dashboard from "./components/Dashboard";
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
+import FilterBar from "./components/FilterBar";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
@@ -38,6 +39,46 @@ function App() {
     endDate: "",
     searchText: "",
   });
+
+  // --- LOGIC LỌC DỮ LIỆU ---
+  const filterOptions = useMemo(() => ({
+    doiTuongThuChi: [...new Set(data.map((item) => item.doiTuongThuChi).filter(Boolean))],
+    nguoiCapNhat: [...new Set(data.map((item) => item.nguoiCapNhat).filter(Boolean))],
+  }), [data]);
+
+  const filteredData = useMemo(() => {
+    return data.filter((item) => {
+      if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
+      if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
+      if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
+      
+      const itemDate = new Date(item.ngay);
+      if (filters.startDate && itemDate < new Date(filters.startDate)) return false;
+      if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        end.setHours(23, 59, 59, 999);
+        if (itemDate > end) return false;
+      }
+
+      if (filters.searchText) {
+        const text = filters.searchText.toLowerCase();
+        const content = (item.noiDung || "").toLowerCase();
+        const note = (item.ghiChu || "").toLowerCase();
+        const cat = (item.doiTuongThuChi || "").toLowerCase();
+        return content.includes(text) || note.includes(text) || cat.includes(text);
+      }
+
+      return true;
+    });
+  }, [data, filters]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" });
+  };
 
   const showToast = (message, type = "success") => {
     setToast({ message, type });
@@ -146,7 +187,7 @@ function App() {
 
   // --- LOGIC XỬ LÝ DỮ LIỆU DASHBOARD ---
   const extraData = useMemo(() => {
-    const categoryMap = data.reduce((acc, item) => {
+    const categoryMap = filteredData.reduce((acc, item) => {
       const cat = item.doiTuongThuChi;
       acc[cat] = (acc[cat] || 0) + item.soTien;
       return acc;
@@ -157,7 +198,7 @@ function App() {
       .sort((a, b) => b.value - a.value)
       .slice(0, 5);
 
-    const monthMap = data.reduce((acc, item) => {
+    const monthMap = filteredData.reduce((acc, item) => {
       const m = `${item.ngay.getMonth() + 1}/${item.ngay.getFullYear()}`;
       acc[m] = (acc[m] || 0) + item.soTien;
       return acc;
@@ -172,12 +213,12 @@ function App() {
       });
 
     return { top5, chartData, nganSach, tienDo };
-  }, [data, nganSach, tienDo]);
+  }, [filteredData, nganSach, tienDo]);
 
   const stats = useMemo(() => {
-    const tongChi = data.reduce((sum, item) => sum + item.soTien, 0);
-    return { tongThu: 0, tongChi, soGiaoDich: data.length };
-  }, [data]);
+    const tongChi = filteredData.reduce((sum, item) => sum + item.soTien, 0);
+    return { tongThu: 0, tongChi, soGiaoDich: filteredData.length };
+  }, [filteredData]);
 
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
@@ -186,10 +227,17 @@ function App() {
       <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={handleAddNew} />
       <main className="main-content">
         <>
+          <FilterBar 
+            filters={filters} 
+            filterOptions={filterOptions} 
+            onFilterChange={handleFilterChange} 
+            onReset={handleResetFilters} 
+          />
+
           {(activeTab === "dashboard" || activeTab === "all") && (
             <Dashboard 
               stats={stats} 
-              data={data}
+              data={filteredData}
               extraData={extraData} 
               onUpdateStageStatus={handleUpdateStageStatus}
               showToast={showToast}
@@ -197,13 +245,13 @@ function App() {
               {activeTab === "all" && (
                 <div style={{ marginTop: '20px' }}>
                   <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
-                  <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
+                  <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
                 </div>
               )}
             </Dashboard>
           )}
           {activeTab === "list" && (
-            <DataTable data={data} onEdit={setEditingItem} onDelete={requestDelete} />
+            <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
           )}
         </>
       </main>
