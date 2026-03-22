@@ -1,8 +1,8 @@
 import React from "react";
-import { FiRefreshCw, FiHome, FiLogOut, FiPlus } from "react-icons/fi";
+import { FiRefreshCw, FiHome, FiLogOut, FiPlus, FiFilter } from "react-icons/fi";
 import "./Header.css";
 
-function Header({ onRefresh, loading, onLogout, onAdd }) {
+function Header({ onRefresh, loading, onLogout, onAdd, onToggleFilter }) {
   return (
     <header className="header">
       <div className="header-content">
@@ -15,6 +15,10 @@ function Header({ onRefresh, loading, onLogout, onAdd }) {
         </div>
 
         <div className="header-right">
+          <button className="refresh-btn" onClick={onToggleFilter} title="Bộ lọc">
+            <FiFilter />
+            <span className="mobile-hidden">Lọc</span>
+          </button>
           <button className="add-btn" onClick={onAdd} title="Thêm mới">
             <FiPlus />
             <span>Thêm</span>

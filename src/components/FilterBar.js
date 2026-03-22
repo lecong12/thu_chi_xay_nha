@@ -8,10 +8,7 @@ import {
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
-  const hasActiveFilters = Object.values(filters).some((v) => v !== "");
+function FilterBar({ filters, filterOptions, onFilterChange, onResethsO
 
   return (
     <div className="filter-bar">
@@ -31,9 +28,8 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
           )}
           <button
             className="toggle-btn"
-            onClick={() => setIsExpanded(!isExpanded)}
-          >
-            {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+            onClick={onToggleExpand}
+          >Down />}
             <span className="toggle-text">
               {isExpanded ? "Thu gọn" : "Mở rộng"}
             </span>

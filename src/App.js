@@ -40,6 +40,9 @@ function App() {
     searchText: "",
   });
 
+  // State quản lý việc đóng/mở thanh lọc
+  const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
   // --- LOGIC LỌC DỮ LIỆU ---
   const filterOptions = useMemo(() => ({
     doiTuongThuChi: [...new Set(data.map((item) => item.doiTuongThuChi).filter(Boolean))],
@@ -224,7 +227,13 @@ function App() {
 
   return (
     <div className="app">
-      <Header onRefresh={fetchAllData} loading={loading} onLogout={() => setIsLoggedIn(false)} onAdd={handleAddNew} />
+      <Header 
+        onRefresh={fetchAllData} 
+        loading={loading} 
+        onLogout={() => setIsLoggedIn(false)} 
+        onAdd={handleAddNew}
+        onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
+      />
       <main className="main-content">
         <>
           <FilterBar 
@@ -232,6 +241,8 @@ function App() {
             filterOptions={filterOptions} 
             onFilterChange={handleFilterChange} 
             onReset={handleResetFilters} 
+            isExpanded={isFilterExpanded}
+            onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
           />
 
           {(activeTab === "dashboard" || activeTab === "all") && (
