@@ -248,21 +248,24 @@ function App() {
               {activeTab === "all" && (
                 <div style={{ marginTop: '20px' }}>
                   <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
-                  <FilterBar 
-                    filters={filters} 
-                    filterOptions={filterOptions} 
-                    onFilterChange={handleFilterChange} 
-                    onReset={handleResetFilters} 
-                    isExpanded={isFilterExpanded}
-                    onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
-                  />
-                  <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+                  <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                    <FilterBar 
+                      filters={filters} 
+                      filterOptions={filterOptions} 
+                      onFilterChange={handleFilterChange} 
+                      onReset={handleResetFilters} 
+                      isExpanded={isFilterExpanded}
+                      onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                    />
+                    <div style={{ borderBottom: '1px solid #e5e7eb' }} />
+                    <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+                  </div>
                 </div>
               )}
             </Dashboard>
           )}
           {activeTab === "list" && (
-            <>
+            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px' }}>
               <FilterBar 
                 filters={filters} 
                 filterOptions={filterOptions} 
@@ -271,8 +274,9 @@ function App() {
                 isExpanded={isFilterExpanded}
                 onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
               />
+              <div style={{ borderBottom: '1px solid #e5e7eb' }} />
               <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
-            </>
+            </div>
           )}
         </>
       </main>

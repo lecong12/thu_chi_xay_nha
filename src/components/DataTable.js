@@ -146,7 +146,6 @@ function DataTable({ data, onEdit, onDelete }) {
   return (
     <div className="data-table-container">
       <div className="table-header">
-        <h3 className="table-title">Danh sách giao dịch</h3>
         <button className="export-btn" onClick={() => exportToCSV(data, "so-tay-xay-nha")}>
           <FiDownload /> Xuất Excel
         </button>
