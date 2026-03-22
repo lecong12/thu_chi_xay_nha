@@ -82,6 +82,23 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset }) {
             </select>
           </div>
 
+          {/* Người cập nhật - Bổ sung */}
+          <div className="filter-group">
+            <label className="filter-label">Người cập nhật</label>
+            <select
+              value={filters.nguoiCapNhat}
+              onChange={(e) => onFilterChange("nguoiCapNhat", e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Tất cả</option>
+              {filterOptions.nguoiCapNhat.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
+
           {/* Ngày bắt đầu */}
           <div className="filter-group">
             <label className="filter-label">Từ ngày</label>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   FiChevronLeft,
   FiChevronRight,
@@ -77,12 +77,37 @@ const exportToCSV = (data, fileName) => {
 function DataTable({ data, onEdit, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRow, setExpandedRow] = useState(null);
+  const [sortConfig, setSortConfig] = useState({ key: "ngay", direction: "desc" }); // Mặc định sắp xếp theo ngày giảm dần
   const itemsPerPage = 10;
 
-  const totalPages = Math.ceil(data.length / itemsPerPage);
+  // Logic sắp xếp dữ liệu
+  const sortedData = useMemo(() => {
+    let sortableItems = [...data];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+
+        // Xử lý an toàn null/undefined
+        if (aValue === null || aValue === undefined) aValue = "";
+        if (bValue === null || bValue === undefined) bValue = "";
+
+        if (aValue < bValue) {
+          return sortConfig.direction === "asc" ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === "asc" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [data, sortConfig]);
+
+  const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentData = data.slice(startIndex, endIndex);
+  const currentData = sortedData.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -91,6 +116,14 @@ function DataTable({ data, onEdit, onDelete }) {
 
   const toggleRow = (id) => {
     setExpandedRow(expandedRow === id ? null : id);
+  };
+
+  const requestSort = (key) => {
+    let direction = "asc";
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === "asc") {
+      direction = "desc";
+    }
+    setSortConfig({ key, direction });
   };
 
   const pageTotalChi = currentData
@@ -132,10 +165,20 @@ function DataTable({ data, onEdit, onDelete }) {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>Ngày</th>
+                  <th onClick={() => requestSort("ngay")} style={{cursor: 'pointer', userSelect: 'none'}} title="Click để sắp xếp">
+                    Ngày {sortConfig.key === "ngay" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+                  </th>
                   <th>Nội dung giao dịch</th>
-                  <th>Hạng mục</th>
-                  <th>Số tiền</th>
+                  <th onClick={() => requestSort("doiTuongThuChi")} style={{cursor: 'pointer', userSelect: 'none'}} title="Click để sắp xếp">
+                    Hạng mục {sortConfig.key === "doiTuongThuChi" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+                  </th>
+                  <th 
+                    onClick={() => requestSort("soTien")} 
+                    style={{cursor: 'pointer', userSelect: 'none', textAlign: 'right'}} 
+                    title="Click để sắp xếp"
+                  >
+                    Số tiền {sortConfig.key === "soTien" && (sortConfig.direction === "asc" ? "▲" : "▼")}
+                  </th>
                   <th>Người cập nhật</th>
                   <th>Chứng từ</th>
                   <th>Ghi chú</th>
@@ -224,6 +267,13 @@ function DataTable({ data, onEdit, onDelete }) {
                          <span className="detail-label">Chứng từ:</span>
                          <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="detail-link">Xem ảnh</a>
                        </div>
+                    )}
+                    {item.nguoiCapNhat && (
+                      <div className="detail-item">
+                        <FiUser size={14} />
+                        <span className="detail-label">Người cập nhật:</span>
+                        <span className="detail-value">{item.nguoiCapNhat}</span>
+                      </div>
                     )}
                     {item.ghiChu && (
                       <div className="detail-item">
