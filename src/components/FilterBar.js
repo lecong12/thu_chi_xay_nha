@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   FiFilter,
   FiSearch,
@@ -8,7 +8,8 @@ import {
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onResethsO
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand }) {
+  const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
     <div className="filter-bar">
@@ -29,7 +30,8 @@ function FilterBar({ filters, filterOptions, onFilterChange, onResethsO
           <button
             className="toggle-btn"
             onClick={onToggleExpand}
-          >Down />}
+          >
+            {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
             <span className="toggle-text">
               {isExpanded ? "Thu gọn" : "Mở rộng"}
             </span>
@@ -42,7 +44,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onResethsO
         <FiSearch className="search-icon" />
         <input
           type="text"
-            placeholder="Tìm hạng mục, vật tư, ghi chú..."
+          placeholder="Tìm hạng mục, vật tư, ghi chú..."
           value={filters.searchText}
           onChange={(e) => onFilterChange("searchText", e.target.value)}
           className="search-input"
@@ -60,7 +62,6 @@ function FilterBar({ filters, filterOptions, onFilterChange, onResethsO
       {/* Expanded filters */}
       <div className={`filter-content ${isExpanded ? "expanded" : ""}`}>
         <div className="filter-grid">
-
           {/* Đối tượng thu chi */}
           <div className="filter-group">
             <label className="filter-label">Hạng mục</label>

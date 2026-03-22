@@ -236,14 +236,6 @@ function App() {
       />
       <main className="main-content">
         <>
-          <FilterBar 
-            filters={filters} 
-            filterOptions={filterOptions} 
-            onFilterChange={handleFilterChange} 
-            onReset={handleResetFilters} 
-            isExpanded={isFilterExpanded}
-            onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
-          />
 
           {(activeTab === "dashboard" || activeTab === "all") && (
             <Dashboard 
@@ -256,13 +248,31 @@ function App() {
               {activeTab === "all" && (
                 <div style={{ marginTop: '20px' }}>
                   <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
+                  <FilterBar 
+                    filters={filters} 
+                    filterOptions={filterOptions} 
+                    onFilterChange={handleFilterChange} 
+                    onReset={handleResetFilters} 
+                    isExpanded={isFilterExpanded}
+                    onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                  />
                   <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
                 </div>
               )}
             </Dashboard>
           )}
           {activeTab === "list" && (
-            <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+            <>
+              <FilterBar 
+                filters={filters} 
+                filterOptions={filterOptions} 
+                onFilterChange={handleFilterChange} 
+                onReset={handleResetFilters} 
+                isExpanded={isFilterExpanded}
+                onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+              />
+              <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+            </>
           )}
         </>
       </main>
