@@ -10,7 +10,14 @@ const BUDGET_CATEGORIES = [
   'Hoàn thiện', 
   'Điện nước', 
   'Nội thất', 
-  'Phát sinh'
+  'Phát sinh',
+  'Khác'
+];
+
+const UPDATER_OPTIONS = [
+  'Ba',
+  'Mẹ',
+  'Khác'
 ];
 
 // Cấu hình Cloudinary (Lấy từ biến môi trường)
@@ -22,6 +29,7 @@ function EditModal({ item, onClose, onSave }) {
     ngay: "",
     noiDung: "",
     doiTuongThuChi: "",
+    nguoiCapNhat: "", // Bổ sung trường người cập nhật
     soTien: "",
     hinhAnh: "", // Thêm trường hình ảnh
     ghiChu: "",
@@ -31,12 +39,13 @@ function EditModal({ item, onClose, onSave }) {
 
   useEffect(() => {
     if (item) {
+      // Nếu là item mới (chưa có ngày), dùng ngày hiện tại
+      const dateVal = item.ngay ? new Date(item.ngay) : new Date();
       setFormData({
-        ngay: item.ngay instanceof Date 
-          ? item.ngay.toISOString().split('T')[0] 
-          : new Date(item.ngay).toISOString().split('T')[0],
+        ngay: dateVal.toISOString().split('T')[0],
         noiDung: item.noiDung || "",
-        doiTuongThuChi: item.doiTuongThuChi || BUDGET_CATEGORIES[0],
+        doiTuongThuChi: item.doiTuongThuChi || "",
+        nguoiCapNhat: item.nguoiCapNhat || "Ba", // Mặc định là Ba nếu chưa có
         // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
         soTien: item.soTien ? new Intl.NumberFormat('vi-VN').format(item.soTien) : "",
         hinhAnh: item.hinhAnh || "",
@@ -178,7 +187,7 @@ function EditModal({ item, onClose, onSave }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>{item && item.id ? "Chỉnh sửa giao dịch" : "Thêm mới giao dịch"}</h2>
+          <h2>{item && (item.id || item.appSheetId) ? "Chỉnh sửa giao dịch" : "Thêm mới giao dịch"}</h2>
           <button className="close-btn" onClick={onClose}>
             <FiX />
           </button>
@@ -218,8 +227,9 @@ function EditModal({ item, onClose, onSave }) {
 
         <form onSubmit={handleSubmit} className="edit-form">
           <div className="form-grid">
+            {/* Hàng 1: Ngày và Số tiền */}
             <div className="form-group">
-              <label>Ngày</label>
+              <label>Ngày giao dịch</label>
               <input
                 type="date"
                 name="ngay"
@@ -229,7 +239,21 @@ function EditModal({ item, onClose, onSave }) {
               />
             </div>
             <div className="form-group">
-              <label>Hạng mục (Ngân sách)</label>
+              <label>Số tiền (VNĐ)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                name="soTien"
+                value={formData.soTien}
+                onChange={handleChange}
+                required
+                placeholder="0"
+              />
+            </div>
+
+            {/* Hàng 2: Hạng mục và Người cập nhật */}
+            <div className="form-group">
+              <label>Hạng mục</label>
               <select
                 name="doiTuongThuChi"
                 value={formData.doiTuongThuChi}
@@ -244,6 +268,20 @@ function EditModal({ item, onClose, onSave }) {
                 ))}
               </select>
             </div>
+            <div className="form-group">
+              <label>Người cập nhật</label>
+              <select
+                name="nguoiCapNhat"
+                value={formData.nguoiCapNhat}
+                onChange={handleChange}
+              >
+                {UPDATER_OPTIONS.map((u) => (
+                  <option key={u} value={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Hàng 3: Nội dung */}
             <div className="form-group full-width">
               <label>Nội dung chi tiết (Vật tư/Nhân công)</label>
               <input
@@ -255,18 +293,8 @@ function EditModal({ item, onClose, onSave }) {
                 placeholder='VD: Xi măng, Cát, Công thợ...'
               />
             </div>
-            <div className="form-group">
-              <label>Số tiền</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                name="soTien"
-                value={formData.soTien}
-                onChange={handleChange}
-                required
-                placeholder="0"
-              />
-            </div>
+
+            {/* Hàng 4: Ghi chú */}
             <div className="form-group full-width">
               <label>Ghi chú</label>
               <textarea
