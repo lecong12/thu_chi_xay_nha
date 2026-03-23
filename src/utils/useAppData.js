@@ -95,6 +95,7 @@ export const useAppData = (isLoggedIn) => {
                     status: c.status || "Chưa bắt đầu",
                     ngayBatDau: c.ngayBatDau ? new Date(c.ngayBatDau) : null,
                     ngayKetThuc: c.ngayKetThuc ? new Date(c.ngayKetThuc) : null,
+                    anhNghiemThu: c.anhNghiemThu || "",
                 };
             });
             setTienDo(cleanTD);

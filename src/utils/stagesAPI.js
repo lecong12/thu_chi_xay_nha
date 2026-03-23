@@ -39,7 +39,7 @@ export const fetchStages = async (appId) => {
       status: row.status || "Chưa bắt đầu",
       ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
       ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
-      anhNghiemThu: row.anhNghiemThu || "",
+      anhNghiemThu: row.anhNghiemThu || null,
     })).sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10)); // Sắp xếp theo ID để đảm bảo thứ tự
 
     return { success: true, data: transformedData };

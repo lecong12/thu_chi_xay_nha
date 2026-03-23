@@ -378,6 +378,12 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
                 onChange={(e) => handleUpdateStatus(stage.id, e.target.value)}
                 className={`status-select status-${stage.status
                   .toLowerCase()
+
+              {stage.anhNghiemThu && (
+                
+                  
+                
+              )}
                   .replace(/\s+/g, "-")}`}
               >
                 <option value="Chưa bắt đầu">Chưa bắt đầu</option>
