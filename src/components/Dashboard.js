@@ -531,6 +531,7 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
                     </div>
                   </div>
                 ) : stage.anhNghiemThu ? (
+                  <>
                   <div style={{ position: 'relative' }}>
                     <img 
                       src={stage.anhNghiemThu} 
