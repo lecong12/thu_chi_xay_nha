@@ -23,7 +23,7 @@ function App() {
   // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
   // Dưới đây giả định logic trong App.js là chính.
   const { 
-    data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus: updateStageStatus 
+    nganSach, tienDo, handleUpdateStageStatus: updateStageStatus 
   } = useAppData(isLoggedIn);
 
   // State cho UI, không liên quan đến data fetching
@@ -66,8 +66,9 @@ function App() {
       if (filters.searchText) {
         const text = filters.searchText.toLowerCase();
         const content = (item.noiDung || "").toLowerCase();
+        const note = (item.ghiChu || "").toLowerCase();
         const cat = (item.doiTuongThuChi || "").toLowerCase();
-        return content.includes(text) || cat.includes(text);
+        return content.includes(text) || note.includes(text) || cat.includes(text);
       }
 
       return true;
@@ -112,7 +113,7 @@ function App() {
       return;
     }
 
-    const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Link Ảnh"];
+    const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
     
     // Helper format tên giai đoạn cho gọn (giống trong DataTable)
     const formatStage = (name) => name ? name.split("(")[0].trim().replace(/^\d+\.\s*/, "") : "-";
