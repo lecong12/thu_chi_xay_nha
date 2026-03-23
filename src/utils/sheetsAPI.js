@@ -53,9 +53,17 @@ export const fetchDataFromAppSheet = (appId, accessKey) => {
  */
 export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
+    let rowId = rowData.keyId || rowData.id;
+
+    // Xử lý lỗi 400: Nếu AppSheet yêu cầu cột id là Number nhưng code đang giữ chuỗi "GD_..."
+    if (typeof rowId === 'string' && rowId.startsWith('GD_')) {
+      const numericPart = rowId.replace(/\D/g, ''); // Lấy phần số
+      if (numericPart) rowId = Number(numericPart);
+    }
+
     // Chuẩn bị payload khớp với tên cột trong Google Sheet
     const editData = [{
-      "id": rowData.keyId || rowData.id, // Key column để nhận diện dòng
+      "id": rowId, // Key column để nhận diện dòng
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
@@ -98,7 +106,15 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
 export const addRowToSheet = async (rowData, appId, accessKey) => {
   try {
     // Sử dụng ID đã được tính toán từ frontend
-    const newId = rowData.id;
+    let newId = rowData.id;
+
+    // Xử lý lỗi 400: AppSheet cột id là Number nhưng frontend gửi chuỗi "GD_..."
+    if (typeof newId === 'string' && newId.startsWith('GD_')) {
+      const numericPart = newId.replace(/\D/g, ''); // Lấy phần số (timestamp)
+      if (numericPart) {
+        newId = Number(numericPart);
+      }
+    }
 
     // Payload gửi đi
     const addData = [{
