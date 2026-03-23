@@ -149,19 +149,17 @@ function App() {
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Nếu item có appSheetId tức là đã tồn tại -> Sửa. Ngược lại -> Thêm mới
-      // Lưu ý: updatedItem ở đây là object từ EditModal, nó kế thừa các trường từ item gốc
-      const isEdit = !!updatedItem.appSheetId;
+      // Nếu item có id (RowNumber) tức là đã tồn tại -> Sửa. Ngược lại -> Thêm mới
+      const isEdit = !!updatedItem.id;
 
       showToast("Đang xử lý dữ liệu...", "info");
 
       let result;
       if (isEdit) {
-        // Gọi API qua sheetsAPI (đã trỏ về Proxy)
+        // Gọi API qua sheetsAPI
         result = await updateRowInSheet(updatedItem, APP_ID);
       } else {
         // AppSheet xử lý thêm mới
-        // Đảm bảo updatedItem có ID nếu AppSheet yêu cầu Client gửi ID
         result = await addRowToSheet(updatedItem, APP_ID);
       }
 
@@ -169,8 +167,8 @@ function App() {
         // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
         const newItem = {
           ...updatedItem,
-          // Nếu là thêm mới, updatedItem.id đã được gán newId ở trên
-          id: updatedItem.id || updatedItem.appSheetId, 
+          // Nếu là thêm mới, tạo ID tạm để hiển thị ngay lập tức
+          id: updatedItem.id || `temp_${Date.now()}`,
           appSheetId: updatedItem.appSheetId, // Giữ nguyên appSheetId nếu có (khi sửa)
           keyId: updatedItem.id, // Quan trọng: Cập nhật keyId để các thao tác sau (Sửa/Xóa) hoạt động đúng
           ngay: new Date(updatedItem.ngay), // Đảm bảo là Date object
