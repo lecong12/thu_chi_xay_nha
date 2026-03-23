@@ -547,7 +547,7 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
                   <div style={{ marginTop: '4px', fontSize: '10px', color: '#059669', textAlign: 'center' }}>
                     ✓ Đã có link: <a href={stage.anhNghiemThu} target="_blank" rel="noreferrer" style={{color: 'inherit', textDecoration: 'underline'}}>Xem ảnh</a>
                   </div>
-                  </div>
+                  </>
                 ) : (
                   <label className="upload-placeholder" style={{ border: '1px dashed #cbd5e1', borderRadius: '4px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}>
                     <FiCamera size={20} />
