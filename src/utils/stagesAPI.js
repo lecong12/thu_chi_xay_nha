@@ -52,6 +52,7 @@ export const fetchStages = async (appId) => {
         appSheetId: row._RowNumber, 
         keyId: row[idKey], // Giá trị Key thực sự để gửi API (Cột id)
         keyColumn: idKey, // Lưu lại tên cột Key tìm được để dùng lúc Update
+        imgColumn: imgKey, // Lưu lại tên cột Ảnh tìm được để dùng lúc Update
         name: row.name || row["Tên công việc"] || row["Hạng mục"] || "",
         status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
         ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
@@ -79,12 +80,14 @@ export const updateStageInSheet = async (stage, appId) => {
 
     // Sử dụng tên cột Key đã tìm thấy lúc Fetch, mặc định là 'id' nếu không có
     const keyColumnName = stage.keyColumn || 'id';
+    // Sử dụng tên cột Ảnh đã tìm thấy lúc Fetch, mặc định là 'Ảnh nghiệm thu' nếu không có
+    const imgColumnName = stage.imgColumn || 'Ảnh nghiệm thu';
 
     const editData = [{
       "_RowNumber": stage.appSheetId, // Gửi kèm RowNumber để hỗ trợ tìm kiếm
       [keyColumnName]: String(stage.keyId), // Dùng đúng tên cột Key tìm được (id, ID, TT...)
       "status": stage.status,
-      "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Link ảnh từ Cloudinary
+      [imgColumnName]: stage.anhNghiemThu || "", // Dùng đúng tên cột Ảnh tìm được
     }];
 
     // Log dữ liệu gửi đi để kiểm tra xem có link ảnh chưa
