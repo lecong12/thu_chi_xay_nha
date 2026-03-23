@@ -144,7 +144,12 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
       );
       const fileData = await res.json();
       
+      console.log("Kết quả từ Cloudinary:", fileData); // Xem log chi tiết trong Console (F12)
+      
       if (fileData.secure_url) {
+        // Hiển thị link để kiểm tra ngay lập tức
+        console.log("Link ảnh nhận được:", fileData.secure_url);
+        
         // Cập nhật ảnh lên AppSheet
         await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
         // Xóa trạng thái pending sau khi thành công

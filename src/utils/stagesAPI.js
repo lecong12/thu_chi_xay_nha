@@ -63,6 +63,9 @@ export const updateStageInSheet = async (stage, appId) => {
       // ngayKetThuc: stage.ngayKetThuc ? stage.ngayKetThuc.toISOString().split('T')[0] : null,
     }];
 
+    // Log dữ liệu gửi đi để kiểm tra xem có link ảnh chưa
+    console.log("Đang gửi cập nhật tiến độ lên AppSheet:", JSON.stringify(editData, null, 2));
+
     const apiUrl = getApiUrl(appId);
 
     console.log("Update Stage API URL:", apiUrl);
