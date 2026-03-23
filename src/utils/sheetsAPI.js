@@ -1,8 +1,11 @@
+e:\Myapp\Thuchixaynha\src\utils\sheetsAPI.js
+// AppSheet API Configuration
 const APPSHEET_TABLE_NAME = "GiaoDich";
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
+// Sử dụng endpoint chuẩn của AppSheet
 const getApiUrl = (appId, tableName = APPSHEET_TABLE_NAME) => 
-  `https://api.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
+  `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
 
 /**
  * Hàm lấy dữ liệu chung cho bất kỳ bảng nào từ AppSheet
@@ -18,7 +21,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Find",
         Properties: {
-          Locale: "en-US", // Chuyển sang en-US để AppSheet trả về định dạng ngày chuẩn (YYYY-MM-DD hoặc MM/DD/YYYY) dễ xử lý hơn
+          Locale: "en-US", // Dùng en-US khi đọc để ngày tháng có định dạng chuẩn YYYY-MM-DD dễ parse
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: [], // Lấy toàn bộ dòng
@@ -31,7 +34,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
     }
 
     const data = await response.json();
-    // AppSheet trả về mảng object hoặc object rỗng nếu lỗi
+    // AppSheet trả về mảng object hoặc object rỗng nếu lỗi/không có dữ liệu
     return { success: true, data: Array.isArray(data) ? data : [] };
   } catch (error) {
     console.error("Error fetching from AppSheet:", error);
@@ -40,7 +43,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
 };
 
 /**
- * Giữ lại hàm này để tương thích ngược nếu cần, nhưng trỏ về hàm chung
+ * Wrapper để tương thích với code cũ nếu có chỗ nào còn gọi hàm này
  */
 export const fetchDataFromAppSheet = (appId, accessKey) => {
   return fetchTableData(APPSHEET_TABLE_NAME, appId, accessKey);
@@ -51,15 +54,15 @@ export const fetchDataFromAppSheet = (appId, accessKey) => {
  */
 export const updateRowInSheet = async (rowData, appId, accessKey) => {
   try {
+    // Chuẩn bị payload khớp với tên cột trong Google Sheet
     const editData = [{
-      "id": rowData.keyId || rowData.id, // Fallback: Nếu không có keyId thì dùng id
-      // "_RowNumber": rowData.appSheetId, // Bỏ RowNumber, chỉ dùng ID (Key) để update cho an toàn giống hàm Xóa
+      "id": rowData.keyId || rowData.id, // Key column để nhận diện dòng
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
-      "Chứng từ": rowData.hinhAnh || "", /* Đổi từ 'Minh chứng' sang 'Chứng từ' để khớp với Google Sheet */
-      "Người cập nhật": rowData.nguoiCapNhat || "",
+      "Người cập nhật": rowData.nguoiCapNhat || "", // Cột F
+      "Chứng từ": rowData.hinhAnh || "",            // Cột G (Link ảnh)
     }];
 
     const response = await fetch(getApiUrl(appId), {
@@ -71,7 +74,7 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Edit",
         Properties: {
-          Locale: "vi-VN", // Chuyển sang vi-VN để tương thích tốt hơn với Sheet tiếng Việt
+          Locale: "vi-VN", // Dùng vi-VN khi ghi để tương thích số liệu/ngày tháng tiếng Việt
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: editData,
@@ -95,18 +98,17 @@ export const updateRowInSheet = async (rowData, appId, accessKey) => {
  */
 export const addRowToSheet = async (rowData, appId, accessKey) => {
   try {
-    // Sử dụng ID đã được tính toán từ App.js (Max + 1)
+    // Sử dụng ID đã được tính toán từ frontend
     const newId = rowData.id;
 
-    // Khi thêm mới, KHÔNG gửi _RowNumber
     const addData = [{
       "id": newId, 
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
       "Hạng mục": rowData.doiTuongThuChi,
       "Nội dung": rowData.noiDung,
       "Số tiền": rowData.soTien ? rowData.soTien.toString() : "0",
-      "Chứng từ": rowData.hinhAnh || "", /* Đổi từ 'Minh chứng' sang 'Chứng từ' */
-      "Người cập nhật": rowData.nguoiCapNhat || "",
+      "Người cập nhật": rowData.nguoiCapNhat || "", // Cột F
+      "Chứng từ": rowData.hinhAnh || "",            // Cột G (Link ảnh)
     }];
 
     const response = await fetch(getApiUrl(appId), {
@@ -118,7 +120,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Add",
         Properties: {
-          Locale: "vi-VN", // Đồng bộ Locale vi-VN
+          Locale: "vi-VN",
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: addData,
