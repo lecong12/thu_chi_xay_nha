@@ -167,14 +167,14 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       
       if (fileData.secure_url) {
         console.log("Link ảnh nhận được:", fileData.secure_url); // Log link ra console
-        notify(`Đã nhận link: ...${fileData.secure_url.slice(-15)}. Đang lưu...`, "info");
+        notify(`Đã có link ảnh. Đang lưu vào dòng ${stageId}...`, "info");
 
         // Cập nhật ảnh lên AppSheet
         const result = await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
         
         // Chỉ xóa trạng thái chờ (preview) nếu lưu thành công
         if (result && result.success) {
-          notify("Đã lưu ảnh thành công!", "success");
+          notify("Lưu thành công!", "success");
           handleCancelUpload(stageId);
         } else {
           // Lỗi từ AppSheet API
@@ -542,6 +542,11 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
                       <span>Sửa</span>
                       <input type="file" accept="image/*" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
                     </label>
+                  </div>
+                  {/* Hiển thị link ảnh để xác nhận Cloudinary đã trả về */}
+                  <div style={{ marginTop: '4px', fontSize: '10px', color: '#059669', textAlign: 'center' }}>
+                    ✓ Đã có link: <a href={stage.anhNghiemThu} target="_blank" rel="noreferrer" style={{color: 'inherit', textDecoration: 'underline'}}>Xem ảnh</a>
+                  </div>
                   </div>
                 ) : (
                   <label className="upload-placeholder" style={{ border: '1px dashed #cbd5e1', borderRadius: '4px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}>
