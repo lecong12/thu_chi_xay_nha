@@ -4,6 +4,8 @@ import {
   FiActivity,
   FiCamera,
   FiLoader,
+  FiSave,
+  FiX,
 } from "react-icons/fi";
 import {
   PieChart,
@@ -79,13 +81,15 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
   const stages = extraData.tienDo || [];
   const budget = extraData.nganSach || [];
   const [uploadingStageId, setUploadingStageId] = useState(null);
+  const [pendingFiles, setPendingFiles] = useState({}); // Lưu ảnh đang chờ upload: { [stageId]: { file, preview } }
 
   const handleUpdateStatus = async (stageId, newStatus) => {
     // Gọi hàm được truyền từ App.js để xử lý logic cập nhật
     await onUpdateStage(stageId, { status: newStatus });
   };
 
-  const handleFileUpload = async (e, stageId) => {
+  // Bước 1: Chọn file và hiển thị xem trước (chưa upload)
+  const handleFileSelect = (e, stageId) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -99,6 +103,29 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
       alert("File ảnh quá lớn ( > 10MB). Vui lòng chọn ảnh nhỏ hơn để upload.");
       return;
     }
+
+    // Tạo preview ảnh
+    const preview = URL.createObjectURL(file);
+    setPendingFiles(prev => ({ ...prev, [stageId]: { file, preview } }));
+    
+    // Reset input để có thể chọn lại file đó nếu cần
+    e.target.value = null;
+  };
+
+  // Hủy chọn ảnh
+  const handleCancelUpload = (stageId) => {
+    setPendingFiles(prev => {
+      const newState = { ...prev };
+      if (newState[stageId]?.preview) URL.revokeObjectURL(newState[stageId].preview);
+      delete newState[stageId];
+      return newState;
+    });
+  };
+
+  // Bước 2: Thực hiện Upload lên Cloudinary và Lưu vào AppSheet
+  const handleConfirmUpload = async (stageId) => {
+    const { file } = pendingFiles[stageId] || {};
+    if (!file) return;
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       alert("Thiếu cấu hình Cloudinary.");
@@ -120,6 +147,8 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
       if (fileData.secure_url) {
         // Cập nhật ảnh lên AppSheet
         await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
+        // Xóa trạng thái pending sau khi thành công
+        handleCancelUpload(stageId);
       } else {
         alert("Lỗi upload ảnh: " + (fileData.error?.message || "Unknown error"));
       }
@@ -439,7 +468,33 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
               </select>
               
               <div className="stage-image-container" style={{ marginTop: '10px', position: 'relative' }}>
-                {stage.anhNghiemThu ? (
+                {pendingFiles[stage.id] ? (
+                  // Giao diện khi đang có ảnh chờ xác nhận (Preview)
+                  <div style={{ position: 'relative' }}>
+                    <img 
+                      src={pendingFiles[stage.id].preview} 
+                      alt="Preview" 
+                      style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block', border: '2px solid #3b82f6' }} 
+                    />
+                    <div style={{ position: 'absolute', bottom: 5, right: 5, display: 'flex', gap: '5px' }}>
+                      <button 
+                        onClick={() => handleConfirmUpload(stage.id)} 
+                        disabled={uploadingStageId === stage.id}
+                        style={{ background: '#16a34a', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                      >
+                        {uploadingStageId === stage.id ? <FiLoader className="spin" /> : <FiSave />} 
+                        Lưu
+                      </button>
+                      <button 
+                        onClick={() => handleCancelUpload(stage.id)}
+                        disabled={uploadingStageId === stage.id}
+                        style={{ background: '#ef4444', color: '#fff', border: 'none', padding: '6px 10px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }}
+                      >
+                        <FiX /> Hủy
+                      </button>
+                    </div>
+                  </div>
+                ) : stage.anhNghiemThu ? (
                   <div style={{ position: 'relative' }}>
                     <img 
                       src={stage.anhNghiemThu} 
@@ -447,16 +502,16 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
                       style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block' }} 
                     />
                     <label className="upload-btn-overlay" style={{ position: 'absolute', bottom: 5, right: 5, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      {uploadingStageId === stage.id ? <FiLoader className="spin" /> : <FiCamera />} 
+                      <FiCamera /> 
                       <span>Sửa</span>
-                      <input type="file" accept="image/*" hidden onChange={(e) => handleFileUpload(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                      <input type="file" accept="image/*" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
                     </label>
                   </div>
                 ) : (
                   <label className="upload-placeholder" style={{ border: '1px dashed #cbd5e1', borderRadius: '4px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}>
-                    {uploadingStageId === stage.id ? <FiLoader className="spin" size={20} /> : <FiCamera size={20} />}
-                    <span style={{ marginTop: '5px' }}>{uploadingStageId === stage.id ? "Đang tải..." : "Thêm ảnh nghiệm thu"}</span>
-                    <input type="file" accept="image/*" hidden onChange={(e) => handleFileUpload(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                    <FiCamera size={20} />
+                    <span style={{ marginTop: '5px' }}>Thêm ảnh nghiệm thu</span>
+                    <input type="file" accept="image/*" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
                   </label>
                 )}
               </div>

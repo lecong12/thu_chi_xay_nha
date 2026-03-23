@@ -73,7 +73,14 @@ export const updateStageInSheet = async (stage, appId) => {
         "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ Action: "Edit", Properties: {}, Rows: editData }),
+      body: JSON.stringify({ 
+        Action: "Edit", 
+        Properties: {
+          Locale: "vi-VN",
+          Timezone: "Asia/Ho_Chi_Minh",
+        }, 
+        Rows: editData 
+      }),
     });
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
