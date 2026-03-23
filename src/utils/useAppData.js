@@ -25,7 +25,6 @@ const normalizeKey = (str) => {
     if (s.includes("doi tuong thu chi")) return "doiTuongThuChi";
     if (s.includes("so tien")) return "soTien";
     if (s.includes("noi dung")) return "noiDung";
-    if (s.includes("ghi chu")) return "ghiChu";
     if (s.includes("hinh anh") || s.includes("minh chung") || s.includes("chung tu")) return "hinhAnh";
     if (s.includes("nguoi cap nhat") || s.includes("nguoi thuc hien")) return "nguoiCapNhat";
     // Fallback for single words like 'id', 'ngay'
@@ -66,7 +65,6 @@ export const useAppData = (isLoggedIn) => {
                     loaiThuChi: c.loaiThuChi || "Chi",
                     noiDung: c.noiDung || "",
                     doiTuongThuChi: c.doiTuongThuChi || "Khác",
-                    ghiChu: c.ghiChu || "",
                     hinhAnh: c.hinhAnh || "",
                     nguoiCapNhat: c.nguoiCapNhat || "",
                 };

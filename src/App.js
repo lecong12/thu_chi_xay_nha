@@ -66,9 +66,8 @@ function App() {
       if (filters.searchText) {
         const text = filters.searchText.toLowerCase();
         const content = (item.noiDung || "").toLowerCase();
-        const note = (item.ghiChu || "").toLowerCase();
         const cat = (item.doiTuongThuChi || "").toLowerCase();
-        return content.includes(text) || note.includes(text) || cat.includes(text);
+        return content.includes(text) || cat.includes(text);
       }
 
       return true;
@@ -102,7 +101,6 @@ function App() {
       noiDung: "",
       doiTuongThuChi: "",
       nguoiCapNhat: "",
-      ghiChu: "",
       hinhAnh: ""
     });
   };
@@ -114,7 +112,7 @@ function App() {
       return;
     }
 
-    const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
+    const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Link Ảnh"];
     
     // Helper format tên giai đoạn cho gọn (giống trong DataTable)
     const formatStage = (name) => name ? name.split("(")[0].trim().replace(/^\d+\.\s*/, "") : "-";
@@ -130,7 +128,6 @@ function App() {
         escape(formatStage(item.doiTuongThuChi)),
         item.soTien,
         escape(item.nguoiCapNhat),
-        escape(item.ghiChu),
         escape(item.hinhAnh || "")
       ].join(",");
     });
