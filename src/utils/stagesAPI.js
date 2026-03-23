@@ -55,8 +55,7 @@ export const fetchStages = async (appId) => {
 export const updateStageInSheet = async (stage, appId) => {
   try {
     const editData = [{
-      "_RowNumber": stage.appSheetId, // Thêm _RowNumber để định danh dòng chính xác
-      "id": stage.keyId,
+      "TT": stage.keyId, // Dùng Key của bảng ('TT') để xác định dòng cần sửa
       "status": stage.status,
       "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Đảm bảo tên cột khớp chính xác với Google Sheet
       // Thêm các trường khác để có thể cập nhật sau này
