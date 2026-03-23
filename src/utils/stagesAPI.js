@@ -77,8 +77,13 @@ export const updateStageInSheet = async (stage, appId) => {
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    const responseData = await response.json();
-    console.log("Update Stage API Response:", responseData);
+    let responseData;
+    try {
+      responseData = await response.json();
+    } catch (error) {
+      console.warn("Empty JSON response from AppSheet:", error);
+      responseData = {}; // Treat as empty object
+    }
     return { success: true, message: "Cập nhật trạng thái thành công!" };
   } catch (error) {
     console.error("Lỗi khi cập nhật tiến độ:", error);
