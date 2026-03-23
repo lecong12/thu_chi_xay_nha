@@ -221,19 +221,25 @@ function DataTable({ data, onEdit, onDelete }) {
                 {expandedRow === item.id && (
                   <div className="card-details">
                     {item.hinhAnh && (
-                       <div className="detail-item">
-                         <FiImage size={14} />
-                         <span className="detail-label">Chứng từ:</span>
-                         <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="detail-link">Xem ảnh</a>
-                       </div>
-                    )}
-                    {item.nguoiCapNhat && (
-                      <div className="detail-item">
-                        <FiUser size={14} />
-                        <span className="detail-label">Người cập nhật:</span>
-                        <span className="detail-value">{item.nguoiCapNhat}</span>
+                      <div className="detail-item" style={{ alignItems: 'flex-start' }}>
+                        <FiImage size={14} style={{ marginTop: '4px' }} />
+                        <span className="detail-label" style={{ marginTop: '2px' }}>Chứng từ:</span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="detail-link">Xem link gốc</a>
+                          <img 
+                            src={item.hinhAnh} 
+                            alt="Chứng từ" 
+                            style={{ width: '100px', height: '100px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb' }}
+                            onError={(e) => {e.target.onerror = null; e.target.src = "https://via.placeholder.com/100?text=Error"}}
+                          />
+                        </div>
                       </div>
                     )}
+                    <div className="detail-item">
+                      <FiUser size={14} />
+                      <span className="detail-label">Người cập nhật:</span>
+                      <span className="detail-value">{item.nguoiCapNhat || "-"}</span>
+                    </div>
                     <div className="card-actions">
                       <button
                         className="action-btn edit-btn"
