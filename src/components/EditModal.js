@@ -223,7 +223,7 @@ function EditModal({ item, onClose, onSave }) {
       ...item,
       ...formData,
       ngay: new Date(formData.ngay),
-      soTien: isNaN(parsedSoTien) ? 0 : parsedSoTien,
+      soTien: isNaN(parsedSoTien) ? 0 : parsedSoTien
     };
 
     onSave(finalData);

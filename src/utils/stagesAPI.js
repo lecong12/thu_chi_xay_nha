@@ -39,7 +39,7 @@ export const fetchStages = async (appId) => {
       status: row.status || "Chưa bắt đầu", // Giá trị mặc định
       ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
       ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
-      anhNghiemThu: row.anhNghiemThu || null,
+      anhNghiemThu: row["Ảnh nghiệm thu"] || row.anhNghiemThu || null, // Map từ tên cột AppSheet
     })).sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10)); // Sắp xếp theo ID để đảm bảo thứ tự
 
     return { success: true, data: transformedData };
@@ -57,7 +57,7 @@ export const updateStageInSheet = async (stage, appId) => {
     const editData = [{
       _RowNumber: stage.appSheetId, // Dùng _RowNumber để xác định dòng cần sửa
       status: stage.status,
-      anhNghiemThu: stage.anhNghiemThu || "", // Cập nhật cột ảnh nghiệm thu
+      "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Cập nhật cột ảnh nghiệm thu (dùng đúng tên cột AppSheet)
       // Thêm các trường khác để có thể cập nhật sau này
       // ngayBatDau: stage.ngayBatDau ? stage.ngayBatDau.toISOString().split('T')[0] : null,
       // ngayKetThuc: stage.ngayKetThuc ? stage.ngayKetThuc.toISOString().split('T')[0] : null,
