@@ -33,19 +33,25 @@ export const fetchStages = async (appId) => {
     }
 
     const transformedData = rawData.map((row, index) => {
-      // 1. Tìm tên cột Key (id) và Ảnh chính xác (bất kể hoa thường)
+      // 1. Tìm tên cột Key và Ảnh chính xác (bất kể hoa thường)
       const rowKeys = Object.keys(row);
-      const idKey = rowKeys.find(k => k.trim().toLowerCase() === 'id') || 'id';
+      
+      // Ưu tiên tìm cột 'id', nếu không có thì tìm 'tt', 'stt', cuối cùng fallback về 'id'
+      const idKey = rowKeys.find(k => k.trim().toLowerCase() === 'id') || 
+                    rowKeys.find(k => k.trim().toLowerCase() === 'tt') || 
+                    rowKeys.find(k => k.trim().toLowerCase() === 'stt') || 'id';
+                    
       const imgKey = rowKeys.find(k => k.trim().toLowerCase() === 'ảnh nghiệm thu' || k.trim().toLowerCase() === 'anh nghiem thu') || "Ảnh nghiệm thu";
 
       // 2. Tạo ID duy nhất cho Frontend (QUAN TRỌNG: Sửa lỗi hiển thị ảnh ở tất cả các ô)
-      // Ưu tiên dùng idKey, nếu không có thì dùng _RowNumber, cùng lắm dùng index
-      const uniqueId = row[idKey] || row.id || row._RowNumber || `stage_idx_${index}`;
+      // Ưu tiên dùng giá trị từ cột Key tìm được
+      const uniqueId = row[idKey] || row._RowNumber || `stage_idx_${index}`;
 
       return {
         id: uniqueId, 
         appSheetId: row._RowNumber, 
         keyId: row[idKey], // Giá trị Key thực sự để gửi API (Cột id)
+        keyColumn: idKey, // Lưu lại tên cột Key tìm được để dùng lúc Update
         name: row.name || row["Tên công việc"] || row["Hạng mục"] || "",
         status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
         ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
@@ -67,12 +73,16 @@ export const fetchStages = async (appId) => {
 export const updateStageInSheet = async (stage, appId) => {
   try {
     // Kiểm tra Key bắt buộc
-    if (!stage.keyId) {
-      throw new Error("Không tìm thấy Key (cột id) để cập nhật dòng này.");
+    if (stage.keyId === undefined || stage.keyId === null || stage.keyId === "") {
+      throw new Error("Dữ liệu dòng này bị thiếu Key (id/TT). Vui lòng kiểm tra lại Google Sheet.");
     }
 
+    // Sử dụng tên cột Key đã tìm thấy lúc Fetch, mặc định là 'id' nếu không có
+    const keyColumnName = stage.keyColumn || 'id';
+
     const editData = [{
-      "id": String(stage.keyId), // SỬA: Dùng tên cột 'id' làm Key thay vì 'TT'
+      "_RowNumber": stage.appSheetId, // Gửi kèm RowNumber để hỗ trợ tìm kiếm
+      [keyColumnName]: String(stage.keyId), // Dùng đúng tên cột Key tìm được (id, ID, TT...)
       "status": stage.status,
       "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Link ảnh từ Cloudinary
     }];
@@ -113,7 +123,7 @@ export const updateStageInSheet = async (stage, appId) => {
       responseData = await response.json();
       // Kiểm tra xem AppSheet có thực sự cập nhật dòng nào không
       if (responseData.Rows && responseData.Rows.length === 0) {
-        console.warn("Cảnh báo: AppSheet trả về danh sách rỗng (Không có dòng nào được cập nhật). Kiểm tra lại Key 'id' hoặc '_RowNumber'.");
+        console.warn(`Cảnh báo: AppSheet trả về danh sách rỗng. Có thể sai Key '${keyColumnName}' hoặc '_RowNumber'.`);
       }
     } catch (error) {
       console.warn("Empty JSON response from AppSheet:", error);
