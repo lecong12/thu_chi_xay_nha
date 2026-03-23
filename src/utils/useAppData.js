@@ -7,6 +7,10 @@ const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 const normalizeKey = (str) => {
     if (!str) return '';
+    // Nếu key đã đúng chuẩn camelCase từ sheetsAPI rồi thì giữ nguyên
+    const knownKeys = ['hinhAnh', 'nguoiCapNhat', 'doiTuongThuChi', 'soTien', 'noiDung', 'ngay', 'loaiThuChi', 'keyId', 'appSheetId', 'id', 'anhNghiemThu', 'ngayBatDau', 'ngayKetThuc', 'status', 'name'];
+    if (knownKeys.includes(str)) return str;
+
     const s = str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
     
     if (s.includes("row number")) return "rowNumber";
