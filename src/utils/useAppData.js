@@ -94,7 +94,9 @@ export const useAppData = (isLoggedIn) => {
                 const c = {};
                 Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
                 return {
-                    id: c.id || c.rowNumber || `td_${index}`,
+                    id: row._RowNumber || `td_${index}`, // Dùng RowNumber cho key của React để đảm bảo tính duy nhất
+                    appSheetId: row._RowNumber,
+                    keyId: c.id || row.id, // Đây là Key thật sự của dòng trong bảng
                     name: c.name || "Công việc",
                     status: c.status || "Chưa bắt đầu",
                     ngayBatDau: c.ngayBatDau ? new Date(c.ngayBatDau) : null,
