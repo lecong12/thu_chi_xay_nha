@@ -188,7 +188,12 @@ function App() {
         setEditingItem(null); // Đóng modal
         await fetchAllData(); // Tải lại dữ liệu thật từ server để đảm bảo đã ghi thành công
       } else {
-        showToast(`Lỗi: ${result?.message || "Không có phản hồi từ server"}`, "error");
+        const msg = result?.message || "Lỗi không xác định";
+        if (msg.includes("403")) {
+          showToast("Lỗi quyền truy cập (403): Kiểm tra quyền 'Updates Allowed' trong AppSheet hoặc quyền chỉnh sửa Google Sheet.", "error");
+        } else {
+          showToast(`Lỗi: ${msg}`, "error");
+        }
       }
     } catch (error) {
       console.error("Save error:", error);
