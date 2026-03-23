@@ -144,7 +144,7 @@ function DataTable({ data, onEdit, onDelete }) {
                     <td style={{whiteSpace: 'nowrap'}}>{formatDate(item.ngay)}</td>
                     <td>{formatStageName(item.doiTuongThuChi)}</td>
                     <td className="content-cell">{item.noiDung || "-"}</td>
-                    <td className="amount-cell chi">
+                    <td className="amount-cell chi" style={{ textAlign: 'right' }}>
                       {formatCurrency(item.soTien)}
                     </td>
                     <td>{item.nguoiCapNhat || "-"}</td>
