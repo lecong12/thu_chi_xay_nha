@@ -36,7 +36,7 @@ export const fetchStages = async (appId) => {
       id: row.id, // Cột 'id' trong bảng data_tien_do (VD: 1, 2, 3...)
       appSheetId: row._RowNumber, // ID của dòng trong AppSheet
       name: row.name || "",
-      status: row.status || "Chưa bắt đầu",
+      status: row.status || "Chưa bắt đầu", // Giá trị mặc định
       ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
       ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
       anhNghiemThu: row.anhNghiemThu || null,
@@ -62,7 +62,11 @@ export const updateStageInSheet = async (stage, appId) => {
       // ngayKetThuc: stage.ngayKetThuc ? stage.ngayKetThuc.toISOString().split('T')[0] : null,
     }];
 
-    const response = await fetch(getApiUrl(appId), {
+    const apiUrl = getApiUrl(appId);
+
+    console.log("Update Stage API URL:", apiUrl);
+
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
@@ -72,7 +76,10 @@ export const updateStageInSheet = async (stage, appId) => {
     });
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return { success: true, message: "Cập nhật trạng thái thành công" };
+
+    const responseData = await response.json();
+    console.log("Update Stage API Response:", responseData);
+    return { success: true, message: "Cập nhật trạng thái thành công!" };
   } catch (error) {
     console.error("Lỗi khi cập nhật tiến độ:", error);
     return { success: false, message: error.message };

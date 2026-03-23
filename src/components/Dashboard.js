@@ -75,7 +75,7 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
 
   const handleUpdateStatus = async (stageId, newStatus) => {
     // Gọi hàm được truyền từ App.js để xử lý logic cập nhật
-    onUpdateStageStatus(stageId, newStatus);
+    await onUpdateStageStatus(stageId, newStatus);
   };
 
   // Tính toán tiến độ hoàn thành
