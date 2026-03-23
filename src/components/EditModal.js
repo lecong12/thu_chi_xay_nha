@@ -126,6 +126,7 @@ function EditModal({ item, onClose, onSave }) {
       const fileData = await res.json();
       
       if (fileData.secure_url) {
+        console.log("Upload thành công:", fileData.secure_url);
         setFormData((prev) => ({ ...prev, hinhAnh: fileData.secure_url }));
       } else {
         const errorMsg = fileData.error?.message || "Không rõ lỗi";
@@ -250,17 +251,22 @@ function EditModal({ item, onClose, onSave }) {
         <div className="image-upload-section">
           <div className="image-preview">
             {formData.hinhAnh ? (
-              <div className="preview-container" onClick={() => !uploading && fileInputRef.current.click()}>
-                <img src={formData.hinhAnh} alt="Chứng từ" />
-                {/* Overlay khi đang upload lại */}
-                {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
-                <button 
-                  type="button" 
-                  className="remove-image-btn" 
-                  onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, hinhAnh: ""})) }}
-                >
-                  <FiX />
-                </button>
+              <div style={{ width: '100%', textAlign: 'center' }}>
+                <div className="preview-container" onClick={() => !uploading && fileInputRef.current.click()}>
+                  <img src={formData.hinhAnh} alt="Chứng từ" />
+                  {/* Overlay khi đang upload lại */}
+                  {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
+                  <button 
+                    type="button" 
+                    className="remove-image-btn" 
+                    onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, hinhAnh: ""})) }}
+                  >
+                    <FiX />
+                  </button>
+                </div>
+                <div style={{ fontSize: '10px', color: '#16a34a', marginTop: '4px', wordBreak: 'break-all' }}>
+                  ✓ Đã có link: {formData.hinhAnh.substring(0, 30)}...
+                </div>
               </div>
             ) : (
               <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
@@ -273,6 +279,7 @@ function EditModal({ item, onClose, onSave }) {
             ref={fileInputRef}
             type="file" 
             accept="image/*" 
+            key={formData.hinhAnh || "new"} // Reset input khi ảnh thay đổi để cho phép chọn lại file cũ nếu cần
             onChange={handleFileUpload} 
             style={{ display: 'none' }} 
           />
