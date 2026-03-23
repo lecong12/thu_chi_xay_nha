@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { updateStageInSheet } from "./stagesAPI";
+import { updateStageInSheet, fetchStages } from "./stagesAPI";
 import { fetchTableData } from "./sheetsAPI";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
@@ -48,13 +48,16 @@ export const useAppData = (isLoggedIn) => {
         setError(null);
 
         try {
-            const tables = ["GiaoDich", "Ngansach", "TienDo"];
-            const [resGD, resNS, resTD] = await Promise.all(
-                tables.map(async (tableName) => {
-                    const result = await fetchTableData(tableName, APP_ID, ACCESS_KEY);
-                    return result.success ? result.data : [];
-                })
-            );
+            // Tải dữ liệu song song
+            const [resGDResult, resNSResult, resTDResult] = await Promise.all([
+                fetchTableData("GiaoDich", APP_ID, ACCESS_KEY),
+                fetchTableData("Ngansach", APP_ID, ACCESS_KEY),
+                fetchStages(APP_ID) // Dùng API riêng cho Tiến độ để lấy đúng cột
+            ]);
+
+            const resGD = resGDResult.success ? resGDResult.data : [];
+            const resNS = resNSResult.success ? resNSResult.data : [];
+            const resTD = resTDResult.success ? resTDResult.data : [];
 
             // 1. Xử lý GiaoDich
             const cleanGD = resGD.map((row, index) => {
@@ -96,7 +99,7 @@ export const useAppData = (isLoggedIn) => {
                 return {
                     id: row._RowNumber || `td_${index}`, // Dùng RowNumber cho key của React để đảm bảo tính duy nhất
                     appSheetId: row._RowNumber,
-                    keyId: c.tt || row.TT || row.Tt || row.tt, // Tìm kỹ các biến thể của cột TT
+                    keyId: row.keyId || c.tt || row.TT, // Ưu tiên keyId từ fetchStages
                     name: c.name || "Công việc",
                     status: c.status || "Chưa bắt đầu",
                     ngayBatDau: c.ngayBatDau ? new Date(c.ngayBatDau) : null,

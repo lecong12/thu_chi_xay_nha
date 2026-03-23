@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiX, FiSave, FiCamera, FiImage, FiLoader } from "react-icons/fi";
-import Tesseract from 'tesseract.js';
+// import Tesseract from 'tesseract.js'; // Tạm tắt do lỗi build
 import "./EditModal.css";
 
 // Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'
@@ -151,6 +151,7 @@ function EditModal({ item, onClose, onSave }) {
 
   // Xử lý OCR (Quét hóa đơn)
   const handleOCR = async () => {
+    /* Tạm tắt tính năng OCR
     if (!formData.hinhAnh) {
       alert("Vui lòng tải ảnh lên hoặc chọn ảnh hóa đơn trước khi quét.");
       return;
@@ -203,6 +204,8 @@ function EditModal({ item, onClose, onSave }) {
     } finally {
       setOcrScanning(false);
     }
+    */
+    alert("Tính năng OCR đang tạm bảo trì.");
   };
 
   const handleSubmit = (e) => {

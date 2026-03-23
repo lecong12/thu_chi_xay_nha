@@ -35,12 +35,13 @@ export const fetchStages = async (appId) => {
     const transformedData = rawData.map(row => ({
       id: row.id, // Cột 'id' trong bảng data_tien_do (VD: 1, 2, 3...)
       appSheetId: row._RowNumber, // ID của dòng trong AppSheet
+      keyId: row.TT, // Quan trọng: Lấy cột TT làm Key
       name: row.name || "",
       status: row.status || "Chưa bắt đầu", // Giá trị mặc định
       ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
       ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
       anhNghiemThu: row["Ảnh nghiệm thu"] || row.anhNghiemThu || null, // Map từ tên cột AppSheet
-    })).sort((a, b) => parseInt(a.id, 10) - parseInt(b.id, 10)); // Sắp xếp theo ID để đảm bảo thứ tự
+    })).sort((a, b) => parseInt(a.keyId || a.id, 10) - parseInt(b.keyId || b.id, 10));
 
     return { success: true, data: transformedData };
   } catch (error) {
@@ -55,7 +56,6 @@ export const fetchStages = async (appId) => {
 export const updateStageInSheet = async (stage, appId) => {
   try {
     const editData = [{
-      "_RowNumber": stage.appSheetId, // Gửi kèm RowNumber để hỗ trợ tìm kiếm
       "TT": String(stage.keyId), // Ép kiểu Key về String để tránh lỗi format
       "status": stage.status,
       "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Đảm bảo tên cột khớp chính xác với Google Sheet
