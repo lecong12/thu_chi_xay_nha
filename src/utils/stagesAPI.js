@@ -43,6 +43,17 @@ export const fetchStages = async (appId) => {
                     
       const imgKey = rowKeys.find(k => k.trim().toLowerCase() === 'ảnh nghiệm thu' || k.trim().toLowerCase() === 'anh nghiem thu') || "Ảnh nghiệm thu";
 
+      // 3. Tìm cột Tên (Name) để hiển thị tiêu đề
+      const nameKey = rowKeys.find(k => {
+        const key = k.trim().toLowerCase();
+        return key === 'name' ||
+               key.includes('tên công việc') || key.includes('ten cong viec') ||
+               key.includes('hạng mục') || key.includes('hang muc') ||
+               key.includes('nội dung') || key.includes('noi dung') ||
+               key.includes('công việc') || key.includes('cong viec') ||
+               key.includes('giai đoạn');
+      });
+
       // 2. Tạo ID duy nhất cho Frontend (QUAN TRỌNG: Sửa lỗi hiển thị ảnh ở tất cả các ô)
       // Ưu tiên dùng giá trị từ cột Key tìm được
       const uniqueId = row[idKey] || row._RowNumber || `stage_idx_${index}`;
