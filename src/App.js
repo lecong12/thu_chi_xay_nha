@@ -155,24 +155,30 @@ function App() {
       showToast("Đang xử lý dữ liệu...", "info");
 
       let result;
+      // Clone item để xử lý, tránh mutate object gốc
+      const itemToSave = { ...updatedItem };
+
       if (isEdit) {
         // Gọi API qua sheetsAPI
-        result = await updateRowInSheet(updatedItem, APP_ID);
+        result = await updateRowInSheet(itemToSave, APP_ID);
       } else {
-        // AppSheet xử lý thêm mới
-        result = await addRowToSheet(updatedItem, APP_ID);
+        // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
+        if (!itemToSave.id) {
+          itemToSave.id = `GD_${Date.now()}`;
+        }
+        result = await addRowToSheet(itemToSave, APP_ID);
       }
 
       if (result && result.success) {
         // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
         const newItem = {
-          ...updatedItem,
-          // Nếu là thêm mới, tạo ID tạm để hiển thị ngay lập tức
-          id: updatedItem.id || `temp_${Date.now()}`,
-          appSheetId: updatedItem.appSheetId, // Giữ nguyên appSheetId nếu có (khi sửa)
-          keyId: updatedItem.id, // Quan trọng: Cập nhật keyId để các thao tác sau (Sửa/Xóa) hoạt động đúng
-          ngay: new Date(updatedItem.ngay), // Đảm bảo là Date object
-          soTien: Number(updatedItem.soTien),
+          ...itemToSave,
+          // Nếu là thêm mới, dùng Key ID vừa tạo làm ID tạm cho giao diện
+          id: itemToSave.appSheetId || itemToSave.id, 
+          appSheetId: itemToSave.appSheetId, 
+          keyId: itemToSave.keyId || itemToSave.id, // Đảm bảo keyId luôn có (ưu tiên keyId có sẵn)
+          ngay: new Date(itemToSave.ngay), // Đảm bảo là Date object
+          soTien: Number(itemToSave.soTien),
         };
 
         setData(prevData => {
@@ -189,8 +195,9 @@ function App() {
         await fetchAllData(); // Tải lại dữ liệu thật từ server để đảm bảo đã ghi thành công
       } else {
         const msg = result?.message || "Lỗi không xác định";
-        if (msg.includes("403")) {
-          showToast("Lỗi quyền truy cập (403): Kiểm tra quyền 'Updates Allowed' trong AppSheet hoặc quyền chỉnh sửa Google Sheet.", "error");
+        // Hiển thị thông báo lỗi chi tiết hơn cho người dùng
+        if (msg.includes("403") || msg.includes("Forbidden")) {
+          showToast("Lỗi 403: Bạn chưa cấp quyền 'Updates/Adds' cho bảng GiaoDich trong AppSheet Editor.", "error");
         } else {
           showToast(`Lỗi: ${msg}`, "error");
         }
