@@ -23,7 +23,7 @@ function App() {
   // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
   // Dưới đây giả định logic trong App.js là chính.
   const { 
-    data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStage 
+    data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus: updateStageStatus 
   } = useAppData(isLoggedIn);
 
   // State cho UI, không liên quan đến data fetching
@@ -86,8 +86,8 @@ function App() {
     setToast({ message, type });
   };
 
-  const handleStageUpdate = async (stageId, updates) => {
-    const result = await handleUpdateStage(stageId, updates);
+  const handleUpdateStageStatus = async (stageId, newStatus) => {
+    const result = await updateStageStatus(stageId, newStatus);
     if (!result.success) {
       showToast(result.message || "Lỗi khi cập nhật trạng thái.", "error");
     }
@@ -288,7 +288,7 @@ function App() {
               stats={stats} 
               data={filteredData}
               extraData={extraData} 
-              onUpdateStage={handleStageUpdate}
+              onUpdateStageStatus={handleUpdateStageStatus}
               showToast={showToast}
             >
               {activeTab === "all" && (

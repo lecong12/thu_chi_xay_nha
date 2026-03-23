@@ -49,7 +49,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
         <FiSearch className="search-icon" />
         <input
           type="text"
-          placeholder="Tìm hạng mục, vật tư, ghi chú..."
+          placeholder="Tìm hạng mục, vật tư..."
           value={filters.searchText}
           onChange={(e) => onFilterChange("searchText", e.target.value)}
           className="search-input"
