@@ -111,15 +111,16 @@ export const useAppData = (isLoggedIn) => {
         fetchAllData();
     }, [fetchAllData]);
 
-    const handleUpdateStageStatus = async (stageId, newStatus) => {
+    const handleUpdateStage = async (stageId, updates) => {
         const originalTienDo = [...tienDo];
         const stageToUpdate = tienDo.find(s => s.id === stageId);
         if (!stageToUpdate) return { success: false, message: "Không tìm thấy giai đoạn" };
 
-        const newTienDo = tienDo.map((s) => s.id === stageId ? { ...s, status: newStatus } : s);
+        const updatedStage = { ...stageToUpdate, ...updates };
+        const newTienDo = tienDo.map((s) => s.id === stageId ? updatedStage : s);
         setTienDo(newTienDo);
 
-        const result = await updateStageInSheet({ ...stageToUpdate, status: newStatus }, APP_ID);
+        const result = await updateStageInSheet(updatedStage, APP_ID);
 
         if (!result.success) {
             setTienDo(originalTienDo); // Revert on failure
@@ -127,5 +128,5 @@ export const useAppData = (isLoggedIn) => {
         return result;
     };
 
-    return { data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStageStatus };
+    return { data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStage };
 };

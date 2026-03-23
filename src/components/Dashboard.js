@@ -1,7 +1,9 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FiTrendingDown,
   FiActivity,
+  FiCamera,
+  FiLoader,
 } from "react-icons/fi";
 import {
   PieChart,
@@ -68,14 +70,59 @@ const GanttTooltip = ({ active, payload }) => {
   return null;
 };
 
-function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
+// Cấu hình Cloudinary
+const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
+const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
+
+function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
   // Lấy dữ liệu đã được fetch và xử lý từ component cha (App.js)
   const stages = extraData.tienDo || [];
   const budget = extraData.nganSach || [];
+  const [uploadingStageId, setUploadingStageId] = useState(null);
 
   const handleUpdateStatus = async (stageId, newStatus) => {
     // Gọi hàm được truyền từ App.js để xử lý logic cập nhật
-    await onUpdateStageStatus(stageId, newStatus);
+    await onUpdateStage(stageId, { status: newStatus });
+  };
+
+  const handleFileUpload = async (e, stageId) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Vui lòng chỉ chọn file ảnh.");
+      return;
+    }
+
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      alert("Thiếu cấu hình Cloudinary.");
+      return;
+    }
+
+    setUploadingStageId(stageId);
+    const data = new FormData();
+    data.append("file", file);
+    data.append("upload_preset", UPLOAD_PRESET);
+
+    try {
+      const res = await fetch(
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        { method: "POST", body: data }
+      );
+      const fileData = await res.json();
+      
+      if (fileData.secure_url) {
+        // Cập nhật ảnh lên AppSheet
+        await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
+      } else {
+        alert("Lỗi upload ảnh: " + (fileData.error?.message || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      alert("Lỗi kết nối khi upload ảnh");
+    } finally {
+      setUploadingStageId(null);
+    }
   };
 
   // Tính toán tiến độ hoàn thành
@@ -384,15 +431,29 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
                 <option value="Đang thi công">Đang thi công</option>
                 <option value="Hoàn thành">Hoàn thành</option>
               </select>
-              {stage.anhNghiemThu && (
-                <div className="stage-image" style={{ marginTop: '10px' }}>
-                  <img 
-                    src={stage.anhNghiemThu} 
-                    alt="Ảnh nghiệm thu" 
-                    style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px' }} 
-                  />
-                </div>
-              )}
+              
+              <div className="stage-image-container" style={{ marginTop: '10px', position: 'relative' }}>
+                {stage.anhNghiemThu ? (
+                  <div style={{ position: 'relative' }}>
+                    <img 
+                      src={stage.anhNghiemThu} 
+                      alt="Ảnh nghiệm thu" 
+                      style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block' }} 
+                    />
+                    <label className="upload-btn-overlay" style={{ position: 'absolute', bottom: 5, right: 5, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {uploadingStageId === stage.id ? <FiLoader className="spin" /> : <FiCamera />} 
+                      <span>Sửa</span>
+                      <input type="file" accept="image/*" hidden onChange={(e) => handleFileUpload(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                    </label>
+                  </div>
+                ) : (
+                  <label className="upload-placeholder" style={{ border: '1px dashed #cbd5e1', borderRadius: '4px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}>
+                    {uploadingStageId === stage.id ? <FiLoader className="spin" size={20} /> : <FiCamera size={20} />}
+                    <span style={{ marginTop: '5px' }}>{uploadingStageId === stage.id ? "Đang tải..." : "Thêm ảnh nghiệm thu"}</span>
+                    <input type="file" accept="image/*" hidden onChange={(e) => handleFileUpload(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                  </label>
+                )}
+              </div>
             </div>
           ))}
         </div>

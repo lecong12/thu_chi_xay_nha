@@ -57,6 +57,7 @@ export const updateStageInSheet = async (stage, appId) => {
     const editData = [{
       _RowNumber: stage.appSheetId, // Dùng _RowNumber để xác định dòng cần sửa
       status: stage.status,
+      anhNghiemThu: stage.anhNghiemThu || "", // Cập nhật cột ảnh nghiệm thu
       // Thêm các trường khác để có thể cập nhật sau này
       // ngayBatDau: stage.ngayBatDau ? stage.ngayBatDau.toISOString().split('T')[0] : null,
       // ngayKetThuc: stage.ngayKetThuc ? stage.ngayKetThuc.toISOString().split('T')[0] : null,
