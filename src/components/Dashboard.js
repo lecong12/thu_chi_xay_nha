@@ -136,12 +136,20 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       return;
     }
 
+    // Hàm showToast an toàn, nếu không có thì dùng alert
+    const notify = (message, type = "info") => {
+      if (showToast) showToast(message, type);
+      else alert(message);
+    };
+
     try {
       setUploadingStageId(stageId); // Bắt đầu loading
       
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
+
+      notify("Đang upload ảnh lên Cloudinary...", "info");
 
       // Thêm Timeout 20 giây để tránh treo mãi mãi
       const controller = new AbortController();
@@ -158,13 +166,21 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       console.log("Kết quả từ Cloudinary:", fileData); // Xem log chi tiết trong Console (F12)
       
       if (fileData.secure_url) {
+        notify("Upload ảnh thành công! Đang lưu vào hệ thống...", "info");
+
         // Cập nhật ảnh lên AppSheet
         const result = await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
+        
         // Chỉ xóa trạng thái chờ (preview) nếu lưu thành công
         if (result && result.success) {
+          notify("Đã lưu ảnh thành công!", "success");
           handleCancelUpload(stageId);
+        } else {
+          // Lỗi từ AppSheet API
+          throw new Error(result.message || "Không thể lưu link ảnh vào AppSheet.");
         }
       } else {
+        // Lỗi từ Cloudinary
         throw new Error(fileData.error?.message || "Lỗi upload ảnh (Cloudinary)");
       }
     } catch (error) {
@@ -173,12 +189,7 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       if (error.name === 'AbortError') {
         msg = "Upload thất bại: Quá thời gian chờ (Timeout). Vui lòng kiểm tra mạng.";
       }
-      
-      if (showToast) {
-        showToast(msg, "error");
-      } else {
-        alert(msg);
-      }
+      notify(msg, "error");
     } finally {
       setUploadingStageId(null); // Luôn tắt loading dù thành công hay thất bại
     }

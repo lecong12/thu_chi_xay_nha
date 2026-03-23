@@ -93,21 +93,8 @@ export const useAppData = (isLoggedIn) => {
             setNganSach(cleanNS);
 
             // 3. Xử lý Tiến Độ
-            const cleanTD = resTD.map((row, index) => {
-                const c = {};
-                Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
-                return {
-                    id: row._RowNumber || `td_${index}`, // Dùng RowNumber cho key của React để đảm bảo tính duy nhất
-                    appSheetId: row._RowNumber,
-                    keyId: row.keyId || c.tt || row.TT, // Ưu tiên keyId từ fetchStages
-                    name: c.name || "Công việc",
-                    status: c.status || "Chưa bắt đầu",
-                    ngayBatDau: c.ngayBatDau ? new Date(c.ngayBatDau) : null,
-                    ngayKetThuc: c.ngayKetThuc ? new Date(c.ngayKetThuc) : null,
-                    anhNghiemThu: c.anhNghiemThu || "",
-                };
-            });
-            setTienDo(cleanTD);
+            // Dữ liệu từ fetchStages đã được chuẩn hóa, chỉ cần gán trực tiếp
+            setTienDo(resTD);
 
         } catch (err) {
             setError("Lỗi nạp dữ liệu. Hãy kiểm tra tên bảng và App ID.");
