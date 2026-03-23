@@ -135,7 +135,6 @@ function DataTable({ data, onEdit, onDelete }) {
                   </th>
                   <th>Người cập nhật</th>
                   <th>Chứng từ</th>
-                  <th>Ghi chú</th>
                   <th>Thao tác</th>
                 </tr>
               </thead>
@@ -158,7 +157,6 @@ function DataTable({ data, onEdit, onDelete }) {
                         <span className="no-image">-</span>
                       )}
                     </td>
-                    <td className="note-cell">{item.ghiChu || "-"}</td>
                     <td className="action-cell">
                       <button
                         className="action-btn edit-btn"
@@ -227,13 +225,6 @@ function DataTable({ data, onEdit, onDelete }) {
                         <FiUser size={14} />
                         <span className="detail-label">Người cập nhật:</span>
                         <span className="detail-value">{item.nguoiCapNhat}</span>
-                      </div>
-                    )}
-                    {item.ghiChu && (
-                      <div className="detail-item">
-                        <FiInfo size={14} />
-                        <span className="detail-label">Ghi chú:</span>
-                        <span className="detail-value">{item.ghiChu}</span>
                       </div>
                     )}
                     <div className="card-actions">

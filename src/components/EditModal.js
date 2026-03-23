@@ -56,7 +56,6 @@ function EditModal({ item, onClose, onSave }) {
     nguoiCapNhat: "", // Bổ sung trường người cập nhật
     soTien: "",
     hinhAnh: "", // Thêm trường hình ảnh
-    ghiChu: "",
   });
   const [uploading, setUploading] = useState(false);
   const [ocrScanning, setOcrScanning] = useState(false);
@@ -73,7 +72,6 @@ function EditModal({ item, onClose, onSave }) {
         // Format số tiền khi load dữ liệu (VD: 1000000 => 1.000.000)
         soTien: item.soTien ? new Intl.NumberFormat('vi-VN').format(item.soTien) : "",
         hinhAnh: item.hinhAnh || "",
-        ghiChu: item.ghiChu || "",
       });
     }
   }, [item]);
@@ -369,16 +367,6 @@ function EditModal({ item, onClose, onSave }) {
               )}
             </div>
 
-            {/* Hàng 4: Ghi chú */}
-            <div className="form-group full-width">
-              <label>Ghi chú</label>
-              <textarea
-                name="ghiChu"
-                value={formData.ghiChu}
-                onChange={handleChange}
-                rows="3"
-              />
-            </div>
             {/* Hidden Input cho Link Ảnh */}
             <input type="hidden" name="hinhAnh" value={formData.hinhAnh} />
           </div>

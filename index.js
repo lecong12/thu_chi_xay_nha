@@ -40,7 +40,7 @@ app.get('/api/status', (req, res) => {
 app.get('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'GiaoDich!A:H'; // Lấy mở rộng đến cột H để có đủ dữ liệu (Ghi chú, Người cập nhật)
+    const range = 'GiaoDich!A:G'; // Cập nhật range A:G theo cấu trúc mới
 
     if (!spreadsheetId) {
       return res.status(500).json({ error: 'SPREADSHEET_ID chưa được cấu hình trên server.' });
@@ -60,7 +60,7 @@ app.get('/api/data', async (req, res) => {
 app.post('/api/data', async (req, res) => {
   try {
     const spreadsheetId = process.env.SPREADSHEET_ID;
-    const range = 'GiaoDich!A:H'; // Tên sheet và dải ô để ghi
+    const range = 'GiaoDich!A:G'; // Cập nhật range A:G
 
     // Dữ liệu gửi từ client, ví dụ: { values: ["2024-05-20", "Vật tư", "Xi măng", 500000, "Đợt 1"] }
      const { values } = req.body;
