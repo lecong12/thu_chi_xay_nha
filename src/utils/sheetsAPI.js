@@ -1,3 +1,4 @@
+e:\Myapp\Thuchixaynha\src\utils\sheetsAPI.js
 // AppSheet API Configuration
 const APPSHEET_TABLE_NAME = "GiaoDich";
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
@@ -20,7 +21,7 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
       body: JSON.stringify({
         Action: "Find",
         Properties: {
-          Locale: "en-US", // Dùng en-US khi đọc để ngày tháng có định dạng chuẩn YYYY-MM-DD dễ parse
+          Locale: "en-US", // Dùng en-US khi đọc để ngày tháng có định dạng chuẩn YYYY-MM-DD dễ xử lý
           Timezone: "Asia/Ho_Chi_Minh",
         },
         Rows: [], // Lấy toàn bộ dòng
@@ -100,6 +101,7 @@ export const addRowToSheet = async (rowData, appId, accessKey) => {
     // Sử dụng ID đã được tính toán từ frontend
     const newId = rowData.id;
 
+    // Payload gửi đi
     const addData = [{
       "id": newId, 
       "Ngày": rowData.ngay instanceof Date ? rowData.ngay.toISOString().split("T")[0] : rowData.ngay,
