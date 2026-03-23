@@ -92,6 +92,7 @@ function App() {
     if (!result.success) {
       showToast(result.message || "Lỗi khi cập nhật trạng thái.", "error");
     }
+    return result; // Trả về kết quả để Dashboard xử lý tiếp (ví dụ: tắt loading upload)
   };
 
   const handleAddNew = () => {

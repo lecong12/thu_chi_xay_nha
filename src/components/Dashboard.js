@@ -159,9 +159,11 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       
       if (fileData.secure_url) {
         // Cập nhật ảnh lên AppSheet
-        await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
-        // Xóa trạng thái pending sau khi thành công
-        handleCancelUpload(stageId);
+        const result = await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
+        // Chỉ xóa trạng thái chờ (preview) nếu lưu thành công
+        if (result && result.success) {
+          handleCancelUpload(stageId);
+        }
       } else {
         throw new Error(fileData.error?.message || "Lỗi upload ảnh (Cloudinary)");
       }
