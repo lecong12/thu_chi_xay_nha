@@ -132,16 +132,20 @@ export const updateStageInSheet = async (stage, appId) => {
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
-    let responseData;
-    try {
-      responseData = await response.json();
-      // Kiểm tra xem AppSheet có thực sự cập nhật dòng nào không
-      if (responseData.Rows && responseData.Rows.length === 0) {
-        console.warn(`Cảnh báo: AppSheet trả về danh sách rỗng. Có thể sai Key '${keyColumnName}' hoặc '_RowNumber'.`);
+    // Đọc text trước để tránh lỗi "Unexpected end of JSON input" nếu body rỗng
+    const responseText = await response.text();
+    let responseData = {};
+    
+    if (responseText) {
+      try {
+        responseData = JSON.parse(responseText);
+        // Kiểm tra xem AppSheet có thực sự cập nhật dòng nào không (nếu API có trả về Rows)
+        if (responseData.Rows && responseData.Rows.length === 0) {
+          console.warn(`Cảnh báo: AppSheet trả về danh sách rỗng. Có thể sai Key '${keyColumnName}' hoặc '_RowNumber'.`);
+        }
+      } catch (error) {
+        console.warn("Lỗi parse JSON từ AppSheet (nhưng request có thể đã thành công):", error);
       }
-    } catch (error) {
-      console.warn("Empty JSON response from AppSheet:", error);
-      responseData = {}; // Treat as empty object
     }
     return { success: true, message: "Cập nhật trạng thái thành công!" };
   } catch (error) {
