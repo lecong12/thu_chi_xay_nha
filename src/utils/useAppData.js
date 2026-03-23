@@ -5,6 +5,10 @@ import { fetchTableData } from "./sheetsAPI";
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
+// Lấy tên bảng từ biến môi trường hoặc dùng giá trị mặc định
+const TABLE_GIAODICH = process.env.REACT_APP_APPSHEET_TABLE_GIAODICH || "GiaoDich";
+const TABLE_NGANSACH = process.env.REACT_APP_APPSHEET_TABLE_NGANSACH || "NganSach";
+
 const normalizeKey = (str) => {
     if (!str) return '';
     // Nếu key đã đúng chuẩn camelCase từ sheetsAPI rồi thì giữ nguyên
@@ -50,8 +54,8 @@ export const useAppData = (isLoggedIn) => {
         try {
             // Tải dữ liệu song song
             const [resGDResult, resNSResult, resTDResult] = await Promise.all([
-                fetchTableData("GiaoDich", APP_ID, ACCESS_KEY),
-                fetchTableData("Ngansach", APP_ID, ACCESS_KEY),
+                fetchTableData(TABLE_GIAODICH, APP_ID, ACCESS_KEY),
+                fetchTableData(TABLE_NGANSACH, APP_ID, ACCESS_KEY),
                 fetchStages(APP_ID) // Dùng API riêng cho Tiến độ để lấy đúng cột
             ]);
 
