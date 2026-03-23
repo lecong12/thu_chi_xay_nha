@@ -151,7 +151,14 @@ function DataTable({ data, onEdit, onDelete }) {
                     <td className="center-cell">
                       {item.hinhAnh ? (
                         <a href={item.hinhAnh} target="_blank" rel="noreferrer" className="view-image-link" title="Xem ảnh">
-                          <FiImage />
+                          <img 
+                            src={item.hinhAnh} 
+                            alt="Chứng từ" 
+                            style={{ 
+                              width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px', border: '1px solid #e5e7eb' 
+                            }} 
+                            onError={(e) => {e.target.onerror = null; e.target.src = "https://via.placeholder.com/40?text=Err"}}
+                          />
                         </a>
                       ) : (
                         <span className="no-image">-</span>
