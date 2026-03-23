@@ -32,16 +32,27 @@ export const fetchStages = async (appId) => {
       return { success: true, data: [] };
     }
 
-    const transformedData = rawData.map(row => ({
-      id: row.id, // Cột 'id' trong bảng data_tien_do (VD: 1, 2, 3...)
-      appSheetId: row._RowNumber, // ID của dòng trong AppSheet
-      keyId: row.TT, // Quan trọng: Lấy cột TT làm Key
-      name: row.name || "",
-      status: row.status || "Chưa bắt đầu", // Giá trị mặc định
-      ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
-      ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
-      anhNghiemThu: row["Ảnh nghiệm thu"] || row.anhNghiemThu || null, // Map từ tên cột AppSheet
-    })).sort((a, b) => parseInt(a.keyId || a.id, 10) - parseInt(b.keyId || b.id, 10));
+    const transformedData = rawData.map((row, index) => {
+      // 1. Tìm tên cột Key (TT) và Ảnh chính xác (bất kể hoa thường)
+      const rowKeys = Object.keys(row);
+      const ttKey = rowKeys.find(k => k.trim().toUpperCase() === 'TT') || 'TT';
+      const imgKey = rowKeys.find(k => k.trim().toLowerCase() === 'ảnh nghiệm thu' || k.trim().toLowerCase() === 'anh nghiem thu') || "Ảnh nghiệm thu";
+
+      // 2. Tạo ID duy nhất cho Frontend (QUAN TRỌNG: Sửa lỗi hiển thị ảnh ở tất cả các ô)
+      // Ưu tiên dùng TT, nếu không có thì dùng _RowNumber, cùng lắm dùng index
+      const uniqueId = row.id || row[ttKey] || row._RowNumber || `stage_idx_${index}`;
+
+      return {
+        id: uniqueId, 
+        appSheetId: row._RowNumber, 
+        keyId: row[ttKey], // Giá trị Key thực sự để gửi API (Cột TT)
+        name: row.name || row["Tên công việc"] || row["Hạng mục"] || "",
+        status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
+        ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
+        ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
+        anhNghiemThu: row[imgKey] || "", // Map đúng cột ảnh
+      };
+    }).sort((a, b) => parseInt(a.keyId || 0, 10) - parseInt(b.keyId || 0, 10));
 
     return { success: true, data: transformedData };
   } catch (error) {
@@ -55,13 +66,15 @@ export const fetchStages = async (appId) => {
  */
 export const updateStageInSheet = async (stage, appId) => {
   try {
+    // Kiểm tra Key bắt buộc
+    if (!stage.keyId) {
+      throw new Error("Không tìm thấy Key (cột TT) để cập nhật dòng này.");
+    }
+
     const editData = [{
-      "TT": String(stage.keyId), // Ép kiểu Key về String để tránh lỗi format
+      "TT": String(stage.keyId), // Key của bảng là cột TT
       "status": stage.status,
-      "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Đảm bảo tên cột khớp chính xác với Google Sheet
-      // Thêm các trường khác để có thể cập nhật sau này
-      // ngayBatDau: stage.ngayBatDau ? stage.ngayBatDau.toISOString().split('T')[0] : null,
-      // ngayKetThuc: stage.ngayKetThuc ? stage.ngayKetThuc.toISOString().split('T')[0] : null,
+      "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Link ảnh từ Cloudinary
     }];
 
     // Log dữ liệu gửi đi để kiểm tra xem có link ảnh chưa
