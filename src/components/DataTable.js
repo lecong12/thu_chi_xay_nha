@@ -122,10 +122,10 @@ function DataTable({ data, onEdit, onDelete }) {
                   <th onClick={() => requestSort("ngay")} style={{cursor: 'pointer', userSelect: 'none'}} title="Click để sắp xếp">
                     Ngày {sortConfig.key === "ngay" && (sortConfig.direction === "asc" ? "▲" : "▼")}
                   </th>
-                  <th>Nội dung giao dịch</th>
                   <th onClick={() => requestSort("doiTuongThuChi")} style={{cursor: 'pointer', userSelect: 'none'}} title="Click để sắp xếp">
                     Hạng mục {sortConfig.key === "doiTuongThuChi" && (sortConfig.direction === "asc" ? "▲" : "▼")}
                   </th>
+                  <th>Nội dung giao dịch</th>
                   <th 
                     onClick={() => requestSort("soTien")} 
                     style={{cursor: 'pointer', userSelect: 'none', textAlign: 'right'}} 
@@ -142,8 +142,8 @@ function DataTable({ data, onEdit, onDelete }) {
                 {chiList.map((item) => (
                   <tr key={item.id} className="row-chi">
                     <td style={{whiteSpace: 'nowrap'}}>{formatDate(item.ngay)}</td>
-                    <td className="content-cell">{item.noiDung || "-"}</td>
                     <td>{formatStageName(item.doiTuongThuChi)}</td>
+                    <td className="content-cell">{item.noiDung || "-"}</td>
                     <td className="amount-cell chi">
                       {formatCurrency(item.soTien)}
                     </td>
