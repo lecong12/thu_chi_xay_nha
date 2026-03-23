@@ -1,4 +1,3 @@
-e:\Myapp\Thuchixaynha\src\utils\sheetsAPI.js
 // AppSheet API Configuration
 const APPSHEET_TABLE_NAME = "GiaoDich";
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
