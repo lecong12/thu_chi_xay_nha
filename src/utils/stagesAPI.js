@@ -53,13 +53,13 @@ export const fetchStages = async (appId) => {
         keyId: row[idKey], // Giá trị Key thực sự để gửi API (Cột id)
         keyColumn: idKey, // Lưu lại tên cột Key tìm được để dùng lúc Update
         imgColumn: imgKey, // Lưu lại tên cột Ảnh tìm được để dùng lúc Update
-        name: row.name || row["Tên công việc"] || row["Hạng mục"] || "",
+        name: row[nameKey] || row.name || row["Tên công việc"] || row["Hạng mục"] || `Giai đoạn ${index + 1}`, // Fallback nếu không tìm thấy tên
         status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
         ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
         ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
         anhNghiemThu: row[imgKey] || "", // Map đúng cột ảnh
       };
-    }).sort((a, b) => parseInt(a.keyId || 0, 10) - parseInt(b.keyId || 0, 10));
+    }).sort((a, b) => a.appSheetId - b.appSheetId); // Sửa lỗi sắp xếp: Dùng thứ tự dòng trong Sheet (_RowNumber)
 
     return { success: true, data: transformedData };
   } catch (error) {
