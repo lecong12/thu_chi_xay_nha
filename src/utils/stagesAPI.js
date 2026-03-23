@@ -33,19 +33,19 @@ export const fetchStages = async (appId) => {
     }
 
     const transformedData = rawData.map((row, index) => {
-      // 1. Tìm tên cột Key (TT) và Ảnh chính xác (bất kể hoa thường)
+      // 1. Tìm tên cột Key (id) và Ảnh chính xác (bất kể hoa thường)
       const rowKeys = Object.keys(row);
-      const ttKey = rowKeys.find(k => k.trim().toUpperCase() === 'TT') || 'TT';
+      const idKey = rowKeys.find(k => k.trim().toLowerCase() === 'id') || 'id';
       const imgKey = rowKeys.find(k => k.trim().toLowerCase() === 'ảnh nghiệm thu' || k.trim().toLowerCase() === 'anh nghiem thu') || "Ảnh nghiệm thu";
 
       // 2. Tạo ID duy nhất cho Frontend (QUAN TRỌNG: Sửa lỗi hiển thị ảnh ở tất cả các ô)
-      // Ưu tiên dùng TT, nếu không có thì dùng _RowNumber, cùng lắm dùng index
-      const uniqueId = row.id || row[ttKey] || row._RowNumber || `stage_idx_${index}`;
+      // Ưu tiên dùng idKey, nếu không có thì dùng _RowNumber, cùng lắm dùng index
+      const uniqueId = row[idKey] || row.id || row._RowNumber || `stage_idx_${index}`;
 
       return {
         id: uniqueId, 
         appSheetId: row._RowNumber, 
-        keyId: row[ttKey], // Giá trị Key thực sự để gửi API (Cột TT)
+        keyId: row[idKey], // Giá trị Key thực sự để gửi API (Cột id)
         name: row.name || row["Tên công việc"] || row["Hạng mục"] || "",
         status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
         ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
@@ -113,7 +113,7 @@ export const updateStageInSheet = async (stage, appId) => {
       responseData = await response.json();
       // Kiểm tra xem AppSheet có thực sự cập nhật dòng nào không
       if (responseData.Rows && responseData.Rows.length === 0) {
-        console.warn("Cảnh báo: AppSheet trả về danh sách rỗng (Không có dòng nào được cập nhật). Kiểm tra lại Key 'TT' hoặc '_RowNumber'.");
+        console.warn("Cảnh báo: AppSheet trả về danh sách rỗng (Không có dòng nào được cập nhật). Kiểm tra lại Key 'id' hoặc '_RowNumber'.");
       }
     } catch (error) {
       console.warn("Empty JSON response from AppSheet:", error);
