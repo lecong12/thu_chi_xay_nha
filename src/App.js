@@ -154,6 +154,8 @@ function App() {
       let result;
       // Clone item để xử lý, tránh mutate object gốc
       const itemToSave = { ...updatedItem };
+      // Đảm bảo loại bỏ trường ghiChu nếu nó vẫn còn tồn tại từ form cũ
+      delete itemToSave.ghiChu;
 
       if (isEdit) {
         // Gọi API qua sheetsAPI

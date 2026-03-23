@@ -367,7 +367,7 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
       {/* Progress Tracker Section */}
       <div className="progress-tracker-section" style={{ marginTop: '20px' }}>
         <h3 className="chart-title">Theo dõi tiến độ thi công</h3>
-        <div className="stages-grid">
+        <div className="stages-grid" style={{ maxHeight: "400px", overflowY: "auto", paddingRight: "5px" }}>
           {stages.map((stage) => (
             <div key={stage.id} className="stage-card">
               <span className="stage-name">
