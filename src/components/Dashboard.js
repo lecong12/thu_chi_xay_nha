@@ -76,7 +76,7 @@ const GanttTooltip = ({ active, payload }) => {
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
 
-function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
+function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children }) {
   // Lấy dữ liệu đã được fetch và xử lý từ component cha (App.js)
   const stages = extraData.tienDo || [];
   const budget = extraData.nganSach || [];
@@ -128,7 +128,11 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
     if (!file) return;
 
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      alert("Thiếu cấu hình Cloudinary.");
+      if (showToast) {
+        showToast("Thiếu cấu hình Cloudinary.", "error");
+      } else {
+        alert("Thiếu cấu hình Cloudinary.");
+      }
       return;
     }
 
@@ -159,14 +163,19 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
         // Xóa trạng thái pending sau khi thành công
         handleCancelUpload(stageId);
       } else {
-        throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
+        throw new Error(fileData.error?.message || "Lỗi upload ảnh (Cloudinary)");
       }
     } catch (error) {
       console.error("Upload error:", error);
+      let msg = "Lỗi upload: " + error.message;
       if (error.name === 'AbortError') {
-        alert("Upload thất bại: Quá thời gian chờ (Timeout). Vui lòng kiểm tra mạng.");
+        msg = "Upload thất bại: Quá thời gian chờ (Timeout). Vui lòng kiểm tra mạng.";
+      }
+      
+      if (showToast) {
+        showToast(msg, "error");
       } else {
-        alert("Lỗi upload: " + error.message);
+        alert(msg);
       }
     } finally {
       setUploadingStageId(null); // Luôn tắt loading dù thành công hay thất bại
