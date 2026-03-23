@@ -96,7 +96,7 @@ export const useAppData = (isLoggedIn) => {
                 return {
                     id: row._RowNumber || `td_${index}`, // Dùng RowNumber cho key của React để đảm bảo tính duy nhất
                     appSheetId: row._RowNumber,
-                    keyId: c.tt || row.TT, // Dùng cột 'TT' làm Key chính
+                    keyId: c.tt || row.TT || row.Tt || row.tt, // Tìm kỹ các biến thể của cột TT
                     name: c.name || "Công việc",
                     status: c.status || "Chưa bắt đầu",
                     ngayBatDau: c.ngayBatDau ? new Date(c.ngayBatDau) : null,

@@ -55,7 +55,8 @@ export const fetchStages = async (appId) => {
 export const updateStageInSheet = async (stage, appId) => {
   try {
     const editData = [{
-      "TT": stage.keyId, // Dùng Key của bảng ('TT') để xác định dòng cần sửa
+      "_RowNumber": stage.appSheetId, // Gửi kèm RowNumber để hỗ trợ tìm kiếm
+      "TT": String(stage.keyId), // Ép kiểu Key về String để tránh lỗi format
       "status": stage.status,
       "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Đảm bảo tên cột khớp chính xác với Google Sheet
       // Thêm các trường khác để có thể cập nhật sau này
@@ -97,6 +98,10 @@ export const updateStageInSheet = async (stage, appId) => {
     let responseData;
     try {
       responseData = await response.json();
+      // Kiểm tra xem AppSheet có thực sự cập nhật dòng nào không
+      if (responseData.Rows && responseData.Rows.length === 0) {
+        console.warn("Cảnh báo: AppSheet trả về danh sách rỗng (Không có dòng nào được cập nhật). Kiểm tra lại Key 'TT' hoặc '_RowNumber'.");
+      }
     } catch (error) {
       console.warn("Empty JSON response from AppSheet:", error);
       responseData = {}; // Treat as empty object
