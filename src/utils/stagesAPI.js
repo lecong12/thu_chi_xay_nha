@@ -70,6 +70,10 @@ export const updateStageInSheet = async (stage, appId) => {
 
     console.log("Update Stage API URL:", apiUrl);
 
+    // Thêm timeout 20s cho AppSheet request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
     const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
@@ -83,8 +87,10 @@ export const updateStageInSheet = async (stage, appId) => {
           Timezone: "Asia/Ho_Chi_Minh",
         }, 
         Rows: editData 
-      }),
+      }), 
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 

@@ -132,36 +132,44 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
       return;
     }
 
-    setUploadingStageId(stageId);
-    const data = new FormData();
-    data.append("file", file);
-    data.append("upload_preset", UPLOAD_PRESET);
-
     try {
+      setUploadingStageId(stageId); // Bắt đầu loading
+      
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", UPLOAD_PRESET);
+
+      // Thêm Timeout 20 giây để tránh treo mãi mãi
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        { method: "POST", body: data }
+        { method: "POST", body: data, signal: controller.signal }
       );
+      clearTimeout(timeoutId); // Xóa timeout nếu phản hồi thành công
+
       const fileData = await res.json();
       
       console.log("Kết quả từ Cloudinary:", fileData); // Xem log chi tiết trong Console (F12)
       
       if (fileData.secure_url) {
-        // Hiển thị link để kiểm tra ngay lập tức
-        console.log("Link ảnh nhận được:", fileData.secure_url);
-        
         // Cập nhật ảnh lên AppSheet
         await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });
         // Xóa trạng thái pending sau khi thành công
         handleCancelUpload(stageId);
       } else {
-        alert("Lỗi upload ảnh: " + (fileData.error?.message || "Unknown error"));
+        throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Lỗi kết nối khi upload ảnh");
+      if (error.name === 'AbortError') {
+        alert("Upload thất bại: Quá thời gian chờ (Timeout). Vui lòng kiểm tra mạng.");
+      } else {
+        alert("Lỗi upload: " + error.message);
+      }
     } finally {
-      setUploadingStageId(null);
+      setUploadingStageId(null); // Luôn tắt loading dù thành công hay thất bại
     }
   };
 

@@ -113,32 +113,37 @@ function EditModal({ item, onClose, onSave }) {
       return;
     }
 
-    setUploading(true);
-    const data = new FormData();
-    data.append("file", file);
-    data.append("upload_preset", UPLOAD_PRESET);
-
     try {
+      setUploading(true);
+      const data = new FormData();
+      data.append("file", file);
+      data.append("upload_preset", UPLOAD_PRESET);
+
+      // Thêm Timeout 20 giây
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
       const res = await fetch(
         `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-        { method: "POST", body: data }
+        { method: "POST", body: data, signal: controller.signal }
       );
+      clearTimeout(timeoutId);
+
       const fileData = await res.json();
       
       if (fileData.secure_url) {
         console.log("Upload thành công:", fileData.secure_url);
         setFormData((prev) => ({ ...prev, hinhAnh: fileData.secure_url }));
       } else {
-        const errorMsg = fileData.error?.message || "Không rõ lỗi";
-        if (errorMsg.includes("unsigned uploads")) {
-          alert(`LỖI CẤU HÌNH CLOUDINARY:\nPreset "${UPLOAD_PRESET}" đang ở chế độ "Signed" (Cần chữ ký).\n\nCÁCH KHẮC PHỤC:\n1. Vào Cloudinary -> Settings -> Upload -> Upload presets.\n2. Sửa preset này và chuyển "Signing Mode" sang "Unsigned".\n3. Lưu lại và thử lại.`);
-        } else {
-          alert("Lỗi upload ảnh: " + errorMsg);
-        }
+        throw new Error(fileData.error?.message || "Lỗi không xác định");
       }
     } catch (error) {
       console.error("Upload error:", error);
-      alert("Lỗi kết nối khi upload ảnh");
+      if (error.name === 'AbortError') {
+        alert("Upload thất bại: Mạng quá chậm hoặc mất kết nối.");
+      } else {
+        alert("Lỗi upload: " + error.message);
+      }
     } finally {
       setUploading(false);
     }
