@@ -94,6 +94,12 @@ function Dashboard({ stats, data, extraData, onUpdateStage, children }) {
       return;
     }
 
+    // Kiểm tra dung lượng file (Giới hạn 10MB của gói Free Cloudinary)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File ảnh quá lớn ( > 10MB). Vui lòng chọn ảnh nhỏ hơn để upload.");
+      return;
+    }
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       alert("Thiếu cấu hình Cloudinary.");
       return;

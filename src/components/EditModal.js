@@ -101,6 +101,12 @@ function EditModal({ item, onClose, onSave }) {
       return;
     }
 
+    // Kiểm tra dung lượng file (Giới hạn 10MB của gói Free Cloudinary)
+    if (file.size > 10 * 1024 * 1024) {
+      alert("File ảnh quá lớn ( > 10MB). Vui lòng chọn ảnh nhỏ hơn để upload.");
+      return;
+    }
+
     if (!CLOUD_NAME || !UPLOAD_PRESET) {
       console.error("Thiếu cấu hình Cloudinary:", { CLOUD_NAME, UPLOAD_PRESET });
       alert(`Lỗi cấu hình Cloudinary!\n\n- Cloud Name: ${CLOUD_NAME || "TRỐNG"}\n- Upload Preset: ${UPLOAD_PRESET || "TRỐNG"}\n\nCách khắc phục:\n1. Kiểm tra file .env có dòng: REACT_APP_CLOUDINARY_UPLOAD_PRESET=...\n2. Nếu chạy Local: Tắt server rồi npm start lại.\n3. Nếu trên Vercel: Vào Settings -> Environment Variables thêm biến, sau đó Redeploy.`);
