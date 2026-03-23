@@ -166,7 +166,8 @@ function Dashboard({ stats, data, extraData, onUpdateStage, showToast, children 
       console.log("Kết quả từ Cloudinary:", fileData); // Xem log chi tiết trong Console (F12)
       
       if (fileData.secure_url) {
-        notify("Upload ảnh thành công! Đang lưu vào hệ thống...", "info");
+        console.log("Link ảnh nhận được:", fileData.secure_url); // Log link ra console
+        notify(`Đã nhận link: ...${fileData.secure_url.slice(-15)}. Đang lưu...`, "info");
 
         // Cập nhật ảnh lên AppSheet
         const result = await onUpdateStage(stageId, { anhNghiemThu: fileData.secure_url });

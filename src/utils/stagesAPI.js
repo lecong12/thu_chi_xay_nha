@@ -68,11 +68,11 @@ export const updateStageInSheet = async (stage, appId) => {
   try {
     // Kiểm tra Key bắt buộc
     if (!stage.keyId) {
-      throw new Error("Không tìm thấy Key (cột TT) để cập nhật dòng này.");
+      throw new Error("Không tìm thấy Key (cột id) để cập nhật dòng này.");
     }
 
     const editData = [{
-      "TT": String(stage.keyId), // Key của bảng là cột TT
+      "id": String(stage.keyId), // SỬA: Dùng tên cột 'id' làm Key thay vì 'TT'
       "status": stage.status,
       "Ảnh nghiệm thu": stage.anhNghiemThu || "", // Link ảnh từ Cloudinary
     }];
