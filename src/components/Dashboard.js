@@ -378,18 +378,21 @@ function Dashboard({ stats, data, extraData, onUpdateStageStatus, children }) {
                 onChange={(e) => handleUpdateStatus(stage.id, e.target.value)}
                 className={`status-select status-${stage.status
                   .toLowerCase()
-
-              {stage.anhNghiemThu && (
-                
-                  
-                
-              )}
                   .replace(/\s+/g, "-")}`}
               >
                 <option value="Chưa bắt đầu">Chưa bắt đầu</option>
                 <option value="Đang thi công">Đang thi công</option>
                 <option value="Hoàn thành">Hoàn thành</option>
               </select>
+              {stage.anhNghiemThu && (
+                <div className="stage-image" style={{ marginTop: '10px' }}>
+                  <img 
+                    src={stage.anhNghiemThu} 
+                    alt="Ảnh nghiệm thu" 
+                    style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px' }} 
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>
