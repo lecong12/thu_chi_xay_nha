@@ -18,7 +18,7 @@ import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
 import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast"; 
-import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchTableData } from "./utils/sheetsAPI";
+import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
 import "./App.css";
 
@@ -29,129 +29,32 @@ function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard'); // Mặc định là trang Tổng quan
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+  const [isDarkMode, setIsDarkMode] = useState(false); // State cho Dark Mode
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
-  // Lưu ý: Nếu useAppData chưa được cập nhật để dùng API mới, bạn nên cập nhật nó hoặc
-  // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
-  // Dưới đây giả định logic trong App.js là chính.
   const { 
     data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage, handleUpdateBudget
   } = useAppData(isLoggedIn);
 
-  // State cho UI, không liên quan đến data fetching
+  // State cho UI
   const [editingItem, setEditingItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); // State cho modal xác nhận xóa
   const [toast, setToast] = useState(null);
 
+  // Filter state
   const [filters, setFilters] = useState({
     loaiThuChi: "",
     nguoiCapNhat: "",
-    doiTuongThuChi: "",oolean))],
-  }), [data]);
-
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
-      if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
-      if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
-      
-      const itemDate = new Date(item.ngay);
-      if (filters.startDate && itemDate < new Date(filters.startDate)) return false;
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHurs(23, 59, 59, 999);
-        if (itemDate > end) return false;
-      }
-
-      if (filters.searchText) {
-        const text = filters.searchText.toLowerCase();
-        const content = (item.noiDung || "").toLowerCase();
-        const note = (item.ghiChu || "").tLowerCase();
-        const cat = (item.doiTuongThuChi || "").toLowerCase();
-        return content.includes(text) || note.incudes(txt) || ct.icludes(text;
-      }
-
-      return true;
-    };
-  }, [data, filters);
-
-  const handleFilterChange = (key value) => {
-    setFilters((prev) => ({ ...prev, [key]: value  ) ;
-  };
-
- scotstartDate: "",
+    doiTuongThuChi: "",
+    startDate: "",
     endDate: "",
     searchText: "",
-  });oolean))],
-  }), [data]);
+  });
 
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
-      if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
-      if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
-      
-      const itemDate = new Date(item.ngay);
-      if (filters.startDate && itemDate < new Date(filters.startDate)) return false;
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHurs(23, 59, 59, 999);
-        if (itemDate > end) return false;
-      }
-
-      if (filters.searchText) {
-        const text = filters.searchText.toLowerCase();
-        const content = (item.noiDung || "").toLowerCase();
-        const note = (item.ghiChu || "").tLowerCase();
-        const cat = (item.doiTuongThuChi || "").toLowerCase();
-        return content.includes(text) || note.incudes(txt) || ct.icludes(text;
-      }
-
-      return true;
-    };
-  }, [data, filters);
-
-  const handleFilterChange = (key value) => {
-    setFilters((prev) => ({ ...prev, [key]:value);
-  };
-
- cost
   // State quản lý việc đóng/mở thanh lọc
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
-oolean))],
-  }), [data]);
 
-  const filteredData = useMemo(() => {
-    return data.filter((item) => {
-      if (filters.loaiThuChi && item.loaiThuChi !== filters.loaiThuChi) return false;
-      if (filters.nguoiCapNhat && item.nguoiCapNhat !== filters.nguoiCapNhat) return false;
-      if (filters.doiTuongThuChi && item.doiTuongThuChi !== filters.doiTuongThuChi) return false;
-      
-      const itemDate = new Date(item.ngay);
-      if (filters.startDate && itemDate < new Date(filters.startDate)) return false;
-      if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        end.setHurs(23, 59, 59, 999);
-        if (itemDate > end) return false;
-      }
-
-      if (filters.searchText) {
-        const text = filters.searchText.toLowerCase();
-        const content = (item.noiDung || "").toLowerCase();
-        const note = (item.ghiChu || "").tLowerCase();
-        const cat = (item.doiTuongThuChi || "").toLowerCase();
-        return content.includes(text) || note.incudes(txt) || ct.icludes(text;
-      }
-
-      return true;
-    };
-  }, [data, filters);
-
-  const handleFilterChange = (key value) => {
-    setFilters((prev) => ({ ...prev, [key]: value /)/;
-  };
-
-  co-st-- LOGIC LỌC DỮ LIỆU ---
+  // --- LOGIC LỌC DỮ LIỆU ---
   const filterOptions = useMemo(() => ({
     doiTuongThuChi: [...new Set(data.map((item) => item.doiTuongThuChi).filter(Boolean))],
     nguoiCapNhat: [...new Set(data.map((item) => item.nguoiCapNhat).filter(Boolean))],
@@ -195,18 +98,31 @@ oolean))],
     setToast({ message, type });
   };
 
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const handleLogin = () => {
+    localStorage.setItem("isLoggedIn", "true");
+    setIsLoggedIn(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
   const handleStageUpdate = async (stageId, updates) => {
     const result = await handleUpdateStage(stageId, updates);
     if (!result.success) {
       showToast(result.message || "Lỗi khi cập nhật trạng thái.", "error");
     }
-    return result; // Trả về kết quả để Dashboard xử lý tiếp (ví dụ: tắt loading upload)
+    return result; 
   };
 
-  // Hàm xử lý chuyển tab (đã nâng cấp để hỗ trợ mở link ngoài)
+  // Hàm xử lý chuyển tab
   const handleTabChange = (tabId) => {
     if (tabId === 'zalo') {
-      // THAY LINK NHÓM ZALO CỦA BẠN VÀO ĐÂY (Ví dụ: https://zalo.me/g/abcdef...)
       window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
       return;
     }
@@ -219,9 +135,7 @@ oolean))],
       soTien: 0,
       loaiThuChi: "Chi",
       noiDung: "",
-         
-      }
-    } doiTuongThuChi: "",
+      doiTuongThuChi: "",
       nguoiCapNhat: "",
       hinhAnh: ""
     });
@@ -236,7 +150,6 @@ oolean))],
 
     const headers = ["Ngày", "Loại", "Nội dung", "Giai đoạn/Nguồn", "Số tiền", "Người cập nhật", "Ghi chú", "Link Ảnh"];
     
-    // Helper format tên giai đoạn cho gọn (giống trong DataTable)
     const formatStage = (name) => name ? name.split("(")[0].trim().replace(/^\d+\.\s*/, "") : "-";
 
     const csvRows = data.map(item => {
@@ -253,12 +166,11 @@ oolean))],
         escape(item.hinhAnh || "")
       ].join(",");
     });
+
     const csvContent = "\uFEFF" + [headers.join(","), ...csvRows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-        c
-      }
-o   } nst link = document.createElement("a");
+    const link = document.createElement("a");
     link.setAttribute("href", url);
     link.setAttribute("download", `${fileName}.csv`);
     document.body.appendChild(link);
@@ -269,13 +181,10 @@ o   } nst link = document.createElement("a");
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Nếu item có id (RowNumber) tức là đã tồn tại -> Sửa. Ngược lại -> Thêm mới
       const isEdit = !!updatedItem.id;
-
       showToast("Đang xử lý dữ liệu...", "info");
 
       let result;
-      // Clone item để xử lý, tránh mutate object gốc
       const itemToSave = { ...updatedItem };
 
       // Chuẩn bị payload khớp với tên cột trong AppSheet cho bảng "GiaoDich"
@@ -290,10 +199,8 @@ o   } nst link = document.createElement("a");
       };
 
       if (isEdit) {
-        // Gọi API qua sheetsAPI
         result = await updateRowInSheet("GiaoDich", apiPayload, APP_ID);
       } else {
-        // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
         if (!apiPayload.id) {
           apiPayload.id = `GD_${Date.now()}`;
         }
@@ -304,11 +211,10 @@ o   } nst link = document.createElement("a");
         // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
         const newItem = {
           ...itemToSave,
-          // Nếu là thêm mới, dùng Key ID vừa tạo làm ID tạm cho giao diện
           id: itemToSave.appSheetId || itemToSave.id, 
           appSheetId: itemToSave.appSheetId, 
-          keyId: itemToSave.keyId || itemToSave.id, // Đảm bảo keyId luôn có (ưu tiên keyId có sẵn)
-          ngay: new Date(itemToSave.ngay), // Đảm bảo là Date object
+          keyId: itemToSave.keyId || itemToSave.id,
+          ngay: new Date(itemToSave.ngay),
           soTien: Number(itemToSave.soTien),
         };
 
@@ -316,18 +222,15 @@ o   } nst link = document.createElement("a");
           if (isEdit) {
             return prevData.map(item => (item.id === newItem.id || item.appSheetId === newItem.appSheetId) ? newItem : item);
           } else {
-            ;
             return [newItem, ...prevData];
           }
         });
-        // -----------------------------------------------------------
 
         showToast(isEdit ? "Cập nhật thành công!" : "Thêm mới thành công!", "success");
         setEditingItem(null); // Đóng modal
-        await fetchAllData(); // Tải lại dữ liệu thật từ server để đảm bảo đã ghi thành công
+        await fetchAllData(); 
       } else {
         const msg = result?.message || "Lỗi không xác định";
-        // Hiển thị thông báo lỗi chi tiết hơn cho người dùng
         if (msg.includes("403") || msg.includes("Forbidden")) {
           showToast("Lỗi 403: Bạn chưa cấp quyền 'Updates/Adds' cho bảng GiaoDich trong AppSheet Editor.", "error");
         } else {
@@ -351,28 +254,21 @@ o   } nst link = document.createElement("a");
 
     const item = data.find(i => i.id === itemToDelete);
     if (!item) {
-      setItemToDelete(null); // Đóng modal nếu không tìm thấy item
+      setItemToDelete(null);
       return;
     }
 
     showToast("Đang xóa...", "info");
-    // Gọi API xóa, chỉ cần truyền ID (keyId)
-    // Thay đổi: Truyền tên bảng "GiaoDich", bỏ tham số appSheetId thừa
     const result = await deleteRowFromSheet("GiaoDich", item.keyId || item.id, APP_ID);
 
     if (result.success) {
       setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
       showToast("Đã xóa thành công!", "success");
-      await fetchAllData(); // Đồng bộ lại với server
+      await fetchAllData(); 
     } else {
       showToast(`Lỗi xóa: ${result.message}`, "error");
     }
-    setItemToDelete(null); // Luôn đóng modal sau khi thực hiện
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
-    setIsLoggedIn(false);
+    setItemToDelete(null); 
   };
 
   // --- LOGIC XỬ LÝ DỮ LIỆU DASHBOARD ---
@@ -463,7 +359,7 @@ o   } nst link = document.createElement("a");
               onAdd={handleAddNew}
             />
             <div style={{ borderBottom: '1px solid #e5e7eb' }} />
-            <DataTable data={filteredData} onEdit={handleEdit} onDelete={handleDelete} />
+            <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
           </div>
         );
 
@@ -524,7 +420,7 @@ o   } nst link = document.createElement("a");
             renderContent()
           )}
         </main>
-      </div> {/* Đóng thẻ app-main-wrapper */}
+      </div>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} showToast={showToast} />}
