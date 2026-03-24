@@ -53,11 +53,14 @@ function GanttChartView({ stages = [] }) {
     });
   }, [stages]);
 
+  // Tính chiều cao động: 50px cho mỗi dòng, tối thiểu 450px
+  const dynamicHeight = Math.max(450, ganttData.length * 50);
+
   return (
     <div className="chart-card">
       <h3 className="chart-title">Biểu đồ tiến độ (Gantt)</h3>
       {ganttData.length > 0 ? (
-        <ResponsiveContainer width="100%" height={450}>
+        <ResponsiveContainer width="100%" height={dynamicHeight}>
           <BarChart data={ganttData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <XAxis type="number" domain={['dataMin', 'dataMax + 5']} tickFormatter={(tick) => `Ngày ${tick}`} tick={{ fill: "#6b7280", fontSize: 11 }} />
             <YAxis type="category" dataKey="name" width={120} tick={{ fill: "#374151", fontSize: 12 }} interval={0} />

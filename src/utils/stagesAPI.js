@@ -3,6 +3,30 @@ const STAGES_TABLE_NAME = process.env.REACT_APP_APPSHEET_TABLE_TIENDO || "TienDo
 
 const getApiUrl = (appId) => `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(STAGES_TABLE_NAME)}/Action`;
 
+// Helper: Xử lý ngày tháng an toàn (Hỗ trợ cả dd/mm/yyyy của VN)
+const parseDate = (value) => {
+  if (!value) return null;
+  if (value instanceof Date) return value;
+  
+  // Nếu là chuỗi
+  if (typeof value === 'string') {
+    if (!value.trim()) return null;
+
+    // Regex tìm định dạng dd/mm/yyyy hoặc d/m/yyyy
+    const parts = value.match(/^(\d{1,2})\/\-\/\-/);
+    if (parts) {
+      // parts[1]=day, parts[2]=month, parts[3]=year -> new Date(year, monthIndex, day)
+      const d = new Date(parts[3], parts[2] - 1, parts[1]);
+      if (!isNaN(d.getTime())) return d;
+    }
+    
+    // Thử parse chuẩn ISO (yyyy-mm-dd) nếu regex trên không khớp
+    const d = new Date(value);
+    return isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+};
+
 /**
  * Lấy danh sách các giai đoạn từ bảng data_tien_do
  */
@@ -54,6 +78,17 @@ export const fetchStages = async (appId) => {
                key.includes('giai đoạn');
       });
 
+      // 4. Tìm cột Ngày bắt đầu / Kết thúc (chấp nhận cả tiếng Việt có dấu)
+      const startKey = rowKeys.find(k => {
+        const key = k.trim().toLowerCase().replace(/_/g, "");
+        return key === 'ngaybatdau' || key.includes('bat dau') || key.includes('bắt đầu') || key.includes('start');
+      });
+
+      const endKey = rowKeys.find(k => {
+        const key = k.trim().toLowerCase().replace(/_/g, "");
+        return key === 'ngayketthuc' || key.includes('ket thuc') || key.includes('kết thúc') || key.includes('end') || key.includes('hoan thanh');
+      });
+
       // 2. Tạo ID duy nhất cho Frontend (QUAN TRỌNG: Sửa lỗi hiển thị ảnh ở tất cả các ô)
       // Ưu tiên dùng giá trị từ cột Key tìm được
       const uniqueId = row[idKey] || row._RowNumber || `stage_idx_${index}`;
@@ -66,8 +101,8 @@ export const fetchStages = async (appId) => {
         imgColumn: imgKey, // Lưu lại tên cột Ảnh tìm được để dùng lúc Update
         name: row[nameKey] || row.name || row["Tên công việc"] || row["Hạng mục"] || `Giai đoạn ${index + 1}`, // Fallback nếu không tìm thấy tên
         status: row.status || row["Trạng thái"] || "Chưa bắt đầu",
-        ngayBatDau: row.ngayBatDau ? new Date(row.ngayBatDau) : null,
-        ngayKetThuc: row.ngayKetThuc ? new Date(row.ngayKetThuc) : null,
+        ngayBatDau: parseDate(row[startKey] || row.ngayBatDau), // Tự động parse ngày
+        ngayKetThuc: parseDate(row[endKey] || row.ngayKetThuc),
         anhNghiemThu: row[imgKey] || "", // Map đúng cột ảnh
       };
     }).sort((a, b) => a.appSheetId - b.appSheetId); // Sửa lỗi sắp xếp: Dùng thứ tự dòng trong Sheet (_RowNumber)
