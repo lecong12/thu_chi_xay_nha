@@ -1,124 +1,58 @@
-/* --- ĐỊNH NGHĨA BIẾN MÀU SẮC --- */
-:root {
-  /* Chế độ Sáng (Mặc định) */
-  --bg-app: #f8fafc;
-  --bg-main: #ffffff;
-  --text-primary: #1e293b;
-  --text-secondary: #64748b;
-  --border-color: #e5e7eb;
-  --card-bg: #ffffff;
-  --accent-color: #2d8e2b; /* Màu xanh lá chủ đạo của bạn */
-  --error-bg: #fef2f2;
-  --error-text: #dc2626;
-  --error-border: #fecaca;
+/* Sidebar.css */
+
+/* 1. Lớp phủ mờ nền */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5); /* Màu đen mờ */
+  backdrop-filter: blur(2px);     /* Làm mờ nhẹ nền phía sau */
+  z-index: 998;
+  transition: opacity 0.3s ease;
 }
 
-/* Chế độ Tối (Kích hoạt khi body có class .dark-theme) */
-body.dark-theme {
-  --bg-app: #0f172a;      /* Xanh đen sâu */
-  --bg-main: #1e293b;     /* Xanh đen nhẹ hơn cho nội dung */
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --border-color: #334155;
-  --card-bg: #1e293b;
-  --accent-color: #4ade80; /* Xanh lá sáng hơn cho nền tối */
-  --error-bg: #450a0a;
-  --error-text: #fca5a5;
-  --error-border: #7f1d1d;
-}
-
-/* --- ÁP DỤNG VÀO CẤU TRÚC HIỆN TẠI --- */
-
-.app {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding-bottom: 70px;
-  background-color: var(--bg-app); /* Dùng biến */
-  color: var(--text-primary);      /* Dùng biến */
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
-.main-content {
-  flex: 1;
-  padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
-  width: 100%;
-  background-color: var(--bg-app);
-}
-
-/* Loading */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 300px;
-  color: var(--text-secondary); /* Dùng biến */
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid var(--border-color); /* Dùng biến */
-  border-top-color: var(--accent-color);  /* Dùng biến */
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.loading-container p {
-  margin-top: 16px;
-  font-size: 16px;
-}
-
-/* Error Banner */
-.error-banner {
-  background: var(--error-bg);      /* Dùng biến */
-  color: var(--error-text);        /* Dùng biến */
-  padding: 12px 20px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-  border: 1px solid var(--error-border); /* Dùng biến */
-}
-
-.error-banner button {
-  background: var(--error-text);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: transform 0.2s;
-}
-
-.error-banner button:hover {
-  transform: scale(1.05);
-  filter: brightness(1.1);
-}
-
-/* Desktop styles */
-@media (min-width: 769px) {
-  .app {
-    padding-bottom: 20px;
-  }
-}
-
-/* Mobile styles */
+/* 2. Cấu hình Sidebar trên Mobile */
 @media (max-width: 768px) {
-  .main-content {
-    padding: 12px;
+  .sidebar-overlay.show {
+    display: block; /* Hiện overlay khi sidebar mở */
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px; /* Ẩn hoàn toàn sidebar về bên trái */
+    width: 280px;  /* Chiều rộng cố định trên mobile */
+    height: 100vh;
+    z-index: 999;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none;
+  }
+
+  .sidebar.open {
+    left: 0; /* Trượt sidebar ra */
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+  }
+
+  .sidebar.closed {
+    left: -280px; /* Đảm bảo đóng hẳn, không để lại icon thừa */
+  }
+
+  /* Ẩn nút mũi tên toggle trên mobile nếu bạn đã có nút Menu ở Header */
+  .toggle-btn {
+    display: flex; 
   }
 }
 
-/* MẸO: Đảm bảo các Card, Table trong các file CSS khác 
-   cũng dùng background-color: var(--card-bg) và color: var(--text-primary) 
-   để tự động đổi màu theo App.js */
+/* 3. Cấu hình cho Desktop (Giữ nguyên logic cũ) */
+@media (min-width: 769px) {
+  .sidebar {
+    position: fixed;
+    /* desktop logic... */
+  }
+  .sidebar-overlay {
+    display: none !important;
+  }
+}
