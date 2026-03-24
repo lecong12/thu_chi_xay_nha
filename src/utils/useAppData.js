@@ -87,6 +87,8 @@ export const useAppData = (isLoggedIn) => {
                 const c = {};
                 Object.keys(row).forEach(k => { c[normalizeKey(k)] = row[k]; });
                 return {
+                    id: row._RowNumber, // Lưu RowNumber để update
+                    keyId: c.hangMuc || c.doiTuongThuChi, // Key là Hạng mục
                     hangMuc: c.hangMuc || c.doiTuongThuChi || "Hạng mục",
                     duKien: Number(String(c.duKien || 0).replace(/\D/g, "")),
                     thucTe: Number(String(c.thucTe || 0).replace(/\D/g, "")),
@@ -143,5 +145,25 @@ export const useAppData = (isLoggedIn) => {
         return result;
     };
 
-    return { data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStage };
+    const handleUpdateBudget = async (item, newDuKien) => {
+        const originalNganSach = [...nganSach];
+        const updatedItem = { ...item, duKien: newDuKien, conLai: newDuKien - item.thucTe };
+        
+        // Optimistic Update: Cập nhật giao diện ngay
+        setNganSach(prev => prev.map(i => i.id === item.id ? updatedItem : i));
+
+        const payload = {
+            "Hạng mục": item.keyId,
+            "Dự kiến": newDuKien
+        };
+
+        const result = await updateRowInSheet(TABLE_NGANSACH, payload, APP_ID, ACCESS_KEY);
+
+        if (!result.success) {
+            setNganSach(originalNganSach); // Revert nếu lỗi
+        }
+        return result;
+    };
+
+    return { data, setData, nganSach, tienDo, loading, error, fetchAllData, handleUpdateStage, handleUpdateBudget };
 };

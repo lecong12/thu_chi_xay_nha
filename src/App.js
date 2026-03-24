@@ -50,7 +50,7 @@ function App() {
   // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
   // Dưới đây giả định logic trong App.js là chính.
   const { 
-    data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage 
+    data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage, handleUpdateBudget
   } = useAppData(isLoggedIn);
 
   // State cho UI, không liên quan đến data fetching
@@ -363,7 +363,7 @@ function App() {
         return <GanttChartView stages={extraData.tienDo} onUpdateStage={handleStageUpdate} />;
 
       case 'budget':
-        return <BudgetView budget={extraData.nganSach} />;
+        return <BudgetView budget={extraData.nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
 
       case 'list':
         return (
