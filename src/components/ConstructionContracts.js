@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase } from 'react-icons/fi';
+import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye, FiX } from 'react-icons/fi';
 import './ConstructionContracts.css';
 
 // Cấu hình Cloudinary
@@ -16,6 +16,7 @@ function ConstructionContracts() {
   const [activeCategory, setActiveCategory] = useState('tho');
   const [contracts, setContracts] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [viewingPdf, setViewingPdf] = useState(null); // State để xem PDF
 
   // Tải dữ liệu từ LocalStorage khi khởi động
   useEffect(() => {
@@ -145,6 +146,10 @@ function ConstructionContracts() {
                 <span className="contract-meta">{contract.date} &bull; {contract.size}</span>
               </div>
               <div className="contract-actions">
+                {/* Nút Xem ngay */}
+                <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
+                  <FiEye />
+                </button>
                 {/* 
                   Thêm thuộc tính `download` để gợi ý trình duyệt tải file xuống thay vì mở trong tab mới.
                   Điều này giúp tăng tính tương thích và giải quyết vấn đề nếu trình duyệt chặn mở PDF trực tiếp.
@@ -160,6 +165,26 @@ function ConstructionContracts() {
           ))}
         </div>
       </div>
+
+      {/* Modal Xem PDF (Giống bên Bản vẽ) */}
+      {viewingPdf && (
+        <div className="pdf-viewer-overlay" onClick={() => setViewingPdf(null)}>
+          <div className="pdf-viewer-container" onClick={e => e.stopPropagation()}>
+            <div className="pdf-header">
+              <h3>{viewingPdf.name}</h3>
+              <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
+            </div>
+            <div className="pdf-body" style={{flex: 1, position: 'relative'}}>
+              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%" style={{display: 'block', height: '100%'}}>
+                <div style={{padding: '20px', textAlign: 'center', color: '#fff'}}>
+                  <p style={{marginBottom: '10px'}}>Không thể hiển thị bản xem trước.</p>
+                  <a href={viewingPdf.url} target="_blank" rel="noreferrer" style={{background: '#fff', color: '#333', padding: '8px 16px', borderRadius: '4px', textDecoration: 'none'}}>Mở trong tab mới</a>
+                </div>
+              </object>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

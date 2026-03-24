@@ -6,18 +6,18 @@ import { arimoNormal } from './Arimo-Regular-normal.js';
 
 const exportToPDF = (data, title = "Báo cáo chi tiêu") => {
   try {
-    // Kiểm tra xem font đã được import đúng chưa
-    if (!arimoNormal) {
-      alert("Lỗi: Không tìm thấy dữ liệu font. Vui lòng kiểm tra lại file Arimo-Regular-normal.js");
-      return;
-    }
-
     const doc = new jsPDF();
+    let fontName = "times"; // Font mặc định (fallback) nếu chưa có font tiếng Việt
 
     // 1. Thêm font tiếng Việt vào file PDF
-    doc.addFileToVFS('Arimo-Regular.ttf', arimoNormal);
-    doc.addFont('Arimo-Regular.ttf', 'Arimo', 'normal');
-    doc.setFont('Arimo');
+    if (arimoNormal) {
+      doc.addFileToVFS('Arimo-Regular.ttf', arimoNormal);
+      doc.addFont('Arimo-Regular.ttf', 'Arimo', 'normal');
+      doc.setFont('Arimo');
+      fontName = "Arimo";
+    } else {
+      console.warn("Chưa có dữ liệu font Arimo. PDF sẽ sử dụng font mặc định (có thể lỗi hiển thị tiếng Việt).");
+    }
 
     const tableColumn = ["STT", "Ngày", "Hạng mục", "Nội dung chi tiết", "Số tiền (VND)"];
     const tableRows = [];
@@ -41,7 +41,7 @@ const exportToPDF = (data, title = "Báo cáo chi tiêu") => {
     // 4. Sử dụng autoTable để vẽ bảng
     doc.autoTable(tableColumn, tableRows, {
       startY: 20,
-      styles: { font: "Arimo", fontStyle: 'normal' },
+      styles: { font: fontName, fontStyle: 'normal' },
       headStyles: { fillColor: [45, 142, 43], textColor: [255, 255, 255], fontStyle: 'bold' }
     });
 

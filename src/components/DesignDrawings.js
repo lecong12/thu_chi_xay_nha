@@ -153,7 +153,14 @@ function DesignDrawings() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
-            <iframe src={viewingPdf.url} title="PDF Viewer" className="pdf-iframe"></iframe>
+            <div className="pdf-body">
+              <object data={viewingPdf.url} type="application/pdf" className="pdf-object" width="100%" height="100%">
+                <div className="pdf-fallback">
+                  <p>Trình duyệt không hỗ trợ xem trực tiếp.</p>
+                  <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="fallback-btn">Mở file trong tab mới</a>
+                </div>
+              </object>
+            </div>
           </div>
         </div>
       )}
