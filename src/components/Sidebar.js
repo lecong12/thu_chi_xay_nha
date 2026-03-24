@@ -18,9 +18,17 @@ import {
 } from 'react-icons/fi';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
+const Sidebar = ({ 
+  isOpen, 
+  toggle, 
+  activeTab, 
+  onTabChange, 
+  onLogout, 
+  isDarkMode, 
+  toggleDarkMode 
+}) => {
   
-  // Danh sách menu chính
+  // Danh sách các mục menu
   const menuItems = [
     { id: 'dashboard', icon: <FiTrendingUp size={20} />, label: 'Tổng quan' },
     { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
@@ -34,42 +42,56 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
     { id: 'all', icon: <FiGrid size={20} />, label: 'Tất cả' },
   ];
 
+  // Logic xử lý khi nhấn vào một mục menu
+  const handleItemClick = (id) => {
+    // 1. Chuyển Tab
+    onTabChange(id);
+    
+    // 2. Nếu là điện thoại (width <= 768px) thì tự động đóng sidebar sau khi chọn
+    if (window.innerWidth <= 768 && isOpen) {
+      toggle();
+    }
+  };
+
   return (
     <>
-      {/* Overlay cho mobile khi menu mở - Giúp đóng menu khi chạm ra ngoài */}
-      {isOpen && (
-        <div className="sidebar-overlay" onClick={toggle} />
-      )}
+      {/* LỚP PHỦ MỜ (OVERLAY): Chỉ hiển thị trên Mobile khi Menu đang mở */}
+      <div 
+        className={`sidebar-overlay ${isOpen ? 'show' : ''}`} 
+        onClick={toggle} 
+      />
 
-      <div className={`sidebar ${isOpen ? 'open' : 'closed'} ${isDarkMode ? 'dark-mode' : ''}`}>
+      {/* SIDEBAR CHÍNH */}
+      <aside className={`sidebar ${isOpen ? 'open' : 'closed'} ${isDarkMode ? 'dark-theme' : ''}`}>
         
         {/* Header của Sidebar */}
         <div className="sidebar-header">
-          {isOpen && <h3 className="app-title">MENU</h3>}
+          {isOpen ? <h3 className="app-title">DANH MỤC</h3> : <div style={{height: '24px'}}></div>}
           <button className="toggle-btn" onClick={toggle} title={isOpen ? "Thu gọn" : "Mở rộng"}>
             {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
           </button>
         </div>
 
-        {/* Danh sách Menu Items */}
+        {/* Thân Sidebar - Chứa danh sách Menu */}
         <div className="sidebar-menu">
           {menuItems.map((item) => (
             <div
               key={item.id}
               className={`menu-item ${activeTab === item.id ? 'active' : ''}`}
-              onClick={() => onTabChange(item.id)}
+              onClick={() => handleItemClick(item.id)}
               title={!isOpen ? item.label : ''}
             >
               <div className="menu-icon">{item.icon}</div>
               {isOpen && <span className="menu-label">{item.label}</span>}
+              {!isOpen && <div className="tooltip">{item.label}</div>}
             </div>
           ))}
         </div>
 
-        {/* Phần chân Sidebar: Chế độ tối & Đăng xuất */}
+        {/* Chân Sidebar - Chứa các nút hệ thống */}
         <div className="sidebar-footer">
           
-          {/* Nút Bật/Tắt Chế độ tối/sáng */}
+          {/* Nút chuyển đổi Dark Mode */}
           <div 
             className="menu-item theme-toggle" 
             onClick={toggleDarkMode} 
@@ -78,7 +100,7 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
             <div className="menu-icon">
               {isDarkMode ? <FiSun size={20} color="#fbbf24" /> : <FiMoon size={20} />}
             </div>
-            {isOpen && <span className="menu-label">{isDarkMode ? "Chế độ Sáng" : "Chế độ Tối"}</span>}
+            {isOpen && <span className="menu-label">{isDarkMode ? "Giao diện Sáng" : "Giao diện Tối"}</span>}
           </div>
 
           {/* Nút Đăng xuất */}
@@ -94,7 +116,7 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
           </div>
           
         </div>
-      </div>
+      </aside>
     </>
   );
 };
