@@ -54,6 +54,7 @@ function ConstructionContracts() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
+      data.append("folder", "File PDF"); // Ép buộc lưu vào thư mục File PDF
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();

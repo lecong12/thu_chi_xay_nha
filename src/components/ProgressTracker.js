@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiCamera, FiLoader, FiSave, FiX } from 'react-icons/fi';
+import { FiCamera, FiLoader, FiSave, FiX, FiFileText } from 'react-icons/fi';
 
 // Cấu hình Cloudinary
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
@@ -16,8 +16,9 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
   const handleFileSelect = (e, stageId) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chỉ chọn file ảnh.");
+    // Cho phép cả ảnh và PDF
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      alert("Vui lòng chỉ chọn file ảnh hoặc PDF.");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
@@ -52,6 +53,7 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
+      data.append("resource_type", "auto"); // QUAN TRỌNG
       notify("Đang upload ảnh...", "info");
 
       const controller = new AbortController();
@@ -107,12 +109,19 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
             
             <div className="stage-image-container" style={{ marginTop: '10px', position: 'relative' }}>
               {pendingFiles[stage.id] ? (
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={pendingFiles[stage.id].preview} 
-                    alt="Preview" 
-                    style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block', border: '2px solid #3b82f6' }} 
-                  />
+                <div style={{ position: 'relative', border: '2px solid #3b82f6', borderRadius: '4px', padding: '4px' }}>
+                  {pendingFiles[stage.id].file.type.startsWith("image/") ? (
+                    <img 
+                      src={pendingFiles[stage.id].preview} 
+                      alt="Preview" 
+                      style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block' }} 
+                    />
+                  ) : (
+                    <div className="pdf-preview-placeholder">
+                      <FiFileText size={40} />
+                      <span>{pendingFiles[stage.id].file.name}</span>
+                    </div>
+                  )}
                   <div style={{ position: 'absolute', bottom: 5, right: 5, display: 'flex', gap: '5px' }}>
                     <button 
                       onClick={() => handleConfirmUpload(stage.id)} 
@@ -132,23 +141,30 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
                   </div>
                 </div>
               ) : stage.anhNghiemThu ? (
-                <div style={{ position: 'relative' }}>
-                  <img 
-                    src={stage.anhNghiemThu} 
-                    alt="Ảnh nghiệm thu" 
-                    style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block' }} 
-                  />
+                <div className="file-display-container">
+                  {stage.anhNghiemThu.toLowerCase().endsWith('.pdf') ? (
+                     <a href={stage.anhNghiemThu} target="_blank" rel="noreferrer" className="pdf-preview-placeholder">
+                        <FiFileText size={40} />
+                        <span>Xem file PDF</span>
+                      </a>
+                  ) : (
+                    <img 
+                      src={stage.anhNghiemThu} 
+                      alt="Ảnh nghiệm thu" 
+                      style={{ width: '100%', borderRadius: '4px', objectFit: 'cover', maxHeight: '150px', display: 'block' }} 
+                    />
+                  )}
                   <label className="upload-btn-overlay" style={{ position: 'absolute', bottom: 5, right: 5, background: 'rgba(0,0,0,0.6)', color: '#fff', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <FiCamera /> 
                     <span>Sửa</span>
-                    <input type="file" accept="image/*" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                    <input type="file" accept="image/*,application/pdf" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
                   </label>
                 </div>
               ) : (
                 <label className="upload-placeholder" style={{ border: '1px dashed #cbd5e1', borderRadius: '4px', padding: '15px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', fontSize: '13px' }}>
                   <FiCamera size={20} />
-                  <span style={{ marginTop: '5px' }}>Thêm ảnh nghiệm thu</span>
-                  <input type="file" accept="image/*" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
+                  <span style={{ marginTop: '5px' }}>Thêm Ảnh/PDF</span>
+                  <input type="file" accept="image/*,application/pdf" hidden onChange={(e) => handleFileSelect(e, stage.id)} disabled={uploadingStageId === stage.id} />
                 </label>
               )}
             </div>

@@ -55,6 +55,7 @@ function DesignDrawings() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
+      data.append("folder", "File PDF"); // Ép buộc lưu vào thư mục File PDF
 
       // Thêm Timeout để tránh treo (Sửa lỗi: Khai báo controller trước khi dùng)
       const controller = new AbortController();

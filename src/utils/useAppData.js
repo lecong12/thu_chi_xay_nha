@@ -127,7 +127,7 @@ export const useAppData = (isLoggedIn) => {
 
         // Map dữ liệu từ Dashboard (camelCase) sang tên cột thực tế trong Sheet (Tiếng Việt)
         if (updates.anhNghiemThu !== undefined) {
-            payload[stageToUpdate.imgColumn || "Ảnh nghiệm thu"] = updates.anhNghiemThu;
+            payload[stageToUpdate.imgColumn || "Ảnh nghiệm thu"] = updates.anhNghiemThu; // Giữ nguyên tên cột có dấu
         }
         if (updates.status !== undefined) {
             payload["Trạng thái"] = updates.status;
