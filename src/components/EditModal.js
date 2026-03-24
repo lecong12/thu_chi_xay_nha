@@ -49,7 +49,7 @@ const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").rep
 
 console.log("Cloudinary Config Loaded:", { cloudName: CLOUD_NAME ? "OK" : "MISSING", preset: UPLOAD_PRESET ? "OK" : "MISSING" });
 
-function EditModal({ item, onClose, onSave }) {
+function EditModal({ item, onClose, onSave, showToast }) {
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
     ngay: "",

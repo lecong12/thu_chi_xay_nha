@@ -441,7 +441,7 @@ function App() {
       </div> {/* Đóng thẻ app-main-wrapper */}
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} showToast={showToast} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {itemToDelete && (
         <ConfirmModal
