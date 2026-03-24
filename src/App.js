@@ -10,6 +10,7 @@ import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhậ
 import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchTableData } from "./utils/sheetsAPI";
+import Sidebar from "./components/Sidebar"; // Import Sidebar
 import "./App.css";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
@@ -17,6 +18,7 @@ const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
   // Lưu ý: Nếu useAppData chưa được cập nhật để dùng API mới, bạn nên cập nhật nó hoặc
