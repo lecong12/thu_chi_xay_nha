@@ -349,7 +349,7 @@ function App() {
               onUpdateStage={handleStageUpdate}
               showToast={showToast}
             >
-              {activeTab === "all" && (
+              {(activeTab === "all" || window.innerWidth <= 768) && (
                 <div style={{ marginTop: '30px', marginBottom: '80px' }}>
                   <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
                   <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
@@ -369,7 +369,7 @@ function App() {
               )}
             </Dashboard>
           )}
-          {activeTab === "list" && (
+          {activeTab === "list" && window.innerWidth > 768 && (
             <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px', marginBottom: '80px' }}>
               <FilterBar 
                 filters={filters} 
