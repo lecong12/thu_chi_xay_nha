@@ -1,17 +1,19 @@
 import React from "react";
-import { FiRefreshCw, FiHome, FiLogOut, FiPlus, FiFilter } from "react-icons/fi";
+import { FiRefreshCw, FiHome, FiLogOut, FiPlus, FiFilter, FiMenu } from "react-icons/fi";
 import "./Header.css";
 
-function Header({ onRefresh, loading, onLogout, onAdd, onToggleFilter }) {
+function Header({ onRefresh, loading, onLogout, onAdd, onToggleFilter, onToggleSidebar }) {
   return (
     <header className="header" style={{ height: '60px', minHeight: '60px' }}>
       <div className="header-content">
         <div className="header-left">
+          <button className="menu-btn mobile-only" onClick={onToggleSidebar}>
+            <FiMenu size={24} />
+          </button>
           <div className="logo">
             <FiHome className="logo-icon" />
             <span className="logo-text">Sổ Tay Xây Nhà</span>
           </div>
-          <span className="subtitle">Theo dõi chi phí & Tiến độ</span>
         </div>
 
         <div className="header-right">
