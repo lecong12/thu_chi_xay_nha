@@ -1,5 +1,11 @@
 import React, { useState, useMemo } from "react";
 import Dashboard from "./components/Dashboard";
+
+// --- Tách Component để dễ quản lý ---
+import ProgressTracker from "./components/ProgressTracker";
+import BudgetView from "./components/BudgetView";
+import GanttChartView from "./components/GanttChartView";
+
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
@@ -17,7 +23,7 @@ const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
-  const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
+  const [activeTab, setActiveTab] = useState('dashboard'); // Mặc định là trang Tổng quan
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
@@ -290,6 +296,42 @@ function App() {
     return { tongThu: 0, tongChi, soGiaoDich: filteredData.length };
   }, [filteredData]);
 
+  // --- LOGIC HIỂN THỊ NỘI DUNG THEO MENU ---
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
+      
+      case 'progress_tracker':
+        return <ProgressTracker stages={extraData.tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
+
+      case 'gantt_chart':
+        return <GanttChartView stages={extraData.tienDo} />;
+
+      case 'budget':
+        return <BudgetView budget={extraData.nganSach} />;
+
+      case 'transactions':
+        return (
+          <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px' }}>
+            <FilterBar 
+              filters={filters} 
+              filterOptions={filterOptions} 
+              onFilterChange={handleFilterChange} 
+              onReset={handleResetFilters} 
+              isExpanded={isFilterExpanded}
+              onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+              onExport={() => exportToCSV(filteredData, "danh-sach-giao-dich")}
+            />
+            <div style={{ borderBottom: '1px solid #e5e7eb' }} />
+            <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+          </div>
+        );
+      default:
+        return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
+    }
+  };
+
   if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
@@ -322,52 +364,7 @@ function App() {
           onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
         />
         <main className="main-content">
-        <>
-
-          {(activeTab === "dashboard" || activeTab === "all") && (
-            <Dashboard 
-              stats={stats} 
-              data={filteredData}
-              extraData={extraData} 
-              onUpdateStage={handleStageUpdate}
-              showToast={showToast}
-            >
-              {activeTab === "all" && (
-                <div style={{ marginTop: '30px', marginBottom: '80px' }}>
-                  <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
-                  <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-                    <FilterBar 
-                      filters={filters} 
-                      filterOptions={filterOptions} 
-                      onFilterChange={handleFilterChange} 
-                      onReset={handleResetFilters} 
-                      isExpanded={isFilterExpanded}
-                      onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
-                      onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
-                    />
-                    <div style={{ borderBottom: '1px solid #e5e7eb' }} />
-                    <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
-                  </div>
-                </div>
-              )}
-            </Dashboard>
-          )}
-          {activeTab === "list" && (
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px', marginBottom: '80px' }}>
-              <FilterBar 
-                filters={filters} 
-                filterOptions={filterOptions} 
-                onFilterChange={handleFilterChange} 
-                onReset={handleResetFilters} 
-                isExpanded={isFilterExpanded}
-                onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
-                onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
-              />
-              <div style={{ borderBottom: '1px solid #e5e7eb' }} />
-              <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
-            </div>
-          )}
-        </>
+          {renderContent()}
         </main>
       </div> {/* Đóng thẻ app-main-wrapper */}
 
