@@ -4,12 +4,14 @@ import {
   FiSearch,
   FiX,
   FiDownload,
+  FiFileText, // Thêm icon cho PDF
+  FiPlus, // Thêm icon cho nút Thêm
   FiChevronDown,
   FiChevronUp,
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport }) {
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onAdd, onExport, onExportPDF }) {
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
@@ -33,12 +35,20 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
         </div>
 
         <div className="filter-actions">
+          <button className="toggle-btn add-btn" onClick={onAdd} title="Thêm giao dịch mới">
+            <FiPlus />
+            <span className="toggle-text">Thêm mới</span>
+          </button>
           {hasActiveFilters && (
             <button className="reset-btn" onClick={onReset}>
               <FiX />
               <span>Xóa lọc</span>
             </button>
           )}
+          <button className="toggle-btn" onClick={onExportPDF} title="Xuất PDF">
+            <FiFileText />
+            <span className="toggle-text">PDF</span>
+          </button>
           <button className="toggle-btn" onClick={onExport} title="Xuất Excel">
             <FiDownload />
             <span className="toggle-text">Excel</span>
