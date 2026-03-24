@@ -157,15 +157,18 @@ function EditModal({ item, onClose, onSave }) {
 
   // Xử lý OCR (Quét hóa đơn)
   const handleOCR = async () => {
-    if (!formData.hinhAnh) {
+    const imageUrl = formData.hinhAnh;
+    if (!imageUrl) {
       alert("Vui lòng tải ảnh lên hoặc chọn ảnh hóa đơn trước khi quét.");
       return;
     }
 
     setOcrScanning(true);
+    showToast("Đang quét nội dung hóa đơn...", "info");
+
     try {
       const result = await Tesseract.recognize(
-        formData.hinhAnh,
+        imageUrl,
         'vie', // Sử dụng ngôn ngữ tiếng Việt
         { logger: m => console.log(m) } // Log tiến độ ra console
       );
@@ -173,39 +176,58 @@ function EditModal({ item, onClose, onSave }) {
       const text = result.data.text;
       console.log("Kết quả OCR:", text);
 
-      const parsedData = {};
+      const parsedData = { noiDung: formData.noiDung, soTien: formData.soTien, ngay: formData.ngay };
+      let foundSomething = false;
 
       // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy)
-      const dateRegex = /(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/;
+      const dateRegex = /(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/;
       const dateMatch = text.match(dateRegex);
       if (dateMatch) {
         const day = dateMatch[1].padStart(2, '0');
         const month = dateMatch[2].padStart(2, '0');
         const year = dateMatch[3];
         parsedData.ngay = `${year}-${month}-${day}`;
+        foundSomething = true;
       }
 
       // 2. Tìm Số tiền (Lấy số lớn nhất tìm thấy trong văn bản)
       // Regex tìm các chuỗi số (VD: 1.000.000 hoặc 1,000,000)
-      const numbers = text.match(/\d{1,3}(?:[.,]\d{3})*(?:[.,]\d+)?/g);
+      const numbers = text.match(/\d{1,3}(?:[.,]\d{3})*(?:,\d+)?/g);
       if (numbers) {
         let maxVal = 0;
         numbers.forEach(numStr => {
-          const cleanNum = parseFloat(numStr.replace(/[.,]/g, '')); // Loại bỏ dấu chấm/phẩy để so sánh
-          if (!isNaN(cleanNum) && cleanNum > 10000 && cleanNum < 10000000000) {
+          const cleanNum = parseFloat(numStr.replace(/[.,]/g, ''));
+          if (!isNaN(cleanNum) && cleanNum > 1000 && cleanNum < 10000000000) { // Giảm ngưỡng xuống 1.000
             if (cleanNum > maxVal) maxVal = cleanNum;
           }
         });
         if (maxVal > 0) {
           parsedData.soTien = maxVal.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+          foundSomething = true;
+        }
+      }
+
+      // 3. Tìm Nội dung (Tìm các từ khóa vật tư phổ biến)
+      const keywords = ['xi măng', 'cát', 'đá', 'gạch', 'sắt', 'thép', 'ống nước', 'dây điện'];
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const lowerLine = line.toLowerCase();
+        if (keywords.some(kw => lowerLine.includes(kw))) {
+          parsedData.noiDung = line.trim();
+          foundSomething = true;
+          break; // Lấy dòng đầu tiên tìm thấy
         }
       }
 
       setFormData(prev => ({ ...prev, ...parsedData }));
-      alert("Quét thành công! Vui lòng kiểm tra lại thông tin.");
+      if (foundSomething) {
+        showToast("Đã nhận diện được thông tin từ ảnh!", "success");
+      } else {
+        showToast("Không nhận diện được thông tin rõ ràng, vui lòng nhập thủ công.", "warning");
+      }
     } catch (error) {
       console.error("OCR Error:", error);
-      alert("Lỗi khi quét OCR: " + error.message);
+      showToast("Lỗi khi quét OCR: " + error.message, "error");
     } finally {
       setOcrScanning(false);
     }
