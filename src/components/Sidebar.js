@@ -1,34 +1,42 @@
 import React from 'react';
 import { 
-  FiLogOut, FiMoon, FiSun, FiChevronLeft, FiChevronRight,
-  FiCheckCircle, FiTrendingUp, FiDollarSign, FiList, FiGrid, 
-  FiMap, FiBriefcase, FiFileText, FiMessageCircle 
+  FiLogOut, 
+  FiChevronLeft, 
+  FiChevronRight,
+  FiCheckCircle,
+  FiBarChart2,
+  FiDollarSign,
+  FiList,
+  FiGrid,
+  FiMessageCircle,
+  FiMoon,
+  FiSun,
+  FiFileText,
+  FiBriefcase,
+  FiMap,
+  FiTrendingUp 
 } from 'react-icons/fi';
 import './Sidebar.css';
 
-const Sidebar = ({ 
-  isOpen, 
-  toggle, 
-  activeTab, 
-  onTabChange, 
-  onLogout, 
-  isDarkMode, 
-  toggleDarkMode 
-}) => {
+const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
   
+  // KHÔI PHỤC ĐẦY ĐỦ 10 MỤC MENU
   const menuItems = [
     { id: 'dashboard', icon: <FiTrendingUp size={20} />, label: 'Tổng quan' },
-    { id: 'list', icon: <FiList size={20} />, label: 'Giao dịch' },
-    { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Ngân sách' },
-    { id: 'progress_tracker', icon: <FiCheckCircle size={20} />, label: 'Tiến độ' },
-    { id: 'drawings', icon: <FiMap size={20} />, label: 'Bản vẽ' },
-    { id: 'contracts', icon: <FiBriefcase size={20} />, label: 'Hợp đồng' },
-    { id: 'notes', icon: <FiFileText size={20} />, label: 'Ghi chú' },
+    { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
+    { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
+    { id: 'progress_tracker', icon: <FiCheckCircle size={20} />, label: 'Theo dõi Tiến độ' },
+    { id: 'gantt_chart', icon: <FiBarChart2 size={20} />, label: 'Biểu đồ Tiến độ' },
+    { id: 'drawings', icon: <FiMap size={20} />, label: 'Bản vẽ Thiết kế' },
+    { id: 'contracts', icon: <FiBriefcase size={20} />, label: 'Hợp đồng Xây dựng' },
+    { id: 'notes', icon: <FiFileText size={20} />, label: 'Ghi chú nhanh' },
+    { id: 'zalo', icon: <FiMessageCircle size={20} />, label: 'Chat Nhóm Zalo' },
+    { id: 'all', icon: <FiGrid size={20} />, label: 'Tất cả' },
   ];
 
   const handleItemClick = (id) => {
     onTabChange(id);
-    // Tự động đóng sidebar khi chọn mục trên điện thoại
+    // Tự động đóng trên mobile khi chọn xong
     if (window.innerWidth <= 768 && isOpen) {
       toggle();
     }
@@ -36,7 +44,7 @@ const Sidebar = ({
 
   return (
     <>
-      {/* Lớp phủ mờ nền khi mở menu trên mobile */}
+      {/* Overlay cho mobile */}
       <div 
         className={`sidebar-overlay ${isOpen ? 'show' : ''}`} 
         onClick={toggle} 
@@ -64,25 +72,16 @@ const Sidebar = ({
           ))}
         </div>
 
+        {/* PHẦN CHÂN: TỐI/SÁNG & ĐĂNG XUẤT */}
         <div className="sidebar-footer">
-          {/* Nút Chế độ Tối/Sáng */}
-          <div 
-            className="menu-item theme-toggle" 
-            onClick={toggleDarkMode} 
-            title={!isOpen ? (isDarkMode ? "Giao diện Sáng" : "Giao diện Tối") : ''}
-          >
+          <div className="menu-item theme-toggle" onClick={toggleDarkMode}>
             <div className="menu-icon">
               {isDarkMode ? <FiSun size={20} color="#fbbf24" /> : <FiMoon size={20} />}
             </div>
-            {isOpen && <span className="menu-label">{isDarkMode ? 'Giao diện Sáng' : 'Giao diện Tối'}</span>}
+            {isOpen && <span className="menu-label">{isDarkMode ? "Giao diện Sáng" : "Giao diện Tối"}</span>}
           </div>
 
-          {/* Nút Đăng xuất */}
-          <div 
-            className="menu-item logout" 
-            onClick={onLogout} 
-            title={!isOpen ? "Đăng xuất" : ''}
-          >
+          <div className="menu-item logout" onClick={onLogout}>
             <div className="menu-icon"><FiLogOut size={20} /></div>
             {isOpen && <span className="menu-label">Đăng xuất</span>}
           </div>
