@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Dashboard from "./components/Dashboard";
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -42,6 +42,38 @@ function App() {
 
   // State quản lý việc đóng/mở thanh lọc
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+
+  // State cho Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+    localStorage.setItem("darkMode", isDarkMode);
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
+  const handleTabChange = (tabId) => {
+    if (tabId === 'zalo') {
+      window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
+      return;
+    }
+    setActiveTab(tabId);
+    
+    // Tự động đóng Sidebar khi chọn menu trên Mobile
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   // --- LOGIC LỌC DỮ LIỆU ---
   const filterOptions = useMemo(() => ({
@@ -275,14 +307,36 @@ function App() {
 
   return (
     <div className="app">
-      <Header 
-        onRefresh={fetchAllData} 
-        loading={loading} 
-        onLogout={() => setIsLoggedIn(false)} 
-        onAdd={handleAddNew}
-        onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        toggle={() => setIsSidebarOpen(!isSidebarOpen)}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
-      <main className="main-content">
+
+      {/* Wrapper nội dung chính: Căn lề trái để tránh Sidebar trên Desktop */}
+      <div 
+        className="app-main-wrapper"
+        style={{ 
+          marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
+          transition: 'margin-left 0.3s ease',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <Header 
+          onRefresh={fetchAllData} 
+          loading={loading} 
+          onLogout={handleLogout} 
+          onAdd={handleAddNew}
+          onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
+        />
+        <main className="main-content">
         <>
 
           {(activeTab === "dashboard" || activeTab === "all") && (
@@ -329,7 +383,9 @@ function App() {
             </div>
           )}
         </>
-      </main>
+        </main>
+      </div>
+
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
