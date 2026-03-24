@@ -1,18 +1,24 @@
-/* Sidebar.css */
+/* Sidebar.css - Bản hoàn thiện 100% */
 
-/* Lớp phủ mờ nền khi mở menu trên mobile */
+:root {
+  --sidebar-width-open: 280px;
+  --sidebar-width-closed: 80px;
+  --transition-speed: 0.3s;
+}
+
+/* 1. Lớp phủ mờ nền khi mở menu trên mobile */
 .sidebar-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(3px); /* Làm mờ nội dung phía sau */
   z-index: 998;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.3s ease;
+  transition: all var(--transition-speed) ease;
 }
 
 .sidebar-overlay.show {
@@ -20,39 +26,139 @@
   visibility: visible;
 }
 
-/* Cấu hình chung Sidebar */
+/* 2. Cấu trúc Sidebar */
 .sidebar {
   position: fixed;
   top: 0;
   height: 100vh;
-  background: var(--bg-main);
-  z-index: 999;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: var(--bg-card);
+  border-right: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
+  z-index: 999;
+  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
 }
 
-/* DESKTOP: Sidebar cố định bên trái */
-@media (min-width: 769px) {
-  .sidebar.open { width: 280px; left: 0; }
-  .sidebar.closed { width: 80px; left: 0; }
-  .sidebar-overlay { display: none !important; }
-}
-
-/* MOBILE: Sidebar trượt ra/vào */
+/* --- XỬ LÝ MOBILE (Dưới 768px) --- */
 @media (max-width: 768px) {
   .sidebar {
-    width: 280px;
-    left: -280px; /* Giấu hẳn sang trái */
+    width: var(--sidebar-width-open);
+    left: calc(var(--sidebar-width-open) * -1); /* Đẩy hẳn ra ngoài màn hình */
   }
 
   .sidebar.open {
-    left: 0; /* Trượt ra khi mở */
-    box-shadow: 10px 0 30px rgba(0,0,0,0.2);
+    left: 0 !important;
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
   }
 
-  /* Ẩn bớt các thành phần không cần thiết trên mobile để tránh che màn hình */
   .sidebar.closed {
-    left: -280px; 
+    left: calc(var(--sidebar-width-open) * -1);
+  }
+}
+
+/* --- XỬ LÝ DESKTOP (Trên 768px) --- */
+@media (min-width: 769px) {
+  .sidebar.open {
+    width: var(--sidebar-width-open);
+    left: 0;
+  }
+
+  .sidebar.closed {
+    width: var(--sidebar-width-closed);
+    left: 0;
+  }
+}
+
+/* 3. Các thành phần bên trong */
+.sidebar-header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.app-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  white-space: nowrap;
+}
+
+.sidebar-menu {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 0;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 24px;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+  position: relative;
+  white-space: nowrap;
+}
+
+.menu-item:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-main);
+}
+
+.menu-item.active {
+  background-color: rgba(45, 142, 43, 0.1); /* Màu nhấn nhạt */
+  color: var(--accent-color);
+  border-right: 4px solid var(--accent-color);
+}
+
+.menu-icon {
+  min-width: 32px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+}
+
+.menu-label {
+  margin-left: 12px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* 4. Footer & Logout */
+.sidebar-footer {
+  padding: 10px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.menu-item.logout {
+  color: #ef4444;
+}
+
+.menu-item.logout:hover {
+  background-color: #fef2f2;
+}
+
+body.dark-theme .menu-item.logout:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* 5. Tooltip khi thu gọn trên Desktop */
+@media (min-width: 769px) {
+  .sidebar.closed .menu-label {
+    display: none;
+  }
+  
+  .sidebar.closed .menu-item {
+    justify-content: center;
+    padding: 14px 0;
+  }
+  
+  .sidebar.closed .menu-icon {
+    min-width: unset;
   }
 }
