@@ -55,7 +55,7 @@ function DesignDrawings() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "auto"); 
+      data.append("resource_type", "raw"); // Chuyển sang 'raw' để lưu file nguyên bản, không nén/convert
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
