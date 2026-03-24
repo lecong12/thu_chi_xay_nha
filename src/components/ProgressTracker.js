@@ -52,13 +52,13 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "auto"); // QUAN TRỌNG
+      // data.append("resource_type", "image"); // Mặc định là image, không cần gửi auto
       notify("Đang upload ảnh...", "info");
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, { 
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { 
         method: "POST", 
         body: data, 
         signal: controller.signal 

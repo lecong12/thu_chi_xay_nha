@@ -117,17 +117,20 @@ function EditModal({ item, onClose, onSave }) {
 
     try {
       setUploading(true);
+      const isPdf = file.type === "application/pdf";
+      const resourceType = isPdf ? "raw" : "image";
+
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "auto"); // QUAN TRỌNG
+      data.append("resource_type", resourceType); 
 
       // Thêm Timeout 20 giây
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`,
         { method: "POST", body: data, signal: controller.signal }
       );
       clearTimeout(timeoutId);

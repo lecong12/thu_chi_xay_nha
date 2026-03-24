@@ -55,13 +55,13 @@ function ConstructionContracts() {
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
       data.append("folder", "File PDF"); // Ép buộc lưu vào thư mục File PDF
-      data.append("resource_type", "auto"); // Thêm để nhất quán
+      data.append("resource_type", "raw"); // Ép buộc loại raw cho PDF
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
         method: "POST",
         body: data,
         signal: controller.signal
