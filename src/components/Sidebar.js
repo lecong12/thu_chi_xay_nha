@@ -1,6 +1,5 @@
 import React from 'react';
 import { 
-  FiHome, 
   FiLogOut, 
   FiChevronLeft, 
   FiChevronRight,
@@ -14,13 +13,14 @@ import {
   FiSun,
   FiFileText,
   FiBriefcase,
-  FiMap
+  FiMap,
+  FiTrendingUp // Icon biểu đồ mới cho Tổng quan
 } from 'react-icons/fi';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
   const menuItems = [
-    { id: 'dashboard', icon: <FiHome size={20} />, label: 'Tổng quan' },
+    { id: 'dashboard', icon: <FiTrendingUp size={20} />, label: 'Tổng quan' },
     { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
     { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
     { id: 'progress_tracker', icon: <FiCheckCircle size={20} />, label: 'Theo dõi Tiến độ' },
