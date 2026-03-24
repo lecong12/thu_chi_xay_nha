@@ -11,27 +11,13 @@ import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
-import Sidebar from "./components/Sidebar"; // Import Sidebar
-import Sidebar from "./components/Sidebar"; // Import Sidebar
-import Sidebar from "./components/Sidebar"; // Import Sidebar
 import "./App.css";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
 function App() {
-  constate cho Sidebar (mặc định mở trên desktop)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-  
-  // St [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
-  constate cho Sidebar (mặc định mở trên desktop)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-  
-  // St [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
-  tate cho Sidebar (mặc định mở trên desktop)
-  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-  
-  // S
-  // State cho Sidebar (mặc định mở trên desktop)
+  const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
+  const [activeTab, setActiveTab] = useState(() => (window.innerWidth > 768 ? "all" : "dashboard"));
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
@@ -288,98 +274,21 @@ function App() {
       .sort((a, b) => {
           const [m1, y1] = a.name.split('/');
           const [m2, y2] = b.name.split('/');
+          return new Date(y1, m1-1) - new Date(y2, m2-1);
+      });
+
+    return { top5, chartData, nganSach, tienDo };
+  }, [filteredData, nganSach, tienDo]);
+
+  const stats = useMemo(() => {
+    const tongChi = filteredData.reduce((sum, item) => sum + item.soTien, 0);
+    return { tongThu: 0, tongChi, soGiaoDich: filteredData.length };
+  }, [filteredData]);
+
+  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
 
   return (
     <div className="app">
-      {/* Sidebar cho Desktop */}
-      <Sidebar           return new Date(y1, m1-1) - new Date(y2, m2-1);
-        isOpen={isSideba Open} 
-        toggl ={() => se IsSidebarOpen(!isSidebarOpen)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogo t={() => {
-           localStorage.}emoveItem("isLoggedI)");
-;          setIsLoggedInfalse);
-        }}
-      />
-
-     {/* Wrappernộidungchính: Căn lề trái để tránh Sidebar */}
-      
-        -main-wrapper
-        style={{ 
-          marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
-          transition: 'margin-left 0.3s ease',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      
-      return { top5, chartData, nganSach, tienDo };
-  
-    return (
-      <div className="app"> // Header vẫn giữ logout choMobile
-        {/* Sidebar cho Desktop */}
-        <Sidebar   }, [filteredData, nganSach, tienDo]);
-        isOpen={isSidebaOpen} 
-          toggl={() => seIsSidebarOpen(!isSidebarOpen)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogot={() => {
-           localStorage.emoveItem("isLoggedI");
-          setIsLoggedInfalse);
-        }}
-      />
-
-      {/* Wrapper nộicdungochính: Căn lề trái để tránh Sidebar */}
-      nst s
-        tats = useMemo-main-wrapper(
-        style={{ 
-          marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
-          transition: 'margin-left 0.3s ease',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      () => {
-      const tongChi = filteredData.reduce((sum, item) => sum + item.soTien
-  
-    return (
-      <div className="app"> // Header vẫn giữ logout choMobile
-        {/* Sidebar cho Desktop */}, 0);
-        <Sidebar     return { tongThu: 0, tongChi, soGiaoDich: filteredData.length };
-          isOpen={isSideba}Open} 
-          toggl,={() => se IsSidebarOpen(!isSidebarOpen)}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onLogo[t={() => {
-           localStorage.femoveItem("isLoggedIi");
-l          setIsLoggedIntfalse);
-        }}
-      />
-eredData]);
-     {/* Wrappernộidungchính: Căn lề trái để tránh Sidebar */}
-      
-        -main-wrapper
-        style={{ 
-          marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
-          transition: 'margin-left 0.3s ease',
-          minHeight: '100vh',
-          display: 'flex',
-          flexDirection: 'column'
-        }}
-      
-      if (!isL>
-      </divo
-ggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
-  
-    return (
-      <div className="app"> // Header vẫn giữ logout choMobile
-        <Header 
-          onRefresh={fetchAllData} 
-          loading={loading} 
-          onLogout={() => setIsLoggedIn(false)} 
-        onAdd={handleAddNew}
-        onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
       {/* Sidebar cho Desktop */}
       <Sidebar 
         isOpen={isSidebarOpen} 
@@ -391,15 +300,12 @@ ggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
            setIsLoggedIn(false);
         }}
       />
-      <main className="main-content">
 
       {/* Wrapper nội dung chính: Căn lề trái để tránh Sidebar */}
       <div 
         className="app-main-wrapper"
         style={{ 
-            ma>
-      </divr
-ginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
+          marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
           transition: 'margin-left 0.3s ease',
           minHeight: '100vh',
           display: 'flex',
@@ -409,7 +315,7 @@ ginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
         <Header 
           onRefresh={fetchAllData} 
           loading={loading} 
-          onLogout={() => setIsLoggedIn(false)} // Header vẫn giữ logout cho Mobile
+          onLogout={() => setIsLoggedIn(false)} 
           onAdd={handleAddNew}
           onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
         />
@@ -426,9 +332,7 @@ ginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
             >
               {activeTab === "all" && (
                 <div style={{ marginTop: '30px', marginBottom: '80px' }}>
-              >
-      </div 
-     <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
+                  <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
                   <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
                     <FilterBar 
                       filters={filters} 
@@ -462,6 +366,7 @@ ginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
             </div>
           )}
         </>
+        </main>
       </main>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
