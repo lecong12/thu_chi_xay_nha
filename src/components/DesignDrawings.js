@@ -153,11 +153,7 @@ function DesignDrawings() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
-            {/* 
-              Sử dụng Google Docs Viewer để hiển thị PDF trong iframe.
-              Điều này giúp tránh lỗi "X-Frame-Options" khi Cloudinary chặn hiển thị trực tiếp.
-            */}
-            <iframe src={`https://docs.google.com/gview?url=${encodeURIComponent(viewingPdf.url)}&embedded=true`} title="PDF Viewer" className="pdf-iframe"></iframe>
+            <iframe src={viewingPdf.url} title="PDF Viewer" className="pdf-iframe"></iframe>
           </div>
         </div>
       )}
