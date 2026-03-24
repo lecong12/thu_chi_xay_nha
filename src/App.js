@@ -2,7 +2,7 @@
 const isMobile = window.innerWidth <= 768;
 
 return (
-  <div className={`app ${isDarkMode ? 'dark-mode' : ''}`}>
+  <div className={`app ${isDarkMode ? 'dark-theme' : ''}`}>
     <Sidebar 
       isOpen={isSidebarOpen} 
       toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
