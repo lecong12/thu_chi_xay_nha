@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiUpload, FiTrash2, FiEye, FiDownload, FiLoader, FiMap, FiX } from 'react-icons/fi';
+import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './DesignDrawings.css';
 
 // Cấu hình Cloudinary
@@ -15,26 +16,24 @@ const DRAWING_CATEGORIES = [
 
 function DesignDrawings() {
   const [activeCategory, setActiveCategory] = useState('kientruc');
-  const [drawings, setDrawings] = useState({});
+  const [drawings, setDrawings] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [viewingPdf, setViewingPdf] = useState(null); // State để lưu file đang xem
+  const [loading, setLoading] = useState(true);
+  const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-  // Tải dữ liệu từ LocalStorage
-  useEffect(() => {
-    const saved = localStorage.getItem("designDrawings");
-    if (saved) {
-      try {
-        setDrawings(JSON.parse(saved));
-      } catch (e) {
-        console.error("Lỗi đọc dữ liệu bản vẽ:", e);
-      }
+  const loadDrawings = async () => {
+    setLoading(true);
+    const res = await fetchTableData("BanVe", APP_ID);
+    if (res.success) {
+      setDrawings(res.data);
     }
-  }, []);
-
-  const saveDrawings = (newDrawings) => {
-    setDrawings(newDrawings);
-    localStorage.setItem("designDrawings", JSON.stringify(newDrawings));
+    setLoading(false);
   };
+
+  useEffect(() => {
+    loadDrawings();
+  }, []);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -79,12 +78,17 @@ function DesignDrawings() {
           size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
         };
 
-        const currentList = drawings[activeCategory] || [];
-        const updatedDrawings = {
-          ...drawings,
-          [activeCategory]: [newDrawing, ...currentList]
+        const rowData = {
+            id: newDrawing.id.toString(),
+            name: newDrawing.name,
+            url: newDrawing.url,
+            date: newDrawing.date,
+            size: newDrawing.size,
+            category: activeCategory
         };
-        saveDrawings(updatedDrawings);
+        
+        await addRowToSheet("BanVe", rowData, APP_ID);
+        setDrawings([rowData, ...drawings]);
       } else {
         throw new Error(fileData.error?.message || "Lỗi upload");
       }
@@ -100,15 +104,24 @@ function DesignDrawings() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id, rowNumber) => {
     if (window.confirm("Xóa bản vẽ này?")) {
-      const currentList = drawings[activeCategory] || [];
-      const updatedList = currentList.filter(d => d.id !== id);
-      saveDrawings({ ...drawings, [activeCategory]: updatedList });
+      await deleteRowFromSheet("BanVe", id, rowNumber, APP_ID);
+      setDrawings(drawings.filter(d => d.id !== id));
     }
   };
 
-  const currentList = drawings[activeCategory] || [];
+  const currentList = drawings.filter(d => d.category === activeCategory);
+
+  // Hàm xử lý URL để xem được trên trình duyệt (thêm fl_inline)
+  const getViewableUrl = (url) => {
+    if (!url) return "";
+    // Nếu là link raw của Cloudinary, thêm fl_inline để trình duyệt hiển thị thay vì tải về
+    if (url.includes("/raw/upload/")) {
+      return url.replace("/raw/upload/", "/raw/upload/fl_inline/");
+    }
+    return url;
+  };
 
   return (
     <div className="drawings-container">
@@ -128,10 +141,13 @@ function DesignDrawings() {
         </label>
       </div>
 
+      {loading ? (
+        <div style={{textAlign: 'center', padding: '20px', color: '#64748b'}}>Đang đồng bộ dữ liệu...</div>
+      ) : (
       <div className="drawings-grid">
         {currentList.length === 0 && <div className="no-data-text">Chưa có bản vẽ nào trong mục này.</div>}
         {currentList.map(drawing => (
-          <div key={drawing.id} className="drawing-card">
+          <div key={drawing.id || drawing._RowNumber} className="drawing-card">
             <div className="drawing-icon"><FiMap size={32} /></div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
@@ -140,11 +156,12 @@ function DesignDrawings() {
             <div className="drawing-actions">
               <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
               <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
-              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id)} title="Xóa"><FiTrash2 /></button>
+              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id, drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
             </div>
           </div>
         ))}
       </div>
+      )}
 
       {/* Trình đọc PDF (Modal) */}
       {viewingPdf && (
@@ -155,7 +172,7 @@ function DesignDrawings() {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
+              <object data={getViewableUrl(viewingPdf.url)} type="application/pdf" width="100%" height="100%">
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#4b5563', backgroundColor: '#f9fafb' }}>
                   <p style={{ marginBottom: '1rem' }}>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
                   <a 

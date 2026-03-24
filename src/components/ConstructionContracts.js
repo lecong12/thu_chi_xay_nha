@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye, FiX } from 'react-icons/fi';
+import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './ConstructionContracts.css';
 
 // Cấu hình Cloudinary
@@ -14,26 +15,26 @@ const CATEGORIES = [
 
 function ConstructionContracts() {
   const [activeCategory, setActiveCategory] = useState('tho');
-  const [contracts, setContracts] = useState({});
+  const [contracts, setContracts] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [viewingPdf, setViewingPdf] = useState(null); // State để xem PDF
+  const [loading, setLoading] = useState(true);
+  const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-  // Tải dữ liệu từ LocalStorage khi khởi động
-  useEffect(() => {
-    const saved = localStorage.getItem("constructionContracts");
-    if (saved) {
-      try {
-        setContracts(JSON.parse(saved));
-      } catch (e) {
-        console.error("Lỗi đọc dữ liệu hợp đồng:", e);
-      }
+  const loadContracts = async () => {
+    setLoading(true);
+    const res = await fetchTableData("HopDong", APP_ID);
+    if (res.success) {
+      setContracts(res.data);
+    } else {
+      console.error("Lỗi tải hợp đồng:", res.message);
     }
-  }, []);
-
-  const saveContracts = (newContracts) => {
-    setContracts(newContracts);
-    localStorage.setItem("constructionContracts", JSON.stringify(newContracts));
+    setLoading(false);
   };
+
+  useEffect(() => {
+    loadContracts();
+  }, []);
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
@@ -78,12 +79,18 @@ function ConstructionContracts() {
           size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
         };
 
-        const currentList = contracts[activeCategory] || [];
-        const updatedContracts = {
-          ...contracts,
-          [activeCategory]: [newContract, ...currentList]
+        // Dữ liệu lưu vào Google Sheet
+        const rowData = {
+            id: newContract.id.toString(),
+            name: newContract.name,
+            url: newContract.url,
+            date: newContract.date,
+            size: newContract.size,
+            category: activeCategory
         };
-        saveContracts(updatedContracts);
+        
+        await addRowToSheet("HopDong", rowData, APP_ID);
+        setContracts([rowData, ...contracts]); // Optimistic update
       } else {
         throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
@@ -99,15 +106,15 @@ function ConstructionContracts() {
     }
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id, rowNumber) => {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
-      const currentList = contracts[activeCategory] || [];
-      const updatedList = currentList.filter(c => c.id !== id);
-      saveContracts({ ...contracts, [activeCategory]: updatedList });
+      await deleteRowFromSheet("HopDong", id, rowNumber, APP_ID);
+      setContracts(contracts.filter(c => c.id !== id));
     }
   };
 
-  const currentList = contracts[activeCategory] || [];
+  // Lọc danh sách theo danh mục đang chọn
+  const currentList = contracts.filter(c => c.category === activeCategory);
 
   return (
     <div className="contracts-container">
@@ -134,10 +141,13 @@ function ConstructionContracts() {
           </label>
         </div>
 
+        {loading ? (
+            <div style={{textAlign: 'center', padding: '20px', color: '#64748b'}}>Đang đồng bộ dữ liệu...</div>
+        ) : (
         <div className="contracts-list">
           {currentList.length === 0 && <div className="no-contracts">Chưa có hợp đồng nào trong mục này.</div>}
           {currentList.map(contract => (
-            <div key={contract.id} className="contract-item">
+            <div key={contract.id || contract._RowNumber} className="contract-item">
               <div className="contract-icon">
                 <FiFileText size={24} />
               </div>
@@ -157,13 +167,14 @@ function ConstructionContracts() {
                 <a href={contract.url} download={contract.name} rel="noreferrer" className="action-icon download" title="Tải về">
                   <FiDownload />
                 </a>
-                <button className="action-icon delete" onClick={() => handleDelete(contract.id)} title="Xóa">
+                <button className="action-icon delete" onClick={() => handleDelete(contract.id, contract._RowNumber)} title="Xóa">
                   <FiTrash2 />
                 </button>
               </div>
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Modal Xem PDF (Giống bên Bản vẽ) */}
