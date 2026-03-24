@@ -56,6 +56,10 @@ function DesignDrawings() {
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
 
+      // Thêm Timeout để tránh treo (Sửa lỗi: Khai báo controller trước khi dùng)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây
+
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
         method: "POST",
         body: data,
