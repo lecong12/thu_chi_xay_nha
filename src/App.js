@@ -5,6 +5,7 @@ import Dashboard from "./components/Dashboard";
 import ProgressTracker from "./components/ProgressTracker";
 import BudgetView from "./components/BudgetView";
 import GanttChartView from "./components/GanttChartView";
+import QuickNotes from "./components/QuickNotes";
 
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -17,6 +18,7 @@ import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
+import "./DarkMode.css"; // Import CSS chế độ tối
 import "./App.css";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
@@ -25,6 +27,20 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const [activeTab, setActiveTab] = useState('dashboard'); // Mặc định là trang Tổng quan
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
+
+  // State cho Dark Mode
+  const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add("dark-mode");
+    } else {
+      document.body.classList.remove("dark-mode");
+    }
+    localStorage.setItem("darkMode", isDarkMode);
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode((prev) => !prev);
   
   // Sử dụng custom hook để quản lý state và logic dữ liệu
   // Lưu ý: Nếu useAppData chưa được cập nhật để dùng API mới, bạn nên cập nhật nó hoặc
@@ -101,6 +117,16 @@ function App() {
       showToast(result.message || "Lỗi khi cập nhật trạng thái.", "error");
     }
     return result; // Trả về kết quả để Dashboard xử lý tiếp (ví dụ: tắt loading upload)
+  };
+
+  // Hàm xử lý chuyển tab (đã nâng cấp để hỗ trợ mở link ngoài)
+  const handleTabChange = (tabId) => {
+    if (tabId === 'zalo') {
+      // THAY LINK NHÓM ZALO CỦA BẠN VÀO ĐÂY (Ví dụ: https://zalo.me/g/abcdef...)
+      window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
+      return;
+    }
+    setActiveTab(tabId);
   };
 
   const handleAddNew = () => {
@@ -302,6 +328,29 @@ function App() {
       case 'dashboard':
         return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
       
+      case 'all':
+        return (
+          <>
+            <Dashboard stats={stats} data={filteredData} extraData={extraData} />
+            <div style={{ marginTop: '30px', marginBottom: '80px' }}>
+              <h3 className="chart-title" style={{ marginBottom: '10px' }}>Danh sách giao dịch</h3>
+              <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
+                <FilterBar 
+                  filters={filters} 
+                  filterOptions={filterOptions} 
+                  onFilterChange={handleFilterChange} 
+                  onReset={handleResetFilters} 
+                  isExpanded={isFilterExpanded}
+                  onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                  onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
+                />
+                <div style={{ borderBottom: '1px solid #e5e7eb' }} />
+                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
+              </div>
+            </div>
+          </>
+        );
+
       case 'progress_tracker':
         return <ProgressTracker stages={extraData.tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
 
@@ -311,7 +360,7 @@ function App() {
       case 'budget':
         return <BudgetView budget={extraData.nganSach} />;
 
-      case 'transactions':
+      case 'list':
         return (
           <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px' }}>
             <FilterBar 
@@ -327,6 +376,10 @@ function App() {
             <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
           </div>
         );
+      
+      case 'notes':
+        return <QuickNotes />;
+
       default:
         return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
     }
@@ -341,8 +394,10 @@ function App() {
         isOpen={isSidebarOpen} 
         toggle={() => setIsSidebarOpen(!isSidebarOpen)}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       {/* Wrapper nội dung chính: Căn lề trái để tránh Sidebar */}

@@ -7,17 +7,25 @@ import {
   FiCheckCircle,
   FiBarChart2,
   FiDollarSign,
-  FiList
+  FiList,
+  FiGrid,
+  FiMessageCircle,
+  FiMoon,
+  FiSun,
+  FiFileText
 } from 'react-icons/fi';
 import './Sidebar.css';
 
-const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout }) => {
+const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
   const menuItems = [
     { id: 'dashboard', icon: <FiHome size={20} />, label: 'Tổng quan' },
+    { id: 'all', icon: <FiGrid size={20} />, label: 'Tất cả' },
     { id: 'progress_tracker', icon: <FiCheckCircle size={20} />, label: 'Theo dõi Tiến độ' },
     { id: 'gantt_chart', icon: <FiBarChart2 size={20} />, label: 'Biểu đồ Tiến độ' },
     { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
-    { id: 'transactions', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
+    { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
+    { id: 'notes', icon: <FiFileText size={20} />, label: 'Ghi chú nhanh' },
+    { id: 'zalo', icon: <FiMessageCircle size={20} />, label: 'Chat Nhóm Zalo' },
   ];
 
   return (
@@ -44,6 +52,15 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout }) => {
       </div>
 
       <div className="sidebar-footer">
+        <div 
+          className="menu-item" 
+          onClick={toggleDarkMode} 
+          title={!isOpen ? (isDarkMode ? "Chế độ Sáng" : "Chế độ Tối") : ''}
+        >
+          <div className="menu-icon">{isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}</div>
+          {isOpen && <span className="menu-label">{isDarkMode ? "Chế độ Sáng" : "Chế độ Tối"}</span>}
+        </div>
+
         <div 
           className="menu-item logout" 
           onClick={onLogout} 
