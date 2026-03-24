@@ -59,9 +59,9 @@ function DesignDrawings() {
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 giây
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // Tăng lên 60 giây
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
         method: "POST",
         body: data,
         signal: controller.signal
