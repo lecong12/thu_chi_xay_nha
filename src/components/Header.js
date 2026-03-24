@@ -1,5 +1,5 @@
 import React from "react";
-import { FiRefreshCw, FiLogOut, FiMenu } from "react-icons/fi";
+import { FiRefreshCw, FiLogOut, FiMenu, FiHome } from "react-icons/fi";
 import "./Header.css";
 
 function Header({ onRefresh, loading, onLogout, onToggleSidebar }) {
@@ -11,6 +11,7 @@ function Header({ onRefresh, loading, onLogout, onToggleSidebar }) {
             <FiMenu size={24} />
           </button>
           <div className="logo">
+            <FiHome className="logo-icon" />
             <span className="logo-text">Sổ Tay Làm Nhà</span>
           </div>
         </div>
