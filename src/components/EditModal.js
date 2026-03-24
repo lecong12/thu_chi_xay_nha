@@ -126,7 +126,7 @@ function EditModal({ item, onClose, onSave }) {
       const timeoutId = setTimeout(() => controller.abort(), 20000);
 
       const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
         { method: "POST", body: data, signal: controller.signal }
       );
       clearTimeout(timeoutId);
