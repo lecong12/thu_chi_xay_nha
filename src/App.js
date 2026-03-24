@@ -344,6 +344,7 @@ function App() {
                   onReset={handleResetFilters} 
                   isExpanded={isFilterExpanded}
                   onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+                  onAdd={handleAddNew}
                   onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
                 />
                 <div style={{ borderBottom: '1px solid #e5e7eb' }} />
@@ -372,6 +373,7 @@ function App() {
               onReset={handleResetFilters} 
               isExpanded={isFilterExpanded}
               onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
+              onAdd={handleAddNew}
               onExport={() => exportToCSV(filteredData, "danh-sach-giao-dich")}
             />
             <div style={{ borderBottom: '1px solid #e5e7eb' }} />
@@ -423,8 +425,7 @@ function App() {
           onRefresh={fetchAllData} 
           loading={loading} 
           onLogout={handleLogout} 
-          onAdd={handleAddNew}
-          onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <main className="main-content">
           {renderContent()}

@@ -40,6 +40,27 @@
   color: #111827;
 }
 
+/* Nút Thêm mới được chuyển vào FilterBar */
+.filter-actions .add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #2d8e2b; /* Màu xanh lá chủ đạo */
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  order: -1; /* Luôn đưa nút Thêm mới lên đầu */
+}
+
+.filter-actions .add-btn:hover {
+  background: #226e21; /* Xanh lá đậm hơn */
+}
+
 .table-summary {
   display: flex;
   gap: 16px;

@@ -6,10 +6,11 @@ import {
   FiDownload,
   FiChevronDown,
   FiChevronUp,
+  FiPlus,
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport }) {
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport, onAdd }) {
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
@@ -22,6 +23,10 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
         </div>
 
         <div className="filter-actions">
+          <button className="add-btn" onClick={onAdd}>
+            <FiPlus />
+            <span>Thêm mới</span>
+          </button>
           {hasActiveFilters && (
             <button className="reset-btn" onClick={onReset}>
               <FiX />
