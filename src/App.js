@@ -463,8 +463,6 @@ ginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0',
           )}
         </>
       </main>
-        </main>
-      </div>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
