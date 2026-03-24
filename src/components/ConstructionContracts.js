@@ -173,14 +173,20 @@ function ConstructionContracts() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
-            <div style={{ padding: '10px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}>
-              <a href={viewingPdf.url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 500, fontSize: '14px' }}>
-                <FiDownload style={{ marginRight: '5px', verticalAlign: 'middle' }} /> 
-                Mở file trong tab mới (nếu không xem được)
-              </a>
-            </div>
             <div className="pdf-body" style={{flex: 1, position: 'relative'}}>
-              <iframe src={viewingPdf.url} title="PDF Viewer" style={{ width: '100%', height: '100%', border: 'none' }}></iframe>
+              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#4b5563', backgroundColor: '#f9fafb' }}>
+                  <p style={{ marginBottom: '1rem' }}>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
+                  <a 
+                    href={viewingPdf.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: '500' }}
+                  >
+                    <FiDownload /> Tải về hoặc mở trong tab mới
+                  </a>
+                </div>
+              </object>
             </div>
           </div>
         </div>
