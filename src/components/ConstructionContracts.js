@@ -54,13 +54,14 @@ function ConstructionContracts() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "raw"); // Chuyển sang 'raw' để giữ nguyên định dạng file gốc
+      data.append("resource_type", "auto"); // Để Cloudinary tự nhận diện PDF
+      data.append("folder", "File PDF"); // Lưu vào thư mục riêng
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // Tăng lên 60 giây (1 phút)
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
         method: "POST",
         body: data,
         signal: controller.signal
@@ -173,15 +174,15 @@ function ConstructionContracts() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
-            <div className="pdf-body" style={{flex: 1, position: 'relative'}}>
+            <div className="pdf-body">
               <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
-                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#4b5563', backgroundColor: '#f9fafb' }}>
-                  <p style={{ marginBottom: '1rem' }}>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
+                <div className="pdf-fallback">
+                  <p>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
                   <a 
                     href={viewingPdf.url} 
                     target="_blank" 
                     rel="noreferrer" 
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', textDecoration: 'none', borderRadius: '8px', fontWeight: '500' }}
+                    className="fallback-download-btn"
                   >
                     <FiDownload /> Tải về hoặc mở trong tab mới
                   </a>

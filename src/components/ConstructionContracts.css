@@ -156,3 +156,34 @@
   border: 1px dashed #cbd5e1;
   border-radius: 8px;
 }
+
+.pdf-body {
+  flex: 1;
+  position: relative;
+}
+
+.pdf-fallback {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #4b5563;
+  background-color: #f9fafb;
+}
+
+.pdf-fallback p {
+  margin-bottom: 1rem;
+}
+
+.fallback-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background-color: #2563eb;
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+}

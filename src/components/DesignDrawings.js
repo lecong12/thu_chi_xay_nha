@@ -55,13 +55,14 @@ function DesignDrawings() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "raw"); // Chuyển sang 'raw' để lưu file nguyên bản, không nén/convert
+      data.append("resource_type", "auto"); // Để Cloudinary tự nhận diện
+      data.append("folder", "File PDF"); // Lưu vào thư mục riêng
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // Tăng lên 60 giây
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 giây
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
         method: "POST",
         body: data,
         signal: controller.signal
