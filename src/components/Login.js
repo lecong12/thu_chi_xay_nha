@@ -3,7 +3,7 @@ import { FiLock, FiHome, FiEye, FiEyeOff } from "react-icons/fi";
 import "./Login.css";
 
 // THAY ĐỔI MẬT KHẨU CỦA BẠN TẠI ĐÂY
-const PASSCODE = "YOUR_NEW_PASSWORD";
+const PASSCODE = "081212";
 
 function Login({ onLogin }) {
   const [passcode, setPasscode] = useState("");
@@ -37,7 +37,7 @@ function Login({ onLogin }) {
           <div className="login-icon">
             <FiHome />
           </div>
-          <h1 className="login-title">Quản Lý Thu Chi</h1>
+          <h1 className="login-title">Quản lý thu chi & tiến độ</h1>
           <p className="login-subtitle">Dự án xây nhà</p>
         </div>
 
