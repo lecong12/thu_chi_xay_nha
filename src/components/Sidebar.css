@@ -126,9 +126,62 @@
   background-color: #fff;
 }
 
-/* Mobile: Ẩn sidebar, dùng MobileFooter */
+/* --- MOBILE RESPONSIVE (Drawer Menu) --- */
+
+/* Overlay (Lớp phủ mờ) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @media (max-width: 768px) {
+  /* Hiện overlay khi menu mở */
+  .sidebar-overlay.open {
+    display: block;
+  }
+
   .sidebar {
+    display: flex; /* Hiện sidebar (không ẩn nữa) */
+    position: fixed;
+    top: 0;
+    left: -260px; /* Mặc định ẩn sang trái */
+    height: 100vh;
+    width: 260px !important; /* Chiều rộng cố định trên mobile */
+    z-index: 1001; /* Nằm trên overlay */
+    transition: left 0.3s ease-in-out;
+    box-shadow: 2px 0 12px rgba(0,0,0,0.15);
+  }
+
+  .sidebar.open {
+    left: 0; /* Trượt vào */
+    width: 260px !important;
+  }
+
+  .sidebar.closed {
+    left: -260px; /* Trượt ra */
+    width: 260px !important;
+  }
+
+  /* Ẩn nút thu gọn trên header của sidebar mobile (vì đã có overlay để đóng) */
+  .sidebar-header .toggle-btn {
     display: none;
+  }
+
+  /* Luôn hiện chữ menu trên mobile khi mở */
+  .menu-label {
+    display: block !important;
+    opacity: 1 !important;
   }
 }

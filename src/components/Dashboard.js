@@ -111,7 +111,7 @@ function Dashboard({ stats, data, extraData }) {
       <div className="charts-grid">
         {/* Pie Chart - Chi tiêu theo đối tượng */}
         <div className="chart-card">
-          <h3 className="chart-title">Chi phí theo Giai đoạn</h3>
+          <h3 className="chart-title">Chi phí theo Hạng mục</h3>
           {pieData.length > 0 ? (
             <div className="chart-container">
               <ResponsiveContainer width="100%" height={250}>

@@ -130,6 +130,11 @@ function App() {
       return;
     }
     setActiveTab(tabId);
+    
+    // Tự động đóng Sidebar khi chọn menu trên Mobile
+    if (window.innerWidth <= 768) {
+      setIsSidebarOpen(false);
+    }
   };
 
   const handleAddNew = () => {

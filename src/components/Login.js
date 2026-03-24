@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { FiLock, FiHome, FiEye, FiEyeOff } from "react-icons/fi";
 import "./Login.css";
 
-const PASSCODE = "081212";
+// THAY ĐỔI MẬT KHẨU CỦA BẠN TẠI ĐÂY
+const PASSCODE = "YOUR_NEW_PASSWORD";
 
 function Login({ onLogin }) {
   const [passcode, setPasscode] = useState("");

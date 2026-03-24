@@ -38,11 +38,7 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
     <div 
       className={`sidebar-overlay ${isOpen ? 'open' : ''}`} 
       onClick={toggle}
-      style={{
-        display: isOpen && window.innerWidth <= 768 ? 'block' : 'none',
-        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999
-      }}
+      // Style đã được chuyển sang file CSS để tối ưu
     />
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
       <div className="sidebar-header" style={{ height: '60px', minHeight: '60px' }}>
