@@ -120,13 +120,18 @@ export const useAppData = (isLoggedIn) => {
         const newTienDo = tienDo.map((s) => s.id === stageId ? updatedStage : s);
         setTienDo(newTienDo);
         
-        // Chuẩn bị payload cho API động (sheetsAPI)
-        // Sử dụng tên cột Key đã tìm được từ fetchStages (keyColumn) hoặc mặc định là 'id'
-        // Nếu updates chứa "Ảnh nghiệm thu", nó sẽ được gửi đi chính xác
+        // Chuẩn bị payload gửi lên AppSheet
         const payload = {
-            [stageToUpdate.keyColumn || 'id']: stageToUpdate.keyId,
-            ...updates
+            [stageToUpdate.keyColumn || 'id']: stageToUpdate.keyId
         };
+
+        // Map dữ liệu từ Dashboard (camelCase) sang tên cột thực tế trong Sheet (Tiếng Việt)
+        if (updates.anhNghiemThu !== undefined) {
+            payload[stageToUpdate.imgColumn || "Ảnh nghiệm thu"] = updates.anhNghiemThu;
+        }
+        if (updates.status !== undefined) {
+            payload["Trạng thái"] = updates.status;
+        }
 
         // Gọi API updateRowInSheet mới (Dynamic)
         // Sử dụng TABLE_TIENDO (mặc định "TienDo")
