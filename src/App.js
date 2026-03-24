@@ -31,6 +31,11 @@ function App() {
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem("theme") === "dark");
 
+  const [editingItem, setEditingItem] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null); 
+  const [toast, setToast] = useState(null);
+  const [uploadingId, setUploadingId] = useState(null);
+
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
@@ -53,12 +58,40 @@ function App() {
     data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage, handleUpdateBudget
   } = useAppData(isLoggedIn);
 
-  const [editingItem, setEditingItem] = useState(null);
-  const [itemToDelete, setItemToDelete] = useState(null); 
-  const [toast, setToast] = useState(null);
-  const [uploadingId, setUploadingId] = useState(null);
-
   const showToast = (message, type = "success") => setToast({ message, type });
+
+  const handleAddNew = () => {
+    setEditingItem({
+      ngay: new Date(),
+      soTien: 0,
+      loaiThuChi: "Chi",
+      noiDung: "",
+      doiTuongThuChi: "",
+      nguoiCapNhat: "",
+      hinhAnh: ""
+    });
+  };
+
+  const handleSaveEdit = async (updatedItem) => {
+    try {
+      const isEdit = !!updatedItem.id;
+      const apiPayload = {
+        "id": updatedItem.keyId || updatedItem.id || `GD_${Date.now()}`,
+        "Ngày": updatedItem.ngay instanceof Date ? updatedItem.ngay.toISOString().split("T")[0] : updatedItem.ngay,
+        "Hạng mục": updatedItem.doiTuongThuChi,
+        "Nội dung": updatedItem.noiDung,
+        "Số tiền": updatedItem.soTien?.toString() || "0",
+        "Người cập nhật": updatedItem.nguoiCapNhat || "",
+        "Chứng từ": updatedItem.hinhAnh || "",
+      };
+      const result = isEdit ? await updateRowInSheet("GiaoDich", apiPayload, APP_ID) : await addRowToSheet("GiaoDich", apiPayload, APP_ID);
+      if (result.success) {
+        showToast("Lưu thành công!", "success");
+        setEditingItem(null);
+        await fetchAllData();
+      }
+    } catch (error) { showToast(error.message, "error"); }
+  };
 
   const handleUniversalUpload = async (id, tableName, columnName, file) => {
     if (!file) return;
@@ -98,10 +131,6 @@ function App() {
     });
   }, [data, filters]);
 
-  const toggleDarkMode = () => setIsDarkMode(p => !p);
-  const handleLogout = () => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); };
-  const handleToggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-
   const renderContent = () => {
     const stats = { tongThu: 0, tongChi: filteredData.reduce((s, i) => s + i.soTien, 0), soGiaoDich: filteredData.length };
     const extraData = { top5: [], chartData: [], nganSach, tienDo };
@@ -110,7 +139,7 @@ function App() {
       case 'dashboard': return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
       case 'list': return (
         <>
-          <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={() => setEditingItem({ ngay: new Date(), soTien: 0, loaiThuChi: "Chi", noiDung: "", doiTuongThuChi: "", nguoiCapNhat: "", hinhAnh: "" })} />
+          <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={handleAddNew} />
           <DataTable data={filteredData} onEdit={setEditingItem} onDelete={setItemToDelete} />
         </>
       );
@@ -129,9 +158,10 @@ function App() {
   return (
     <div className={`app ${isDarkMode ? 'dark-theme' : ''}`}>
       <Sidebar 
-        isOpen={isSidebarOpen} toggle={handleToggleSidebar} 
+        isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
         activeTab={activeTab} onTabChange={setActiveTab} 
-        onLogout={handleLogout} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} 
+        onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} 
+        isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
       />
       <div 
         className="app-main-wrapper" 
@@ -140,14 +170,22 @@ function App() {
           transition: 'margin-left 0.3s ease', width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column'
         }}
       >
-        <Header onRefresh={fetchAllData} loading={loading} onAdd={() => setEditingItem({ ngay: new Date(), soTien: 0, loaiThuChi: "Chi" })} onToggleSidebar={handleToggleSidebar} isDarkMode={isDarkMode} />
+        <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
         <main className="main-content" style={{ flex: 1 }}>
           {loading ? <div className="loading-spinner"></div> : renderContent()}
         </main>
-        {/* CHỈ HIỆN MENUBAR KHI SIDEBAR ĐANG ĐÓNG */}
         {isMobile && !isSidebarOpen && <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />}
       </div>
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} showToast={showToast} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      {itemToDelete && <ConfirmModal isOpen={!!itemToDelete} onClose={() => setItemToDelete(null)} onConfirm={async () => {
+          const item = data.find(i => i.id === itemToDelete);
+          if (item) {
+            const result = await deleteRowFromSheet("GiaoDich", item.keyId || item.id, APP_ID);
+            if (result.success) { showToast("Đã xóa!", "success"); await fetchAllData(); }
+          }
+          setItemToDelete(null);
+      }} title="Xác nhận xóa" />}
     </div>
   );
 }
