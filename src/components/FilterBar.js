@@ -6,27 +6,33 @@ import {
   FiDownload,
   FiChevronDown,
   FiChevronUp,
-  FiPlus,
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport, onExportPDF, onAdd }) {
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport }) {
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
     <div className="filter-bar">
       <div className="filter-header">
-        <div className="filter-title">
-          <FiFilter />
-          <span>Bộ lọc dữ liệu</span>
-          {hasActiveFilters && <span className="filter-badge">Đang lọc</span>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div className="filter-title">
+            <FiFilter />
+            <span>Lọc và tìm kiếm dữ liệu</span>
+            {hasActiveFilters && <span className="filter-badge">Đang lọc</span>}
+          </div>
+          <button
+            className="toggle-btn"
+            onClick={onToggleExpand}
+          >
+            {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
+            <span className="toggle-text">
+              {isExpanded ? "Thu gọn" : "Mở rộng"}
+            </span>
+          </button>
         </div>
 
         <div className="filter-actions">
-          <button className="add-btn" onClick={onAdd}>
-            <FiPlus />
-            <span>Thêm mới</span>
-          </button>
           {hasActiveFilters && (
             <button className="reset-btn" onClick={onReset}>
               <FiX />
@@ -36,19 +42,6 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
           <button className="toggle-btn" onClick={onExport} title="Xuất Excel">
             <FiDownload />
             <span className="toggle-text">Excel</span>
-          </button>
-          <button className="toggle-btn" onClick={onExportPDF} title="Xuất PDF">
-            <FiDownload />
-            <span className="toggle-text">PDF</span>
-          </button>
-          <button
-            className="toggle-btn"
-            onClick={onToggleExpand}
-          >
-            {isExpanded ? <FiChevronUp /> : <FiChevronDown />}
-            <span className="toggle-text">
-              {isExpanded ? "Thu gọn" : "Mở rộng"}
-            </span>
           </button>
         </div>
       </div>

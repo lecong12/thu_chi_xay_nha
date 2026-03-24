@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiCamera, FiLoader, FiSave, FiX } from 'react-icons/fi';
+import { FiCamera, FiLoader, FiSave, FiX, FiFileText } from 'react-icons/fi';
 
 // Cấu hình Cloudinary
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
