@@ -116,6 +116,13 @@
   align-items: center;
 }
 
+.close-pdf-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
 .pdf-iframe {
   flex: 1;
   border: none;

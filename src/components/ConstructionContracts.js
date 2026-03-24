@@ -56,10 +56,16 @@ function ConstructionContracts() {
       // Dùng 'auto' để Cloudinary tự nhận diện PDF
       data.append("resource_type", "auto"); 
 
+      // Thêm Timeout để tránh treo
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 giây
+
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
         method: "POST",
-        body: data
+        body: data,
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       
       const fileData = await res.json();
       if (fileData.secure_url) {
@@ -81,8 +87,11 @@ function ConstructionContracts() {
         throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
     } catch (error) {
-      console.error(error);
-      alert("Lỗi upload: " + error.message);
+      let msg = "Lỗi upload: " + error.message;
+      if (error.name === 'AbortError') {
+        msg = "Upload thất bại: Quá thời gian chờ (Timeout). Vui lòng kiểm tra mạng và thử lại.";
+      }
+      alert(msg);
     } finally {
       setUploading(false);
       e.target.value = null; // Reset input
