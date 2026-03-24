@@ -250,6 +250,11 @@ function App() {
     setItemToDelete(null); // Luôn đóng modal sau khi thực hiện
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
   // --- LOGIC XỬ LÝ DỮ LIỆU DASHBOARD ---
   const extraData = useMemo(() => {
     const categoryMap = filteredData.reduce((acc, item) => {
@@ -295,10 +300,7 @@ function App() {
         toggle={() => setIsSidebarOpen(!isSidebarOpen)}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLogout={() => {
-           localStorage.removeItem("isLoggedIn");
-           setIsLoggedIn(false);
-        }}
+        onLogout={handleLogout}
       />
 
       {/* Wrapper nội dung chính: Căn lề trái để tránh Sidebar */}
@@ -315,7 +317,7 @@ function App() {
         <Header 
           onRefresh={fetchAllData} 
           loading={loading} 
-          onLogout={() => setIsLoggedIn(false)} 
+          onLogout={handleLogout} 
           onAdd={handleAddNew}
           onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
         />
@@ -367,7 +369,7 @@ function App() {
           )}
         </>
         </main>
-      </div>
+      </div> {/* Đóng thẻ app-main-wrapper */}
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}

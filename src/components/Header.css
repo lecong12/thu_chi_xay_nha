@@ -188,3 +188,10 @@
     border-radius: 50%;
   }
 }
+
+/* Hide logout button on desktop since it's in the sidebar */
+@media (min-width: 769px) {
+  .header .logout-btn {
+    display: none;
+  }
+}
