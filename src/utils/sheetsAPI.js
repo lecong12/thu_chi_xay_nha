@@ -156,6 +156,3 @@ export const deleteRowFromSheet = async (tableName, rowId, appId, accessKey) => 
 
 // Wrapper để tương thích ngược với code cũ trong App.js nếu chưa sửa hết
 export const fetchDataFromAppSheet = (appId) => fetchTableData("GiaoDich", appId);
-
-// Wrapper tương thích ngược (nếu cần)
-export const fetchDataFromAppSheet = (appId, accessKey) => fetchTableData("GiaoDich", appId, accessKey);
