@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { updateStageInSheet, fetchStages } from "./stagesAPI";
-import { fetchTableData } from "./sheetsAPI";
+import { fetchStages } from "./stagesAPI";
+import { fetchTableData, updateRowInSheet } from "./sheetsAPI";
 
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 const ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
@@ -119,8 +119,18 @@ export const useAppData = (isLoggedIn) => {
         const updatedStage = { ...stageToUpdate, ...updates };
         const newTienDo = tienDo.map((s) => s.id === stageId ? updatedStage : s);
         setTienDo(newTienDo);
+        
+        // Chuẩn bị payload cho API động (sheetsAPI)
+        // Sử dụng tên cột Key đã tìm được từ fetchStages (keyColumn) hoặc mặc định là 'id'
+        // Nếu updates chứa "Ảnh nghiệm thu", nó sẽ được gửi đi chính xác
+        const payload = {
+            [stageToUpdate.keyColumn || 'id']: stageToUpdate.keyId,
+            ...updates
+        };
 
-        const result = await updateStageInSheet(updatedStage, APP_ID);
+        // Gọi API updateRowInSheet mới (Dynamic)
+        // Sử dụng TABLE_TIENDO (mặc định "TienDo")
+        const result = await updateRowInSheet("TienDo", payload, APP_ID, ACCESS_KEY);
 
         if (!result.success) {
             setTienDo(originalTienDo); // Revert on failure
