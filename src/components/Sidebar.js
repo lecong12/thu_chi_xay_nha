@@ -14,11 +14,13 @@ import {
   FiFileText,
   FiBriefcase,
   FiMap,
-  FiTrendingUp // Icon biểu đồ mới cho Tổng quan
+  FiTrendingUp 
 } from 'react-icons/fi';
 import './Sidebar.css';
 
 const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
+  
+  // Danh sách menu chính
   const menuItems = [
     { id: 'dashboard', icon: <FiTrendingUp size={20} />, label: 'Tổng quan' },
     { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
@@ -34,54 +36,65 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
 
   return (
     <>
-    {/* Overlay cho mobile khi menu mở */}
-    <div 
-      className={`sidebar-overlay ${isOpen ? 'open' : ''}`} 
-      onClick={toggle}
-      // Style đã được chuyển sang file CSS để tối ưu
-    />
-    <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header" style={{ height: '60px', minHeight: '60px' }}>
-        {isOpen && <h3 className="app-title">Menu</h3>}
-        <button className="toggle-btn" onClick={toggle} title={isOpen ? "Thu gọn" : "Mở rộng"}>
-          {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
-        </button>
-      </div>
+      {/* Overlay cho mobile khi menu mở - Giúp đóng menu khi chạm ra ngoài */}
+      {isOpen && (
+        <div className="sidebar-overlay" onClick={toggle} />
+      )}
 
-      <div className="sidebar-menu">
-        {menuItems.map((item) => (
-          <div
-            key={item.id}
-            className={`menu-item ${activeTab === item.id ? 'active' : ''}`}
-            onClick={() => onTabChange(item.id)}
-            title={!isOpen ? item.label : ''}
+      <div className={`sidebar ${isOpen ? 'open' : 'closed'} ${isDarkMode ? 'dark-mode' : ''}`}>
+        
+        {/* Header của Sidebar */}
+        <div className="sidebar-header">
+          {isOpen && <h3 className="app-title">MENU</h3>}
+          <button className="toggle-btn" onClick={toggle} title={isOpen ? "Thu gọn" : "Mở rộng"}>
+            {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
+          </button>
+        </div>
+
+        {/* Danh sách Menu Items */}
+        <div className="sidebar-menu">
+          {menuItems.map((item) => (
+            <div
+              key={item.id}
+              className={`menu-item ${activeTab === item.id ? 'active' : ''}`}
+              onClick={() => onTabChange(item.id)}
+              title={!isOpen ? item.label : ''}
+            >
+              <div className="menu-icon">{item.icon}</div>
+              {isOpen && <span className="menu-label">{item.label}</span>}
+            </div>
+          ))}
+        </div>
+
+        {/* Phần chân Sidebar: Chế độ tối & Đăng xuất */}
+        <div className="sidebar-footer">
+          
+          {/* Nút Bật/Tắt Chế độ tối/sáng */}
+          <div 
+            className="menu-item theme-toggle" 
+            onClick={toggleDarkMode} 
+            title={!isOpen ? (isDarkMode ? "Chế độ Sáng" : "Chế độ Tối") : ''}
           >
-            <div className="menu-icon">{item.icon}</div>
-            {isOpen && <span className="menu-label">{item.label}</span>}
+            <div className="menu-icon">
+              {isDarkMode ? <FiSun size={20} color="#fbbf24" /> : <FiMoon size={20} />}
+            </div>
+            {isOpen && <span className="menu-label">{isDarkMode ? "Chế độ Sáng" : "Chế độ Tối"}</span>}
           </div>
-        ))}
-      </div>
 
-      <div className="sidebar-footer">
-        <div 
-          className="menu-item" 
-          onClick={toggleDarkMode} 
-          title={!isOpen ? (isDarkMode ? "Chế độ Sáng" : "Chế độ Tối") : ''}
-        >
-          <div className="menu-icon">{isDarkMode ? <FiSun size={20} /> : <FiMoon size={20} />}</div>
-          {isOpen && <span className="menu-label">{isDarkMode ? "Chế độ Sáng" : "Chế độ Tối"}</span>}
-        </div>
-
-        <div 
-          className="menu-item logout" 
-          onClick={onLogout} 
-          title={!isOpen ? "Đăng xuất" : ''}
-        >
-          <div className="menu-icon"><FiLogOut size={20} /></div>
-          {isOpen && <span className="menu-label">Đăng xuất</span>}
+          {/* Nút Đăng xuất */}
+          <div 
+            className="menu-item logout" 
+            onClick={onLogout} 
+            title={!isOpen ? "Đăng xuất" : ''}
+          >
+            <div className="menu-icon">
+              <FiLogOut size={20} />
+            </div>
+            {isOpen && <span className="menu-label">Đăng xuất</span>}
+          </div>
+          
         </div>
       </div>
-    </div>
     </>
   );
 };
