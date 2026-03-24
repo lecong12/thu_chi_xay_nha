@@ -17,7 +17,7 @@ import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
 import { useAppData } from "./utils/useAppData"; // Import custom hook
-import Toast from "./components/Toast";
+import Toast from "./components/Toast"; 
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchTableData } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
 import "./App.css";
@@ -26,7 +26,7 @@ const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
-  
+
   const [activeTab, setActiveTab] = useState('dashboard'); // Mặc định là trang Tổng quan
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   
