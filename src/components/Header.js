@@ -1,5 +1,5 @@
 import React from "react";
-import { FiRefreshCw, FiHome, FiLogOut, FiMenu } from "react-icons/fi";
+import { FiRefreshCw, FiLogOut, FiMenu } from "react-icons/fi";
 import "./Header.css";
 
 function Header({ onRefresh, loading, onLogout, onToggleSidebar }) {
@@ -7,11 +7,10 @@ function Header({ onRefresh, loading, onLogout, onToggleSidebar }) {
     <header className="header" style={{ height: '60px', minHeight: '60px' }}>
       <div className="header-content">
         <div className="header-left">
-          <button className="menu-btn mobile-only" onClick={onToggleSidebar}>
+          <button className="menu-btn" onClick={onToggleSidebar}>
             <FiMenu size={24} />
           </button>
           <div className="logo">
-            <FiHome className="logo-icon" />
             <span className="logo-text">Sổ Tay Làm Nhà</span>
           </div>
         </div>
