@@ -1,32 +1,5 @@
-/* Sidebar.css - Bản hoàn thiện 100% */
+/* Sidebar.css */
 
-:root {
-  --sidebar-width-open: 280px;
-  --sidebar-width-closed: 80px;
-  --transition-speed: 0.3s;
-}
-
-/* 1. Lớp phủ mờ nền khi mở menu trên mobile */
-.sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(3px); /* Làm mờ nội dung phía sau */
-  z-index: 998;
-  opacity: 0;
-  visibility: hidden;
-  transition: all var(--transition-speed) ease;
-}
-
-.sidebar-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* 2. Cấu trúc Sidebar */
 .sidebar {
   position: fixed;
   top: 0;
@@ -34,45 +7,44 @@
   background-color: var(--bg-card);
   border-right: 1px solid var(--border-color);
   display: flex;
-  flex-direction: column;
+  flex-direction: column; /* Quan trọng để footer nằm dưới */
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(2px);
   z-index: 999;
-  transition: all var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
 }
 
-/* --- XỬ LÝ MOBILE (Dưới 768px) --- */
-@media (max-width: 768px) {
-  .sidebar {
-    width: var(--sidebar-width-open);
-    left: calc(var(--sidebar-width-open) * -1); /* Đẩy hẳn ra ngoài màn hình */
-  }
-
-  .sidebar.open {
-    left: 0 !important;
-    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .sidebar.closed {
-    left: calc(var(--sidebar-width-open) * -1);
-  }
+.sidebar-overlay.show {
+  opacity: 1;
+  visibility: visible;
 }
 
-/* --- XỬ LÝ DESKTOP (Trên 768px) --- */
+/* Xử lý hiển thị Desktop & Mobile */
 @media (min-width: 769px) {
-  .sidebar.open {
-    width: var(--sidebar-width-open);
-    left: 0;
-  }
-
-  .sidebar.closed {
-    width: var(--sidebar-width-closed);
-    left: 0;
-  }
+  .sidebar.open { width: 280px; left: 0; }
+  .sidebar.closed { width: 80px; left: 0; }
 }
 
-/* 3. Các thành phần bên trong */
+@media (max-width: 768px) {
+  .sidebar { width: 280px; left: -280px; }
+  .sidebar.open { left: 0 !important; }
+}
+
+/* Nội dung Menu */
 .sidebar-header {
-  height: 64px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -80,85 +52,47 @@
   border-bottom: 1px solid var(--border-color);
 }
 
-.app-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--accent-color);
-  white-space: nowrap;
-}
-
 .sidebar-menu {
-  flex: 1;
+  flex: 1; /* Chiếm toàn bộ khoảng trống ở giữa */
   overflow-y: auto;
-  overflow-x: hidden;
   padding: 10px 0;
 }
 
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 14px 24px;
+  padding: 12px 20px;
   cursor: pointer;
   color: var(--text-muted);
-  transition: all 0.2s ease;
-  position: relative;
-  white-space: nowrap;
+  transition: 0.2s;
 }
 
-.menu-item:hover {
+.menu-item:hover, .menu-item.active {
   background-color: var(--hover-bg);
-  color: var(--text-main);
+  color: var(--accent-color);
 }
 
 .menu-item.active {
-  background-color: rgba(45, 142, 43, 0.1); /* Màu nhấn nhạt */
-  color: var(--accent-color);
   border-right: 4px solid var(--accent-color);
 }
 
 .menu-icon {
-  min-width: 32px;
-  font-size: 20px;
+  min-width: 35px;
   display: flex;
-  align-items: center;
+  justify-content: center;
 }
 
-.menu-label {
-  margin-left: 12px;
-  font-weight: 500;
-  font-size: 14px;
-}
-
-/* 4. Footer & Logout */
+/* Footer nằm dưới cùng */
 .sidebar-footer {
+  margin-top: auto; /* Đẩy xuống đáy */
   padding: 10px 0;
   border-top: 1px solid var(--border-color);
 }
 
 .menu-item.logout {
-  color: #ef4444;
+  color: #ef4444 !important;
 }
 
 .menu-item.logout:hover {
-  background-color: #fef2f2;
-}
-
-body.dark-theme .menu-item.logout:hover {
   background-color: rgba(239, 68, 68, 0.1);
-}
-
-/* 5. Tooltip khi thu gọn trên Desktop */
-@media (min-width: 769px) {
-  .sidebar.closed .menu-label {
-    display: none;
-  }
-  
-  .sidebar.closed .menu-item {
-    justify-content: center;
-    padding: 14px 0;
-  }
-  
-  .sidebar.closed .menu-icon {
-    min-width: unset;
-  }
 }
