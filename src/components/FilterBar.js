@@ -10,7 +10,7 @@ import {
 } from "react-icons/fi";
 import "./FilterBar.css";
 
-function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport, onAdd }) {
+function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded, onToggleExpand, onExport, onExportPDF, onAdd }) {
   const hasActiveFilters = Object.values(filters).some((v) => v !== "");
 
   return (
@@ -36,6 +36,10 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
           <button className="toggle-btn" onClick={onExport} title="Xuất Excel">
             <FiDownload />
             <span className="toggle-text">Excel</span>
+          </button>
+          <button className="toggle-btn" onClick={onExportPDF} title="Xuất PDF">
+            <FiDownload />
+            <span className="toggle-text">PDF</span>
           </button>
           <button
             className="toggle-btn"

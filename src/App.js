@@ -20,6 +20,7 @@ import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
+import exportToPDF from "./components/pdfExporter"; // Import hàm xuất PDF
 import "./DarkMode.css"; // Import CSS chế độ tối
 import "./App.css";
 
@@ -346,6 +347,7 @@ function App() {
                   onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
                   onAdd={handleAddNew}
                   onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
+                  onExportPDF={() => exportToPDF(filteredData, "so-tay-xay-nha")}
                 />
                 <div style={{ borderBottom: '1px solid #e5e7eb' }} />
                 <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
@@ -358,7 +360,7 @@ function App() {
         return <ProgressTracker stages={extraData.tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
 
       case 'gantt_chart':
-        return <GanttChartView stages={extraData.tienDo} />;
+        return <GanttChartView stages={extraData.tienDo} onUpdateStage={handleStageUpdate} />;
 
       case 'budget':
         return <BudgetView budget={extraData.nganSach} />;
@@ -375,6 +377,7 @@ function App() {
               onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
               onAdd={handleAddNew}
               onExport={() => exportToCSV(filteredData, "danh-sach-giao-dich")}
+              onExportPDF={() => exportToPDF(filteredData, "danh-sach-giao-dich")}
             />
             <div style={{ borderBottom: '1px solid #e5e7eb' }} />
             <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
