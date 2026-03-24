@@ -21,20 +21,20 @@ import './Sidebar.css';
 const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode, toggleDarkMode }) => {
   const menuItems = [
     { id: 'dashboard', icon: <FiHome size={20} />, label: 'Tổng quan' },
-    { id: 'all', icon: <FiGrid size={20} />, label: 'Tất cả' },
+    { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
+    { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
     { id: 'progress_tracker', icon: <FiCheckCircle size={20} />, label: 'Theo dõi Tiến độ' },
     { id: 'gantt_chart', icon: <FiBarChart2 size={20} />, label: 'Biểu đồ Tiến độ' },
-    { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
-    { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
     { id: 'drawings', icon: <FiMap size={20} />, label: 'Bản vẽ Thiết kế' },
     { id: 'contracts', icon: <FiBriefcase size={20} />, label: 'Hợp đồng Xây dựng' },
     { id: 'notes', icon: <FiFileText size={20} />, label: 'Ghi chú nhanh' },
     { id: 'zalo', icon: <FiMessageCircle size={20} />, label: 'Chat Nhóm Zalo' },
+    { id: 'all', icon: <FiGrid size={20} />, label: 'Tất cả' },
   ];
 
   return (
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header">
+      <div className="sidebar-header" style={{ height: '60px', minHeight: '60px' }}>
         {isOpen && <h3 className="app-title">Menu</h3>}
         <button className="toggle-btn" onClick={toggle} title={isOpen ? "Thu gọn" : "Mở rộng"}>
           {isOpen ? <FiChevronLeft /> : <FiChevronRight />}

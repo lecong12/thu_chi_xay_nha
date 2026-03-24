@@ -4,7 +4,7 @@ import "./Header.css";
 
 function Header({ onRefresh, loading, onLogout, onAdd, onToggleFilter }) {
   return (
-    <header className="header">
+    <header className="header" style={{ height: '60px', minHeight: '60px' }}>
       <div className="header-content">
         <div className="header-left">
           <div className="logo">
