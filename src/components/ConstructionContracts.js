@@ -174,13 +174,14 @@ function ConstructionContracts() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
+            <div style={{ padding: '10px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}>
+              <a href={viewingPdf.url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 500, fontSize: '14px' }}>
+                <FiDownload style={{ marginRight: '5px', verticalAlign: 'middle' }} /> 
+                Mở file trong tab mới (nếu không xem được)
+              </a>
+            </div>
             <div className="pdf-body" style={{flex: 1, position: 'relative'}}>
-              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%" style={{display: 'block', height: '100%'}}>
-                <div style={{padding: '20px', textAlign: 'center', color: '#fff'}}>
-                  <p style={{marginBottom: '10px'}}>Không thể hiển thị bản xem trước.</p>
-                  <a href={viewingPdf.url} target="_blank" rel="noreferrer" style={{background: '#fff', color: '#333', padding: '8px 16px', borderRadius: '4px', textDecoration: 'none'}}>Mở trong tab mới</a>
-                </div>
-              </object>
+              <iframe src={viewingPdf.url} title="PDF Viewer" style={{ width: '100%', height: '100%', border: 'none' }}></iframe>
             </div>
           </div>
         </div>

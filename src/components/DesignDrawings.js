@@ -153,13 +153,15 @@ function DesignDrawings() {
               <h3>{viewingPdf.name}</h3>
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
+            {/* Thanh công cụ phụ: Luôn hiển thị nút mở file gốc để dự phòng */}
+            <div style={{ padding: '10px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', textAlign: 'right' }}>
+              <a href={viewingPdf.url} target="_blank" rel="noreferrer" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 500, fontSize: '14px' }}>
+                <FiDownload style={{ marginRight: '5px', verticalAlign: 'middle' }} /> 
+                Mở file trong tab mới (nếu không xem được)
+              </a>
+            </div>
             <div className="pdf-body">
-              <object data={viewingPdf.url} type="application/pdf" className="pdf-object" width="100%" height="100%">
-                <div className="pdf-fallback">
-                  <p>Trình duyệt không hỗ trợ xem trực tiếp.</p>
-                  <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="fallback-btn">Mở file trong tab mới</a>
-                </div>
-              </object>
+              <iframe src={viewingPdf.url} title="PDF Viewer" style={{ width: '100%', height: '100%', border: 'none' }}></iframe>
             </div>
           </div>
         </div>
