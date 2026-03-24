@@ -12,7 +12,7 @@ function Header({ onRefresh, loading, onLogout, onToggleSidebar }) {
           </button>
           <div className="logo">
             <FiHome className="logo-icon" />
-            <span className="logo-text">Sổ Tay Xây Nhà</span>
+            <span className="logo-text">Sổ Tay Làm Nhà</span>
           </div>
         </div>
 

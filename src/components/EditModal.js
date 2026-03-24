@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { FiX, FiSave, FiCamera, FiImage, FiLoader } from "react-icons/fi";
-// import Tesseract from 'tesseract.js'; // Tạm tắt do lỗi build
+import { FiX, FiSave, FiCamera, FiImage, FiLoader, FiFileText } from "react-icons/fi";
+import Tesseract from 'tesseract.js';
 import "./EditModal.css";
 
 // Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'
@@ -97,9 +97,9 @@ function EditModal({ item, onClose, onSave }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Kiểm tra định dạng file ảnh
-    if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chỉ chọn file ảnh (JPG, PNG, JPEG).");
+    // Kiểm tra định dạng file ảnh hoặc PDF
+    if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+      alert("Vui lòng chỉ chọn file ảnh hoặc PDF.");
       return;
     }
 
@@ -120,6 +120,7 @@ function EditModal({ item, onClose, onSave }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
+      data.append("resource_type", "auto"); // QUAN TRỌNG
 
       // Thêm Timeout 20 giây
       const controller = new AbortController();
@@ -153,7 +154,6 @@ function EditModal({ item, onClose, onSave }) {
 
   // Xử lý OCR (Quét hóa đơn)
   const handleOCR = async () => {
-    /* Tạm tắt tính năng OCR
     if (!formData.hinhAnh) {
       alert("Vui lòng tải ảnh lên hoặc chọn ảnh hóa đơn trước khi quét.");
       return;
@@ -206,8 +206,6 @@ function EditModal({ item, onClose, onSave }) {
     } finally {
       setOcrScanning(false);
     }
-    */
-    alert("Tính năng OCR đang tạm bảo trì.");
   };
 
   const handleSubmit = (e) => {
@@ -261,19 +259,25 @@ function EditModal({ item, onClose, onSave }) {
         <div className="image-upload-section">
           <div className="image-preview">
             {formData.hinhAnh ? (
-              <div style={{ width: '100%', textAlign: 'center' }}>
-                <div className="preview-container" onClick={() => !uploading && fileInputRef.current.click()}>
-                  <img src={formData.hinhAnh} alt="Chứng từ" />
-                  {/* Overlay khi đang upload lại */}
-                  {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
-                  <button 
-                    type="button" 
-                    className="remove-image-btn" 
-                    onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, hinhAnh: ""})) }}
-                  >
-                    <FiX />
-                  </button>
-                </div>
+              <div style={{ width: '100%', textAlign: 'center' }} className="preview-wrapper">
+                {formData.hinhAnh.toLowerCase().endsWith('.pdf') ? (
+                  <a href={formData.hinhAnh} target="_blank" rel="noreferrer" className="pdf-preview-placeholder">
+                    <FiFileText size={40} />
+                    <span>File PDF đã tải lên</span>
+                  </a>
+                ) : (
+                  <div className="preview-container" onClick={() => !uploading && fileInputRef.current.click()}>
+                    <img src={formData.hinhAnh} alt="Chứng từ" />
+                    {uploading && <div className="upload-overlay"><FiLoader className="spin" /></div>}
+                    <button 
+                      type="button" 
+                      className="remove-image-btn" 
+                      onClick={(e) => { e.stopPropagation(); setFormData(prev => ({...prev, hinhAnh: ""})) }}
+                    >
+                      <FiX />
+                    </button>
+                  </div>
+                )}
                 <div style={{ fontSize: '10px', color: '#16a34a', marginTop: '4px', wordBreak: 'break-all' }}>
                   ✓ Đã có link: {formData.hinhAnh.substring(0, 30)}...
                 </div>
@@ -281,14 +285,14 @@ function EditModal({ item, onClose, onSave }) {
             ) : (
               <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
                 {uploading ? <FiLoader className="spin" /> : <FiCamera size={32} />}
-                <span>{uploading ? "Đang tải lên..." : "Chụp hoặc chọn ảnh hóa đơn"}</span>
+                <span>{uploading ? "Đang tải lên..." : "Thêm Ảnh/PDF Chứng từ"}</span>
               </div>
             )}
           </div>
           <input 
             ref={fileInputRef}
             type="file" 
-            accept="image/*" 
+            accept="image/*,application/pdf" 
             key={formData.hinhAnh || "new"} // Reset input khi ảnh thay đổi để cho phép chọn lại file cũ nếu cần
             onChange={handleFileUpload} 
             style={{ display: 'none' }} 
