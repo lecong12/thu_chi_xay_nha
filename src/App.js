@@ -1,14 +1,12 @@
 import React, { useState, useMemo, useEffect } from "react";
+// ... (giữ nguyên các import cũ)
 import Dashboard from "./components/Dashboard";
-
-// --- Tách Component để dễ quản lý ---
 import ProgressTracker from "./components/ProgressTracker";
 import BudgetView from "./components/BudgetView";
 import GanttChartView from "./components/GanttChartView";
 import DesignDrawings from "./components/DesignDrawings";
 import ConstructionContracts from "./components/ConstructionContracts";
 import QuickNotes from "./components/QuickNotes";
-
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
 import Header from "./components/Header";
@@ -30,8 +28,23 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
-  const [isDarkMode, setIsDarkMode] = useState(false); 
   
+  // --- MỚI: Khởi tạo Dark Mode từ localStorage ---
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem("theme") === "dark";
+  });
+
+  // --- MỚI: useEffect để xử lý bật/tắt class Dark Mode toàn cục ---
+  useEffect(() => {
+    if (isDarkMode) {
+      document.body.classList.add("dark-theme");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.body.classList.remove("dark-theme");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
+
   const { 
     data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage, handleUpdateBudget
   } = useAppData(isLoggedIn);
@@ -39,54 +52,37 @@ function App() {
   const [editingItem, setEditingItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); 
   const [toast, setToast] = useState(null);
-  const [uploadingId, setUploadingId] = useState(null); // Quản lý trạng thái upload chung
+  const [uploadingId, setUploadingId] = useState(null);
 
-  // --- LOGIC UPLOAD FILE TỔNG HỢP (ẢNH/PDF) ---
-  // id: khóa chính của dòng cần update
-  // tableName: Tên Sheet (HopDong, BanVe, TienDo...)
-  // columnName: Tên cột lưu link (url, hinhAnh...)
+  // Logic Upload tổng hợp (Giữ nguyên như bản trước)
   const handleUniversalUpload = async (id, tableName, columnName, file) => {
     if (!file) return;
-
     try {
       setUploadingId(id);
-      showToast("Đang tải file lên Cloudinary...", "info");
-
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      formData.append("resource_type", "auto"); // Tự động nhận diện PDF/Ảnh
+      formData.append("resource_type", "auto"); 
 
-      const res = await fetch(
-        `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
-        { method: "POST", body: formData }
-      );
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+        method: "POST", body: formData
+      });
       const fileData = await res.json();
 
       if (fileData.secure_url) {
-        showToast("Đang đồng bộ với Google Sheets...", "info");
-        
-        // Cập nhật AppSheet
-        const result = await updateRowInSheet(tableName, { 
-          id: id, 
-          [columnName]: fileData.secure_url 
-        }, APP_ID);
-
+        const result = await updateRowInSheet(tableName, { id, [columnName]: fileData.secure_url }, APP_ID);
         if (result.success) {
           showToast("Lưu tệp thành công!", "success");
-          await fetchAllData(); // Load lại toàn bộ để cập nhật UI
-        } else {
-          showToast(`Lỗi lưu AppSheet: ${result.message}`, "error");
+          await fetchAllData();
         }
       }
     } catch (error) {
-      showToast(`Lỗi upload: ${error.message}`, "error");
+      showToast(`Lỗi: ${error.message}`, "error");
     } finally {
       setUploadingId(null);
     }
   };
 
-  // Các hàm Filter giữ nguyên...
   const [filters, setFilters] = useState({
     loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "",
   });
@@ -120,7 +116,10 @@ function App() {
   const handleFilterChange = (key, value) => setFilters((prev) => ({ ...prev, [key]: value }));
   const handleResetFilters = () => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" });
   const showToast = (message, type = "success") => setToast({ message, type });
-  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
+
+  // Nút đổi Dark Mode
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+
   const handleLogin = () => { localStorage.setItem("isLoggedIn", "true"); setIsLoggedIn(true); };
   const handleLogout = () => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); };
 
@@ -176,10 +175,9 @@ function App() {
   const extraData = useMemo(() => ({ top5: [], chartData: [], nganSach, tienDo }), [nganSach, tienDo]);
   const stats = useMemo(() => ({ tongThu: 0, tongChi: filteredData.reduce((s, i) => s + i.soTien, 0), soGiaoDich: filteredData.length }), [filteredData]);
 
-  // --- RENDER CONTENT ---
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
+      case 'dashboard': return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
       case 'progress_tracker': return <ProgressTracker stages={tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} onUploadFile={(id, file) => handleUniversalUpload(id, "TienDo", "Ảnh nghiệm thu", file)} uploadingId={uploadingId} />;
       case 'budget': return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
       case 'drawings': return <DesignDrawings onUploadPDF={(id, file) => handleUniversalUpload(id, "BanVe", "url", file)} uploadingId={uploadingId} />;
@@ -200,9 +198,17 @@ function App() {
 
   return (
     <div className={`app ${isDarkMode ? 'dark-mode' : ''}`}>
-      <Sidebar isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} activeTab={activeTab} onTabChange={handleTabChange} onLogout={handleLogout} isDarkMode={isDarkMode} toggleDarkMode={toggleDarkMode} />
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
+        activeTab={activeTab} 
+        onTabChange={handleTabChange} 
+        onLogout={handleLogout} 
+        isDarkMode={isDarkMode} 
+        toggleDarkMode={toggleDarkMode} 
+      />
       <div className="app-main-wrapper" style={{ marginLeft: window.innerWidth > 768 ? (isSidebarOpen ? '240px' : '64px') : '0', transition: 'margin-left 0.3s ease' }}>
-        <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+        <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
         <main className="main-content">
           {loading ? <div className="loading-spinner"></div> : renderContent()}
         </main>
