@@ -20,7 +20,7 @@ function FilterBar({ filters, filterOptions, onFilterChange, onReset, isExpanded
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           <div className="filter-title">
             <FiFilter />
-            <span>Lọc và tìm kiếm dữ liệu</span>
+            <span>Lọc và Tìm</span>
             {hasActiveFilters && <span className="filter-badge">Đang lọc</span>}
           </div>
           <button
