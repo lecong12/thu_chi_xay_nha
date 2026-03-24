@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 // QUAN TRỌNG: Đảm bảo bạn đã tạo file font này theo hướng dẫn ở Bước 2.
 import { arimoNormal } from './Arimo-Regular-normal.js';
@@ -39,7 +39,9 @@ const exportToPDF = (data, title = "Báo cáo chi tiêu") => {
     doc.text(title, 14, 15);
 
     // 4. Sử dụng autoTable để vẽ bảng
-    doc.autoTable(tableColumn, tableRows, {
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
       startY: 20,
       styles: { font: fontName, fontStyle: 'normal' },
       headStyles: { fillColor: [45, 142, 43], textColor: [255, 255, 255], fontStyle: 'bold' }
