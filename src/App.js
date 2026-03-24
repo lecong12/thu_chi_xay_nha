@@ -9,6 +9,7 @@ import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
 import { useAppData } from "./utils/useAppData"; // Import custom hook
 import Toast from "./components/Toast";
+<<<<<<< HEAD
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
 import "./App.css";
 
@@ -29,6 +30,24 @@ function App() {
   // State cho UI, không liên quan đến data fetching
   const [editingItem, setEditingItem] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null); // State cho modal xác nhận xóa
+=======
+import {
+  fetchDataFromAppSheet,
+  updateRowInSheet,
+  deleteRowFromSheet,
+} from "./utils/sheetsAPI";
+import "./App.css";
+
+function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem("isLoggedIn") === "true";
+  });
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [editingItem, setEditingItem] = useState(null);
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
   const [toast, setToast] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -40,8 +59,55 @@ function App() {
     searchText: "",
   });
 
+<<<<<<< HEAD
   // State quản lý việc đóng/mở thanh lọc
   const [isFilterExpanded, setIsFilterExpanded] = useState(false);
+=======
+  // Fetch data from AppSheet
+  const fetchData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await fetchDataFromAppSheet();
+
+      if (result.success && result.data) {
+        const parsedData = result.data.map((row, index) => {
+          // Create unique ID combining original ID and index
+          const uniqueId = row.id
+            ? `${row.id}_${index}`
+            : `row_${Date.now()}_${index}`;
+
+          return {
+            ...row,
+            id: uniqueId,
+            originalId: row.originalId || row.id,
+          };
+        });
+
+        // Apply local changes
+        const mergedData = parsedData
+          .filter((item) => !localChanges.deleted.includes(item.id))
+          .map((item) =>
+            localChanges.edited[item.id]
+              ? {
+                  ...item,
+                  ...localChanges.edited[item.id],
+                  ngay: new Date(localChanges.edited[item.id].ngay),
+                }
+              : item
+          );
+
+        setData(mergedData);
+        setLoading(false);
+      } else {
+        throw new Error(result.message || "Không thể tải dữ liệu");
+      }
+    } catch (err) {
+      setError("Lỗi tải dữ liệu: " + err.message);
+      setLoading(false);
+    }
+  };
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
 
   // --- LOGIC LỌC DỮ LIỆU ---
   const filterOptions = useMemo(() => ({
@@ -148,6 +214,7 @@ function App() {
   // --- XỬ LÝ THÊM / SỬA / XÓA ---
   const handleSaveEdit = async (updatedItem) => {
     try {
+<<<<<<< HEAD
       // Nếu item có id (RowNumber) tức là đã tồn tại -> Sửa. Ngược lại -> Thêm mới
       const isEdit = !!updatedItem.id;
 
@@ -160,6 +227,15 @@ function App() {
       if (isEdit) {
         // Gọi API qua sheetsAPI
         result = await updateRowInSheet(itemToSave, APP_ID);
+=======
+      const result = await updateRowInSheet(updatedItem);
+
+      if (result.success) {
+        // Refresh data from AppSheet to ensure consistency
+        await fetchData();
+        setEditingItem(null);
+        showToast(result.message || "Cập nhật thành công!", "success");
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
       } else {
         // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
         if (!itemToSave.id) {
@@ -207,9 +283,29 @@ function App() {
     }
   };
 
+<<<<<<< HEAD
   // Mở modal xác nhận khi người dùng bấm nút xóa
   const requestDelete = (id) => {
     setItemToDelete(id);
+=======
+  const handleDelete = async (id) => {
+    if (window.confirm("Bạn có chắc chắn muốn xóa giao dịch này?")) {
+      try {
+        const result = await deleteRowFromSheet(id);
+
+        if (result.success) {
+          // Refresh data from AppSheet to ensure consistency
+          await fetchData();
+          showToast(result.message || "Xóa thành công!", "success");
+        } else {
+          showToast(result.message || "Xóa thất bại", "error");
+        }
+      } catch (error) {
+        showToast("Có lỗi xảy ra khi xóa", "error");
+        console.error("Error deleting:", error);
+      }
+    }
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
   };
 
   // Thực thi xóa sau khi người dùng xác nhận từ Modal
@@ -285,6 +381,7 @@ function App() {
       <main className="main-content">
         <>
 
+<<<<<<< HEAD
           {(activeTab === "dashboard" || activeTab === "all") && (
             <Dashboard 
               stats={stats} 
@@ -329,8 +426,39 @@ function App() {
             </div>
           )}
         </>
+=======
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p>Đang tải dữ liệu...</p>
+          </div>
+        ) : (
+          <>
+            {(activeTab === "dashboard" || activeTab === "all") && (
+              <Dashboard stats={stats} data={filteredData} />
+            )}
+
+            {(activeTab === "list" || activeTab === "all") && (
+              <>
+                <FilterBar
+                  filters={filters}
+                  filterOptions={filterOptions}
+                  onFilterChange={handleFilterChange}
+                  onReset={resetFilters}
+                />
+                <DataTable
+                  data={filteredData}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                />
+              </>
+            )}
+          </>
+        )}
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
       </main>
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
+<<<<<<< HEAD
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {itemToDelete && (
@@ -342,6 +470,23 @@ function App() {
         >
           <p>Bạn có chắc chắn muốn xóa vĩnh viễn giao dịch này không? Hành động này không thể hoàn tác.</p>
         </ConfirmModal>
+=======
+
+      {editingItem && (
+        <EditModal
+          item={editingItem}
+          onClose={() => setEditingItem(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
       )}
     </div>
   );

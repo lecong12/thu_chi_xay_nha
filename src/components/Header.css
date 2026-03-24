@@ -173,17 +173,26 @@
 
   .refresh-btn span,
   .logout-btn span,
+<<<<<<< HEAD
   .setup-btn span,
   .clear-cache-btn span,
   .add-btn span {
+=======
+  .clear-cache-btn span {
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
     display: none;
   }
 
   .refresh-btn,
+<<<<<<< HEAD
   .setup-btn,
   .logout-btn,
   .clear-cache-btn,
   .add-btn {
+=======
+  .logout-btn,
+  .clear-cache-btn {
+>>>>>>> a805ca1e (Remove localStorage cache, use AppSheet ID directly, fix duplicate data)
     padding: 10px;
     border-radius: 50%;
   }
