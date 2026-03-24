@@ -367,7 +367,7 @@ function App() {
           )}
         </>
         </main>
-      </main>
+      </div>
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
