@@ -7,6 +7,7 @@ import BudgetView from "./components/BudgetView";
 import GanttChartView from "./components/GanttChartView";
 import QuickNotes from "./components/QuickNotes";
 import ConstructionContracts from "./components/ConstructionContracts";
+import DesignDrawings from "./components/DesignDrawings";
 
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -378,6 +379,9 @@ function App() {
           </div>
         );
       
+      case 'drawings':
+        return <DesignDrawings />;
+
       case 'contracts':
         return <ConstructionContracts />;
 

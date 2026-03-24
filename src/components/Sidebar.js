@@ -13,7 +13,8 @@ import {
   FiMoon,
   FiSun,
   FiFileText,
-  FiBriefcase
+  FiBriefcase,
+  FiMap
 } from 'react-icons/fi';
 import './Sidebar.css';
 
@@ -25,6 +26,7 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
     { id: 'gantt_chart', icon: <FiBarChart2 size={20} />, label: 'Biểu đồ Tiến độ' },
     { id: 'budget', icon: <FiDollarSign size={20} />, label: 'Đối chiếu Ngân sách' },
     { id: 'list', icon: <FiList size={20} />, label: 'Danh sách Giao dịch' },
+    { id: 'drawings', icon: <FiMap size={20} />, label: 'Bản vẽ Thiết kế' },
     { id: 'contracts', icon: <FiBriefcase size={20} />, label: 'Hợp đồng Xây dựng' },
     { id: 'notes', icon: <FiFileText size={20} />, label: 'Ghi chú nhanh' },
     { id: 'zalo', icon: <FiMessageCircle size={20} />, label: 'Chat Nhóm Zalo' },
