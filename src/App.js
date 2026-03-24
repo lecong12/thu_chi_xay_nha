@@ -6,6 +6,7 @@ import ProgressTracker from "./components/ProgressTracker";
 import BudgetView from "./components/BudgetView";
 import GanttChartView from "./components/GanttChartView";
 import QuickNotes from "./components/QuickNotes";
+import ConstructionContracts from "./components/ConstructionContracts";
 
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -377,6 +378,9 @@ function App() {
           </div>
         );
       
+      case 'contracts':
+        return <ConstructionContracts />;
+
       case 'notes':
         return <QuickNotes />;
 

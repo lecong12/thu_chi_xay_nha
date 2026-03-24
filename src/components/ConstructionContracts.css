@@ -1,0 +1,158 @@
+.contracts-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-height: 80vh;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-size: 1.5rem;
+  color: #1e293b;
+}
+
+.category-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.tab-btn {
+  padding: 10px 16px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  background-color: #f1f5f9;
+  color: #334155;
+}
+
+.tab-btn.active {
+  background-color: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.upload-box {
+  margin-bottom: 20px;
+}
+
+.upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.upload-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.upload-btn.disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.contracts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.contract-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.contract-item:hover {
+  background-color: #f8fafc;
+}
+
+.contract-icon {
+  color: #ef4444; /* PDF color */
+  margin-right: 16px;
+}
+
+.contract-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.contract-name {
+  font-weight: 500;
+  color: #334155;
+  text-decoration: none;
+  margin-bottom: 4px;
+}
+
+.contract-name:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.contract-meta {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.contract-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-icon {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 4px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+}
+
+.action-icon:hover {
+  background-color: #e2e8f0;
+}
+
+.action-icon.delete:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.action-icon.download:hover {
+  background-color: #f0fdf4;
+  color: #16a34a;
+}
+
+.no-contracts {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}
