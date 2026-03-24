@@ -5,6 +5,9 @@ import "./EditModal.css";
 
 // Danh sách hạng mục ngân sách, đồng bộ với Sheet 'NganSach'
 const BUDGET_CATEGORIES = [
+  'Chuẩn bị',
+  'Thiết kế',
+  'Giám sát',
   'Phần thô', 
   'Nhân công', 
   'Hoàn thiện', 
@@ -16,14 +19,13 @@ const BUDGET_CATEGORIES = [
 
 const UPDATER_OPTIONS = [
   'Ba',
-  'Mẹ',
-  'Khác'
-];
+  'Mẹ'
+  ];
 
 // Danh sách gợi ý nội dung theo hạng mục
 const SUGGESTION_MAP = {
   'Nhân công': [
-    { label: 'Công thợ chính', amount: 600000 },
+    { label: 'Công thợ nề', amount: 600000 },
     { label: 'Công phụ hồ', amount: 400000 },
     { label: 'Tiền cơm thợ', amount: 30000 },
     { label: 'Thưởng thợ', amount: 50000 }
