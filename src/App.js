@@ -157,19 +157,27 @@ function App() {
       // Clone item để xử lý, tránh mutate object gốc
       const itemToSave = { ...updatedItem };
 
+      // Chuẩn bị payload khớp với tên cột trong AppSheet cho bảng "GiaoDich"
+      const apiPayload = {
+        "id": itemToSave.keyId || itemToSave.id,
+        "Ngày": itemToSave.ngay instanceof Date ? itemToSave.ngay.toISOString().split("T")[0] : itemToSave.ngay,
+        "Hạng mục": itemToSave.doiTuongThuChi,
+        "Nội dung": itemToSave.noiDung,
+        "Số tiền": itemToSave.soTien ? itemToSave.soTien.toString() : "0",
+        "Người cập nhật": itemToSave.nguoiCapNhat || "",
+        "Chứng từ": itemToSave.hinhAnh || "",
+      };
+
       if (isEdit) {
         // Gọi API qua sheetsAPI
-        result = await updateRowInSheet(itemToSave, APP_ID);
+        result = await updateRowInSheet("GiaoDich", apiPayload, APP_ID);
       } else {
         // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
-        if (!itemToSave.id) {
-          itemToSave.id = `GD_${Date.now()}`;
-        }
-        result = await addRowToSheet(itemToSave, APP_ID);
+        if (!apiPayload.id) {
+          api. = await addRowToSheet("GiaoDich", apiPayload, APP_ID);
       }
 
-      if (result && result.success) {
-        // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
+      if (result && result.success) { nhật giao diện ngay lập tức ---
         const newItem = {
           ...itemToSave,
           // Nếu là thêm mới, dùng Key ID vừa tạo làm ID tạm cho giao diện
@@ -224,10 +232,10 @@ function App() {
 
     showToast("Đang xóa...", "info");
     // Gọi API xóa, chỉ cần truyền ID (keyId)
-    const result = await deleteRowFromSheet(item.keyId || item.id, item.appSheetId, APP_ID);
+    // Thay đổi: Truyền tên bảng "GiaoDich", bỏ tham số appSheetId thừa
+    const result = await deleteRowFromSheet("GiaoDich", item.keyId || item.id, APP_ID);
 
-    if (result.success) {
-      setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
+    if (result.success) {e id !=io diện
       showToast("Đã xóa thành công!", "success");
       await fetchAllData(); // Đồng bộ lại với server
     } else {
