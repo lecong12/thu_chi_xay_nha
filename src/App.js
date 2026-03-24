@@ -174,10 +174,13 @@ function App() {
       } else {
         // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
         if (!apiPayload.id) {
-          api. = await addRowToSheet("GiaoDich", apiPayload, APP_ID);
+          apiPayload.id = `GD_${Date.now()}`;
+        }
+        result = await addRowToSheet("GiaoDich", apiPayload, APP_ID);
       }
 
-      if (result && result.success) { nhật giao diện ngay lập tức ---
+      if (result && result.success) {
+        // --- OPTIMISTIC UPDATE: Cập nhật giao diện ngay lập tức ---
         const newItem = {
           ...itemToSave,
           // Nếu là thêm mới, dùng Key ID vừa tạo làm ID tạm cho giao diện
@@ -235,7 +238,8 @@ function App() {
     // Thay đổi: Truyền tên bảng "GiaoDich", bỏ tham số appSheetId thừa
     const result = await deleteRowFromSheet("GiaoDich", item.keyId || item.id, APP_ID);
 
-    if (result.success) {e id !=io diện
+    if (result.success) {
+      setData(prevData => prevData.filter(i => i.id !== itemToDelete)); // Xóa ngay trên giao diện
       showToast("Đã xóa thành công!", "success");
       await fetchAllData(); // Đồng bộ lại với server
     } else {
