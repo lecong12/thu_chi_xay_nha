@@ -8,7 +8,9 @@ import {
   FiEdit2,
   FiTrash2,
   FiImage,
+  FiDownload,
 } from "react-icons/fi";
+import exportToPDF from "./pdfExporter";
 import "./DataTable.css";
 
 const formatCurrency = (value) => {
@@ -111,9 +113,18 @@ function DataTable({ data, onEdit, onDelete }) {
         <div className="section-container">
           <div className="section-header">
             <h4 className="section-title chi-title">Bảng Chi Phí</h4>
-            <span className="summary-item chi">
-              Tổng Chi: {formatCurrency(pageTotalChi)}
-            </span>
+            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+              <button
+                className="export-btn"
+                onClick={() => exportToPDF(sortedData, "Báo Cáo Chi Tiêu")}
+              >
+                <FiDownload />
+                <span>Xuất PDF</span>
+              </button>
+              <span className="summary-item chi">
+                Tổng Chi: {formatCurrency(pageTotalChi)}
+              </span>
+            </div>
           </div>
           <div className="table-wrapper desktop-table">
             <table className="data-table">

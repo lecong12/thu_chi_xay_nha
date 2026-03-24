@@ -1,0 +1,137 @@
+/* Giao diện chung */
+body.dark-mode {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+.dark-mode .app,
+.dark-mode .main-content,
+.dark-mode .app-main-wrapper {
+  background-color: #0f172a !important;
+  color: #f1f5f9;
+}
+
+/* Sidebar */
+.dark-mode .sidebar {
+  background-color: #1e293b;
+  border-right: 1px solid #334155;
+}
+.dark-mode .sidebar-header {
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+.dark-mode .menu-item {
+  color: #94a3b8;
+}
+.dark-mode .menu-item:hover {
+  background-color: #334155;
+  color: #fff;
+}
+.dark-mode .menu-item.active {
+  background-color: #3b82f6;
+  color: white;
+}
+.dark-mode .sidebar-footer {
+  background-color: #1e293b;
+  border-top: 1px solid #334155;
+}
+
+/* Header */
+.dark-mode .header {
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+.dark-mode .logo-text {
+  color: #f8fafc;
+}
+
+/* Cards & Containers */
+.dark-mode .stat-card,
+.dark-mode .chart-card,
+.dark-mode .stage-card,
+.dark-mode .transaction-card,
+.dark-mode .progress-tracker-section,
+.dark-mode .budget-section {
+  background-color: #1e293b !important;
+  border-color: #334155;
+  color: #f1f5f9;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+}
+
+/* Override inline styles của container trắng trong App.js */
+.dark-mode div[style*="background-color: rgb(255, 255, 255)"],
+.dark-mode div[style*="background-color: #fff"] {
+  background-color: #1e293b !important;
+  color: #f1f5f9;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.5) !important;
+}
+
+/* Text & Labels */
+.dark-mode .chart-title,
+.dark-mode .section-title,
+.dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4 {
+  color: #f1f5f9 !important;
+  border-bottom-color: #334155;
+}
+.dark-mode .stat-label, 
+.dark-mode .filter-label {
+  color: #94a3b8;
+}
+.dark-mode .stat-value {
+  color: #f1f5f9;
+}
+
+/* Tables */
+.dark-mode .data-table th,
+.dark-mode .budget-table th {
+  background-color: #334155;
+  color: #e2e8f0;
+  border-bottom: 1px solid #475569;
+}
+.dark-mode .data-table td,
+.dark-mode .budget-table td {
+  background-color: #1e293b;
+  color: #cbd5e1;
+  border-bottom: 1px solid #334155;
+}
+.dark-mode .data-table tr:hover td {
+  background-color: #334155;
+}
+
+/* Inputs & Selects */
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea {
+  background-color: #334155;
+  border: 1px solid #475569;
+  color: white;
+}
+
+/* Filter Bar */
+.dark-mode .filter-bar {
+  background-color: #1e293b;
+  border-bottom: 1px solid #334155;
+}
+.dark-mode .filter-title {
+  color: #f1f5f9;
+}
+
+/* Mobile Footer */
+.dark-mode .mobile-footer {
+  background-color: #1e293b;
+  border-top: 1px solid #334155;
+}
+.dark-mode .nav-item {
+  color: #64748b;
+}
+.dark-mode .nav-item.active {
+  color: #2d8e2b;
+  background-color: #334155;
+}
+
+/* Modal */
+.dark-mode .modal-content {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border: 1px solid #334155;
+}

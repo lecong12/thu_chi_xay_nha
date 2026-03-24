@@ -1,0 +1,139 @@
+.drawings-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  min-height: 80vh;
+}
+
+.drawings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.drawing-card {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.drawing-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+  background: #fff;
+}
+
+.drawing-icon {
+  color: #3b82f6;
+  margin-right: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.drawing-info {
+  flex: 1;
+  overflow: hidden;
+}
+
+.drawing-name {
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 4px;
+}
+
+.drawing-meta {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+.drawing-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.icon-btn {
+  border: none;
+  background: #fff;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.icon-btn.view:hover { color: #3b82f6; border-color: #3b82f6; }
+.icon-btn.download:hover { color: #16a34a; border-color: #16a34a; }
+.icon-btn.delete:hover { color: #ef4444; border-color: #ef4444; }
+
+/* PDF Viewer Modal */
+.pdf-viewer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.85);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.pdf-viewer-container {
+  background: #fff;
+  width: 90%;
+  height: 90%;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.pdf-header {
+  padding: 15px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.close-pdf-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.pdf-iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+}
+
+.no-data-text {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+}

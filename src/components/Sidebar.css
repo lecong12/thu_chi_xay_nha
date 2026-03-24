@@ -1,0 +1,134 @@
+.sidebar {
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  border-right: 1px solid #f0f0f0;
+  overflow: hidden;
+}
+
+.sidebar.open {
+  width: 240px;
+}
+
+.sidebar.closed {
+  width: 64px;
+}
+
+.sidebar-header {
+  height: 64px; /* Khớp với chiều cao Header */
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #2d8e2b; /* Màu xanh chủ đạo */
+  color: white;
+}
+
+.sidebar-header .toggle-btn {
+  color: white;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 4px;
+  margin-left: auto; /* Đẩy nút sang phải */
+}
+
+.toggle-btn:hover {
+  background-color: rgba(255,255,255,0.2);
+}
+
+.sidebar-menu {
+  flex: 1;
+  padding: 16px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #4b5563;
+  white-space: nowrap;
+  margin: 0 8px;
+  border-radius: 8px;
+  height: 48px;
+}
+
+.menu-item:hover {
+  background-color: #f0fdf4;
+  color: #2d8e2b;
+}
+
+.menu-item.active {
+  background-color: #dcfce7;
+  color: #16a34a;
+  font-weight: 600;
+}
+
+.menu-item.logout {
+  color: #6b7280;
+}
+
+.menu-item.logout:hover {
+  background-color: #fef2f2;
+  color: #ef4444;
+}
+
+.menu-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.menu-label {
+  margin-left: 12px;
+  font-size: 14px;
+  opacity: 1;
+  transition: opacity 0.2s;
+}
+
+.sidebar.closed .menu-label {
+  opacity: 0;
+  display: none;
+}
+
+.sidebar-footer {
+  padding: 16px 0;
+  border-top: 1px solid #f0f0f0;
+  background-color: #fff;
+}
+
+/* Mobile: Ẩn sidebar, dùng MobileFooter */
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}

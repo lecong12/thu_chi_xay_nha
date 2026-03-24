@@ -10,7 +10,7 @@ function MobileFooter({ activeTab, onTabChange }) {
   ];
 
   const openZalo = () => {
-    window.open("http://zalo.me/0914149128", "_blank");
+    window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
   };
 
   return (
