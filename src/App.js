@@ -1,13 +1,13 @@
-import React, { useState, useMemo   from "rea  from "rea  from "rea} from "react";
-import Dashboard from "./components/Dashboard";Dashboard from "./components/Dashboard";Dashboard from "./components/Dashboard";Dashboard from "./components/Dashboard";
-
-
-
+import React, { useState, useMemo, useEffect } from "react";
+import Dashboard from "./components/Dashboard";
 
 // --- Tách Component để dễ quản lý ---
 import ProgressTracker from "./components/ProgressTracker";
 import BudgetView from "./components/BudgetView";
 import GanttChartView from "./components/GanttChartView";
+import DesignDrawings from "./components/DesignDrawings";
+import ConstructionContracts from "./components/ConstructionContracts";
+import QuickNotes from "./components/QuickNotes";
 
 import DataTable from "./components/DataTable";
 import MobileFooter from "./components/MobileFooter";
@@ -15,41 +15,27 @@ import Header from "./components/Header";
 import FilterBar from "./components/FilterBar";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
-import ConfirmModal from "./compwToSheet, deleteRowFromSheet } from ".outils/sheetsAPI";
-importnSidebar from "./components/Sidebar"; // Import Sidebarents/ConfirmModal"; // Import modal xác nhận
-import { useAppData } from "./utwToSheet, deleteRowFromSheet } from ".iutils/sheetsAPI";
-importlSidebar from "./components/Sidebar"; // Import Sidebars/useAppData"; // Import custom hook
-import Toast from "./components/wToSheet, deleteRowFromSheet } from ".Tutils/sheetsAPI";
-importoSidebar from "./components/Sidebar"; // Import Sidebarast";
-import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
+import ConfirmModal from "./components/ConfirmModal"; // Import modal xác nhận
+import { useAppData } from "./utils/useAppData"; // Import custom hook
+import Toast from "./components/Toast";
+import { updateRowInSheet, addRowToSheet, deleteRowFromSheet, fetchTableData } from "./utils/sheetsAPI";
 import Sidebar from "./components/Sidebar"; // Import Sidebar
-import BudgetView from "./components/BudgetView";
-import ProgressTracker from "./components/ProgressTracker";
-import GanttChartView from "./components/GanttChartView";
-import DesignDrawings from "./components/DesignDrawings";
-import ConstructionContracts from "./components/ConstructionContracts";
-import QuickNotes from "./components/QuickNotes";
 import "./App.css";
 
-co
-  nst APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
+const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-fu
-  nction App() {
+function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem("isLoggedIn") === "true");
   
   const [activeTab, setActiveTab] = useState('dashboard'); // Mặc định là trang Tổng quan
   const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth > 768);
   
-  const itingItem,stEditingItem] = useState(null);
   // Sử dụng custom hook để quản lý state và logic dữ liệu
   // Lưu ý: Nếu useAppData chưa được cập nhật để dùng API mới, bạn nên cập nhật nó hoặc
-  // dùng fetchDataFromAppSheet trực tiếp ở đây thay
-  const  vìitingItem, shtEditingItem] = useState(null);ook nếu hook vẫn dùng logic cũ.
+  // dùng fetchDataFromAppSheet trực tiếp ở đây thay vì hook nếu hook vẫn dùng logic cũ.
   // Dưới đây giả định logic trong App.js là chính.
   const { 
-    data, setData, nganSach, tienDo, loading, fetchA
-  const llDitingItem,asttEditingItem] = useState(null);a, handleUpdateStage, handleUpdateBudget 
+    data, setData, nganSach, tienDo, loading, fetchAllData, handleUpdateStage, handleUpdateBudget
   } = useAppData(isLoggedIn);
 
   // State cho UI, không liên quan đến data fetching
@@ -229,8 +215,7 @@ oolean))],
 
   const handleAddNew = () => {
     setEditingItem({
-      ngay: new Date(),o lỗi chi tiết hơn cho người dùng
-        if (msg.includes("403") || msg.includes("Forbidden")){
+      ngay: new Date(),
       soTien: 0,
       loaiThuChi: "Chi",
       noiDung: "",
@@ -238,9 +223,8 @@ oolean))],
       }
     } doiTuongThuChi: "",
       nguoiCapNhat: "",
-      hinwToast(`Lỗi hệ thống: ${error.message}`, "error");hAnh: ""
-     
-  } });
+      hinhAnh: ""
+    });
   };
 
   // --- LOGIC XUẤT EXCEL (CSV) ---
@@ -269,8 +253,6 @@ oolean))],
         escape(item.hinhAnh || "")
       ].join(",");
     });
-o lỗi chi tiết hơn cho người dùng
-        if (msg.includes("403") || msg.includes("Forbidden")){
     const csvContent = "\uFEFF" + [headers.join(","), ...csvRows].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
@@ -278,9 +260,8 @@ o lỗi chi tiết hơn cho người dùng
       }
 o   } nst link = document.createElement("a");
     link.setAttribute("href", url);
-    link.wToast(`Lỗi hệ thống: ${error.message}`, "error");setAttribute("download", `${fileName}.csv`);
-     
-  } document.body.appendChild(link);
+    link.setAttribute("download", `${fileName}.csv`);
+    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
@@ -298,8 +279,7 @@ o   } nst link = document.createElement("a");
       const itemToSave = { ...updatedItem };
 
       // Chuẩn bị payload khớp với tên cột trong AppSheet cho bảng "GiaoDich"
-      const apiPayload 
-          const [m1, y1] = a.name.split('/'=; {
+      const apiPayload = {
         "id": itemToSave.keyId || itemToSave.id,
         "Ngày": itemToSave.ngay instanceof Date ? itemToSave.ngay.toISOString().split("T")[0] : itemToSave.ngay,
         "Hạng mục": itemToSave.doiTuongThuChi,
@@ -310,18 +290,14 @@ o   } nst link = document.createElement("a");
       };
 
       if (isEdit) {
-        // Gọi API qua sheeto lỗi chi tiết hơn cho người dùng
-        if (msg.includes("403") || msg.includes("Forbidden"))s{API
+        // Gọi API qua sheetsAPI
         result = await updateRowInSheet("GiaoDich", apiPayload, APP_ID);
       } else {
         // Nếu là thêm mới, tự tạo ID (Key) cho AppSheet để tránh lỗi thiếu Key
-         
-      }
-    }   if (!apiPayload.id) {
+        if (!apiPayload.id) {
           apiPayload.id = `GD_${Date.now()}`;
-        }wToast(`Lỗi hệ thống: ${error.message}`, "error");
-     
-  }     result = await addRowToSheet("GiaoDich", apiPayload, APP_ID);
+        }
+        result = await addRowToSheet("GiaoDich", apiPayload, APP_ID);
       }
 
       if (result && result.success) {
@@ -340,7 +316,7 @@ o   } nst link = document.createElement("a");
           if (isEdit) {
             return prevData.map(item => (item.id === newItem.id || item.appSheetId === newItem.appSheetId) ? newItem : item);
           } else {
-          const [m1, y1] = a.name.split('/';
+            ;
             return [newItem, ...prevData];
           }
         });
@@ -380,8 +356,7 @@ o   } nst link = document.createElement("a");
     }
 
     showToast("Đang xóa...", "info");
-    // Gọi API xóa, chỉ
-          const [m1, y1] = a.name.split('/' ;cần truyền ID (keyId)
+    // Gọi API xóa, chỉ cần truyền ID (keyId)
     // Thay đổi: Truyền tên bảng "GiaoDich", bỏ tham số appSheetId thừa
     const result = await deleteRowFromSheet("GiaoDich", item.keyId || item.id, APP_ID);
 
@@ -422,9 +397,9 @@ o   } nst link = document.createElement("a");
     const chartData = Object.entries(monthMap)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => {
-          const [m1, y1] = a.name.split('/');
-          const [m2, y2] = b.name.split('/');
-          return new Date(y1, m1-1) - new Date(y2, m2-1);
+        const [m1, y1] = a.name.split('/');
+        const [m2, y2] = b.name.split('/');
+        return new Date(y1, m1 - 1) - new Date(y2, m2 - 1);
       });
 
     return { top5, chartData, nganSach, tienDo };
@@ -456,7 +431,7 @@ o   } nst link = document.createElement("a");
                   isExpanded={isFilterExpanded}
                   onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
                   onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
-              onAdd={handleAddNew}
+                  onAdd={handleAddNew}
                 />
                 <div style={{ borderBottom: '1px solid #e5e7eb' }} />
                 <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
@@ -466,13 +441,13 @@ o   } nst link = document.createElement("a");
         );
 
       case 'progress_tracker':
-        return <ProgressTracker stages={extraData.tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
+        return <ProgressTracker stages={tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
 
       case 'gantt_chart':
-        return <GanttChartView stages={extraData.tienDo} />;
+        return <GanttChartView stages={tienDo} onUpdateStage={handleStageUpdate} />;
 
       case 'budget':
-        return <BudgetView budget={extraData.nganSach} />;
+        return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
 
       case 'list':
         return (
@@ -485,50 +460,12 @@ o   } nst link = document.createElement("a");
               isExpanded={isFilterExpanded}
               onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
               onExport={() => exportToCSV(filteredData, "danh-sach-giao-dich")}
-            />
-            <div style={{ borderBottom: '1px solid #e5e7eb' }} />
-            <DataTable data={filteredData} onEdit={setEditingItem} onDelete={requestDelete} />
-          </div>
-        );
-      default:
-        return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
-    }
-  };
-
-  // --- LOGIC HIỂN THỊ NỘI DUNG THEO MENU ---
-  const renderContent = () => {
-    switch (activeTab) {
- 
-
-export default App;     case 'dashboard':
-        return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
-      
-      case 'list':
-        return (
-          <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden', marginTop: '10px' }}>
-            <FilterBar 
-              filters={filters} 
-              filterOptions={filterOptions} 
-              onFilterChange={handleFilterChange} 
-              onReset={handleResetFilters} 
-              isExpanded={isFilterExpanded}
-              onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)}
-              onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")}
               onAdd={handleAddNew}
             />
             <div style={{ borderBottom: '1px solid #e5e7eb' }} />
             <DataTable data={filteredData} onEdit={handleEdit} onDelete={handleDelete} />
           </div>
         );
-
-      case 'budget':
-        return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
-
-      case 'progress_tracker':
-        return <ProgressTracker stages={tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />;
-
-      case 'gantt_chart':
-        return <GanttChartView stages={tienDo} onUpdateStage={handleStageUpdate} />;
 
       case 'drawings':
         return <DesignDrawings />;
@@ -539,54 +476,23 @@ export default App;     case 'dashboard':
       case 'notes':
         return <QuickNotes />;
 
-      case 'all':
       default:
- 
-
-export default App;       return (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            <Dashboard stats={stats} data={filteredData} extraData={extraData} />
-            
-            <div style={{ backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
-               <h3 className="chart-title" style={{ padding: '15px 20px 0' }}>Danh sách giao dịch</h3>
-               <FilterBar 
-                 filters={filters} 
-                 filterOptions={filterOptions} 
-                 onFilterChange={handleFilterChange} 
-                 onReset={handleResetFilters} 
-                 isExpanded={isFilterExpanded} 
-                 onToggleExpand={() => setIsFilterExpanded(!isFilterExpanded)} 
-                 onExport={() => exportToCSV(filteredData, "so-tay-xay-nha")} 
-                 onAdd={handleAddNew} 
-               />
-               <div style={{ borderBottom: '1px solid #e5e7eb' }} />
-               <DataTable data={filteredData} onEdit={handleEdit} onDelete={handleDelete} />
-            </div>
-
-            <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />
-            <ProgressTracker stages={tienDo} onUpdateStage={handleStageUpdate} showToast={showToast} />
-            <GanttChartView stages={tienDo} onUpdateStage={handleStageUpdate} />
-            <DesignDrawings />
-            <ConstructionContracts />
-            <QuickNotes />
-          </div>
-        );
+        return <Dashboard stats={stats} data={filteredData} extraData={extraData} />;
     }
   };
 
-  if (!isLoggedIn) return <Login onLogin={() => setIsLoggedIn(true)} />;
+  if (!isLoggedIn) return <Login onLogin={handleLogin} />;
 
   return (
     <div className="app">
-      {/* Sidebar cho Desktop */}
       <Sidebar 
         isOpen={isSidebarOpen} 
         toggle={() => setIsSidebarOpen(!isSidebarOpen)}
         activeTab={activeTab}
         onTabChange={handleTabChange}
- 
-
-export default App;       onLogout={handleLogout}
+        onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        toggleDarkMode={toggleDarkMode}
       />
 
       {/* Wrapper nội dung chính: Căn lề trái để tránh Sidebar */}
@@ -606,14 +512,22 @@ export default App;       onLogout={handleLogout}
           onLogout={handleLogout} 
           onAdd={handleAddNew}
           onToggleFilter={() => setIsFilterExpanded(!isFilterExpanded)} 
+          onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         />
         <main className="main-content">
-          {renderContent()}
+          {loading ? (
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Đang tải dữ liệu...</p>
+            </div>
+          ) : (
+            renderContent()
+          )}
         </main>
       </div> {/* Đóng thẻ app-main-wrapper */}
 
       <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />
-      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} />}
+      {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} showToast={showToast} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       {itemToDelete && (
         <ConfirmModal
