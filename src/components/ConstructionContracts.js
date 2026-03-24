@@ -54,8 +54,6 @@ function ConstructionContracts() {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "auto"); // Để Cloudinary tự nhận diện PDF
-      data.append("folder", "File PDF"); // Lưu vào thư mục riêng
 
       // Thêm Timeout để tránh treo
       const controller = new AbortController();
