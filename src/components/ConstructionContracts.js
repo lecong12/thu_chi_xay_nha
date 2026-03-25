@@ -21,23 +21,24 @@ function ConstructionContracts() {
   const [loading, setLoading] = useState(true);
   const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-  // Tải dữ liệu từ AppSheet
-  const loadContracts = async () => {
-    setLoading(true);
-    try {
-      const res = await fetchTableData("HopDong", APP_ID);
-      if (res.success) {
-        setContracts(res.data || []);
+  useEffect(() => {// Tải dữ liệu từ AppSheet
+    // Tải dữ liệu từ AppSheet
+    const loadContracts = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchTableData("HopDong", APP_ID);
+        if (res.success) {
+          setContracts(res.data || []);
+        }
+      } catch (error) {
+        console.error("Lỗi tải hợp đồng:", error);
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Lỗi tải hợp đồng:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
-  useEffect(() => {
     loadContracts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileUpload = async (e) => {
@@ -45,7 +46,7 @@ function ConstructionContracts() {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      alert("Vui lòng chỉ chọn file PDF.");
+      showToast("Vui lòng chỉ chọn file PDF.", "warning");
       return;
     }
 
@@ -78,17 +79,17 @@ function ConstructionContracts() {
         
         if (sheetRes.success) {
           // Cập nhật giao diện ngay
-          setContracts(prev => [rowData, ...prev]);
+          setContracts(prev => [rowData, ...prev]);         
+          showToast("Upload thành công!", "success");
         }
       }
     } catch (error) {
-      alert("Lỗi upload: " + error.message);
+      showToast("Lỗi upload: " + error.message, "error");
     } finally {
       setUploading(false);
       e.target.value = null; 
     }
   };
-
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
       const res = await deleteRowFromSheet("HopDong", id, APP_ID);

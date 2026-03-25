@@ -22,22 +22,23 @@ function DesignDrawings() {
   const [loading, setLoading] = useState(true);
   const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-  const loadDrawings = async () => {
-    setLoading(true);
-    try {
-      const res = await fetchTableData("BanVe", APP_ID);
-      if (res.success) {
-        setDrawings(res.data || []);
-      }
-    } catch (error) {
-      console.error("Lỗi tải bản vẽ:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const loadDrawings = async () => {
+      setLoading(true);
+      try {
+        const res = await fetchTableData("BanVe", APP_ID);
+        if (res.success) {
+          setDrawings(res.data || []);
+        }
+      } catch (error) {
+        console.error("Lỗi tải bản vẽ:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadDrawings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleFileUpload = async (e) => {
@@ -45,7 +46,7 @@ function DesignDrawings() {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      alert("Vui lòng chỉ chọn file bản vẽ định dạng PDF.");
+      showToast("Vui lòng chỉ chọn file bản vẽ định dạng PDF.", "warning");
       return;
     }
 
@@ -73,13 +74,14 @@ function DesignDrawings() {
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
-        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);
+        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
         if (sheetRes.success) {
-          setDrawings(prev => [rowData, ...prev]);
+          setDrawings(prev => [rowData, ...prev]);       
+          showToast("Upload thành công!", "success");
         }
       }
     } catch (error) {
-      alert("Lỗi upload: " + error.message);
+       showToast("Lỗi upload: " + error.message, "error");
     } finally {
       setUploading(false);
       e.target.value = null;
