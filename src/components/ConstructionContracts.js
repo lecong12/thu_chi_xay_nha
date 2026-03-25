@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye } from 'react-icons/fi';
+import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye, FiX } from 'react-icons/fi';
 import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './ConstructionContracts.css';
 
@@ -17,6 +18,7 @@ function ConstructionContracts() {
   const [activeCategory, setActiveCategory] = useState('tho');
   const [contracts, setContracts] = useState([]);
   const [uploading, setUploading] = useState(false);
+  const [viewingPdf, setViewingPdf] = useState(null);
   const [loading, setLoading] = useState(true);
   const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
@@ -167,6 +169,7 @@ function ConstructionContracts() {
               <div className="contract-actions">
                 {/* Nút Xem ngay */}
                 <button className="action-icon view" onClick={() => handleViewPdf(contract.url)} title="Xem ngay">
+                <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
                   <FiEye />
                 </button>
                 {/* 
