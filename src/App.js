@@ -111,6 +111,11 @@ function App() {
     } catch (error) { showToast(`Lỗi: ${error.message}`, "error"); } finally { setUploadingId(null); }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+  };
+
   const [filters, setFilters] = useState({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" });
 
   const filterOptions = useMemo(() => ({
@@ -193,6 +198,7 @@ function App() {
         isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
         activeTab={activeTab} onTabChange={setActiveTab} 
         onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} 
+        onLogout={handleLogout} 
         isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
         isMobile={isMobile}
       />
