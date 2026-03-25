@@ -1,53 +1,95 @@
-.stages-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  padding: 10px 0;
-}
+import React, { useState } from 'react';
+import { Camera, Check, X, Loader2 } from 'lucide-react';
 
-.stage-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
+const ProgressTracker = ({ stages = [], onUpdateStatus, onUploadImage }) => {
+  const [uploadingStage, setUploadingStage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
-.stage-name-text { font-weight: 700; color: var(--text-main); margin-left: 8px; }
-.stage-date-text { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  const handleFileChange = (e, stageId) => {
+    const file = e.target.files[0];
+    if (file) {
+      setUploadingStage(stageId);
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  };
 
-.status-select-box {
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
-  background: var(--bg-app);
-  color: var(--text-main);
-  font-weight: 600;
-}
+  const cancelUpload = () => {
+    setUploadingStage(null);
+    setPreviewImage(null);
+  };
 
-.image-upload-zone { height: 160px; position: relative; }
-.img-preview, .img-done { width: 100%; height: 160px; object-fit: cover; border-radius: 8px; }
+  return (
+    <div className="stages-grid">
+      {stages.map((stage) => (
+        <div key={stage.id} className="stage-card">
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span className="stage-name-text">{stage.name}</span>
+          </div>
+          
+          <div className="stage-date-text">
+            Dự kiến: {stage.startDate || 'Chưa xác định'}
+          </div>
 
-.upload-actions {
-  position: absolute; bottom: 8px; right: 8px; display: flex; gap: 6px;
-}
+          <select 
+            className="status-select-box"
+            value={stage.status}
+            onChange={(e) => onUpdateStatus(stage.id, e.target.value)}
+          >
+            <option value="pending">Chờ thực hiện</option>
+            <option value="in_progress">Đang thi công</option>
+            <option value="completed">Đã hoàn thành</option>
+          </select>
 
-.btn-confirm { background: #22c55e; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; display: flex; alignItems: center; gap: 4px; }
-.btn-cancel { background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+          <div className="image-upload-zone">
+            {uploadingStage === stage.id && previewImage ? (
+              <>
+                <img src={previewImage} alt="Preview" className="img-preview" />
+                <div className="upload-actions">
+                  <button className="btn-confirm" onClick={() => onUploadImage(stage.id, previewImage)}>
+                    <Check size={16} /> Xác nhận
+                  </button>
+                  <button className="btn-cancel" onClick={cancelUpload}>
+                    <X size={16} /> Hủy
+                  </button>
+                </div>
+              </>
+            ) : stage.imageUrl ? (
+              <>
+                <img src={stage.imageUrl} alt={stage.name} className="img-done" />
+                <label className="edit-image-label">
+                  Sửa ảnh
+                  <input 
+                    type="file" 
+                    hidden 
+                    accept="image/*"
+                    onChange={(e) => handleFileChange(e, stage.id)} 
+                  />
+                </label>
+              </>
+            ) : (
+              <label className="upload-placeholder-box">
+                <Camera size={24} />
+                <span>Tải ảnh thực tế</span>
+                <input 
+                  type="file" 
+                  hidden 
+                  accept="image/*"
+                  onChange={(e) => handleFileChange(e, stage.id)} 
+                />
+              </label>
+            )}
+            
+            {stage.isUploading && (
+              <div className="upload-placeholder-box" style={{ position: 'absolute', top: 0, background: 'rgba(255,255,255,0.7)' }}>
+                <Loader2 className="spin" size={24} />
+                <span>Đang tải lên...</span>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
-.upload-placeholder-box {
-  height: 100%; border: 2px dashed var(--border-color); border-radius: 8px;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--text-muted); gap: 8px;
-}
-
-.edit-image-label {
-  position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6);
-  color: white; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;
-}
-
-.spin { animation: rotation 1s infinite linear; }
-@keyframes rotation { from { transform: rotate(0deg); } to { transform: rotate(359deg); } }
+export default ProgressTracker;
