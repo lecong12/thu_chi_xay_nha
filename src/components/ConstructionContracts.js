@@ -45,6 +45,13 @@ function ConstructionContracts({ showToast }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Thêm kiểm tra cấu hình Cloudinary
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      showToast("Lỗi: Cấu hình Cloudinary bị thiếu. Vui lòng kiểm tra file .env.", "error");
+      console.error("Cloudinary config missing", { CLOUD_NAME, UPLOAD_PRESET });
+      return;
+    }
+
     if (file.type !== "application/pdf") {
       showToast("Vui lòng chỉ chọn file PDF.", "warning");
       return;
@@ -80,8 +87,13 @@ function ConstructionContracts({ showToast }) {
         if (sheetRes.success) {
           // Cập nhật giao diện ngay
           setContracts(prev => [rowData, ...prev]);         
-          showToast("Upload thành công!", "success");
+          showToast("Upload và lưu hợp đồng thành công!", "success");
+        } else {
+          // Hiển thị lỗi nếu lưu vào Sheet thất bại
+          showToast(`Lỗi lưu vào Sheet: ${sheetRes.message}`, "error");
         }
+      } else {
+        throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
     } catch (error) {
       showToast("Lỗi upload: " + error.message, "error");
