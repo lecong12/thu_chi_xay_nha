@@ -14,7 +14,7 @@ const DRAWING_CATEGORIES = [
   { id: 'noithat', label: 'Bản vẽ Nội thất' }
 ];
 
-function DesignDrawings() {
+function DesignDrawings({ showToast }) {
   const [activeCategory, setActiveCategory] = useState('kientruc');
   const [drawings, setDrawings] = useState([]);
   const [uploading, setUploading] = useState(false);

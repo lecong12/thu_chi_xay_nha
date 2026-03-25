@@ -185,7 +185,7 @@ function App() {
               <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />
             </div>
             <div style={{ marginBottom: '80px' }}>
-              <QuickNotes />
+              <QuickNotes showToast={showToast} />
             </div>
           </>
         );
@@ -194,7 +194,7 @@ function App() {
       case 'gantt_chart': return <GanttChartView stages={tienDo} />;
       case 'drawings': return <DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />;
       case 'contracts': return <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />;
-      case 'notes': return <QuickNotes />;
+      case 'notes': return <QuickNotes showToast={showToast} />;
       default: return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
     }
   };
