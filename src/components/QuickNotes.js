@@ -19,8 +19,15 @@ function QuickNotes({ showToast }) {
         // Giả định bảng tên là "GhiChu" trong AppSheet
         const res = await fetchTableData("GhiChu", APP_ID);
         if (res.success) {
-          // Sắp xếp theo ngày mới nhất
-          const sorted = (res.data || []).sort((a, b) => new Date(b.ngay) - new Date(a.ngay));
+          // Chuẩn hóa dữ liệu đầu vào: Map các tên cột Tiếng Việt/AppSheet sang tên biến code
+          const mappedNotes = (res.data || []).map(item => ({
+            id: item.id || item.ID || item.Id || item._RowNumber,
+            ngay: item.ngay || item.Ngay || item["Ngày"] || item.Date,
+            noiDung: item.noiDung || item.NoiDung || item["Nội dung"] || item["Ghi chú"],
+            _RowNumber: item._RowNumber
+          })).filter(n => n.noiDung); // Lọc bỏ dòng rỗng
+
+          const sorted = mappedNotes.sort((a, b) => new Date(b.ngay || 0) - new Date(a.ngay || 0));
           setNotes(sorted);
         }
       } catch (e) {
@@ -38,18 +45,27 @@ function QuickNotes({ showToast }) {
     
     setAdding(true);
     const now = new Date();
-    // Cấu trúc dữ liệu gửi lên Sheet
-    const noteData = {
-      id: `NOTE_${Date.now()}`, // Bắt buộc phải có ID duy nhất
-      ngay: now.toISOString().split('T')[0], // Format YYYY-MM-DD
+    const dateStr = now.toISOString().split('T')[0];
+    const noteId = `NOTE_${Date.now()}`;
+
+    // 1. Cấu trúc dữ liệu gửi lên API (Dùng tên cột Tiếng Việt để khớp với Sheet)
+    const apiPayload = {
+      "id": noteId, 
+      "Ngày": dateStr, 
+      "Nội dung": newNote.trim()
+    };
+
+    // 2. Cấu trúc dữ liệu để hiển thị ngay trên UI (Dùng tên biến code)
+    const uiNote = {
+      id: noteId,
+      ngay: now,
       noiDung: newNote.trim()
     };
 
     try {
-        const res = await addRowToSheet("GhiChu", noteData, APP_ID); // API mới sẽ map đúng cột cho GhiChu
+        const res = await addRowToSheet("GhiChu", apiPayload, APP_ID);
         if (res.success) {
-            // Thêm ghi chú mới vào đầu danh sách trên UI
-            setNotes(prevNotes => [{ ...noteData, ngay: now }, ...prevNotes]);
+            setNotes(prevNotes => [uiNote, ...prevNotes]);
             setNewNote("");
             if (showToast) showToast("Đã lưu ghi chú", "success");
         } else {
@@ -65,7 +81,8 @@ function QuickNotes({ showToast }) {
   const deleteNote = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa ghi chú này?")) {
         try {
-            const res = await deleteRowFromSheet("GhiChu", id, null, APP_ID);
+            // Sửa lỗi: Loại bỏ tham số null thừa, đúng signature là (tableName, rowId, appId)
+            const res = await deleteRowFromSheet("GhiChu", id, APP_ID);
             if (res.success) {
                 setNotes(notes.filter(n => n.id !== id));
                 if (showToast) showToast("Đã xóa", "success");
