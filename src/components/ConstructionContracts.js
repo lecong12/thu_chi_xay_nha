@@ -67,10 +67,10 @@ function ConstructionContracts() {
         // Chuẩn bị dữ liệu ghi xuống Google Sheets (AppSheet)
         const rowData = {
             id: `CT_${Date.now()}`, // Key của dòng
-            Tên: file.name,
+            name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
-            Ngày: new Date().toLocaleDateString('vi-VN'),
-            "Kích thước": (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            date: new Date().toLocaleDateString('vi-VN'),
+            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
