@@ -46,7 +46,7 @@ function QuickNotes({ showToast }) {
     };
 
     try {
-        const res = await addRowToSheet("GhiChu", noteData, APP_ID);
+        const res = await addRowToSheet("GhiChu", noteData, APP_ID); // API mới sẽ map đúng cột cho GhiChu
         if (res.success) {
             // Thêm ghi chú mới vào đầu danh sách trên UI
             setNotes(prevNotes => [{ ...noteData, ngay: now }, ...prevNotes]);
@@ -65,7 +65,7 @@ function QuickNotes({ showToast }) {
   const deleteNote = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa ghi chú này?")) {
         try {
-            const res = await deleteRowFromSheet("GhiChu", id, APP_ID);
+            const res = await deleteRowFromSheet("GhiChu", id, null, APP_ID);
             if (res.success) {
                 setNotes(notes.filter(n => n.id !== id));
                 if (showToast) showToast("Đã xóa", "success");

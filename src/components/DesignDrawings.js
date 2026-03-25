@@ -85,7 +85,7 @@ function DesignDrawings({ showToast }) {
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
-        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
+        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID); // API mới map rowData trực tiếp
         if (sheetRes.success) {
           setDrawings(prev => [rowData, ...prev]);       
           showToast("Upload và lưu bản vẽ thành công!", "success");
@@ -105,7 +105,7 @@ function DesignDrawings({ showToast }) {
 
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
-      const res = await deleteRowFromSheet("BanVe", id, APP_ID);
+      const res = await deleteRowFromSheet("BanVe", id, null, APP_ID);
       if (res.success) {
         setDrawings(drawings.filter(d => d.id !== id && d._RowNumber !== id));
       }
@@ -173,15 +173,13 @@ function DesignDrawings({ showToast }) {
             </div>
             <div className="pdf-body">
               {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) ? (
-                <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
-                  <div className="pdf-fallback">
-                    <FiFileText size={50} color="#94a3b8" />
-                    <p>Không thể hiển thị PDF trực tiếp trong khung này.</p>
-                    <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
-                      Mở tệp trong tab mới <FiDownload />
-                    </a>
-                  </div>
-                </object>
+                <iframe 
+                  src={viewingPdf.url} 
+                  title="PDF Viewer"
+                  width="100%" 
+                  height="100%"
+                  style={{ border: 'none' }}
+                />
               ) : (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <img src={viewingPdf.url} alt={viewingPdf.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />

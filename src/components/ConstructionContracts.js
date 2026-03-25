@@ -23,7 +23,7 @@ function ConstructionContracts() {
 
   const loadContracts = async () => {
     setLoading(true);
-    const res = await fetchTableData("HopDong", APP_ID);
+    const res = await fetchTableData("HopDong", APP_ID); // Đã đúng, API mới sẽ xử lý
     if (res.success) {
       setContracts(res.data);
     } else {
@@ -81,7 +81,7 @@ function ConstructionContracts() {
             category: activeCategory
         };
         
-        await addRowToSheet("HopDong", rowData, APP_ID);
+        await addRowToSheet("HopDong", rowData, APP_ID); // API mới hỗ trợ dynamic mapping
         // Cập nhật giao diện với dữ liệu đã được xử lý đúng
         setContracts(prev => [{
           ...rowData,
@@ -104,7 +104,7 @@ function ConstructionContracts() {
 
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
-      await deleteRowFromSheet("HopDong", id, APP_ID);
+      await deleteRowFromSheet("HopDong", id, null, APP_ID);
       setContracts(contracts.filter(c => c.id !== id));
     }
   };
@@ -182,21 +182,14 @@ function ConstructionContracts() {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              {/* Dùng object để nhúng PDF, có nút tải về nếu lỗi */}
-              <object 
-                data={viewingPdf.url} 
-                type="application/pdf" 
+              {/* Sử dụng iframe để xem trực tiếp, ổn định hơn object */}
+              <iframe 
+                src={viewingPdf.url} 
+                title="PDF Viewer"
                 width="100%" 
                 height="100%"
-              >
-                <div className="pdf-fallback">
-                   <FiFileText size={50} color="#94a3b8" />
-                   <p>Không thể hiển thị PDF trực tiếp trong khung này.</p>
-                   <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
-                     Mở tệp trong tab mới <FiDownload />
-                   </a>
-                </div>
-              </object>
+                style={{ border: 'none' }}
+              />
             </div>
           </div>
         </div>
