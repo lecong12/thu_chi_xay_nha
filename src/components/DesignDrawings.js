@@ -97,15 +97,6 @@ function DesignDrawings() {
 
   const currentList = drawings.filter(d => d.category === activeCategory);
 
-  // Hàm xử lý URL quan trọng: Thêm fl_inline để ép trình duyệt hiển thị PDF thay vì tải về
-  const getViewableUrl = (url) => {
-    if (!url) return "";
-    if (url.includes("/raw/upload/")) {
-      return url.replace("/raw/upload/", "/raw/upload/fl_inline/");
-    }
-    return url;
-  };
-
   return (
     <div className="drawings-container">
       <h2 className="page-title"><FiMap /> Hồ sơ & Bản vẽ Thiết kế</h2>
@@ -162,7 +153,7 @@ function DesignDrawings() {
             </div>
             <div className="pdf-body">
               <object 
-                data={getViewableUrl(viewingPdf.url)} 
+                data={viewingPdf.url} 
                 type="application/pdf" 
                 width="100%" 
                 height="100%"
