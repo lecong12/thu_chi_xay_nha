@@ -196,8 +196,7 @@ function App() {
     <div className={`app ${isDarkMode ? 'dark-theme' : ''}`}>
       <Sidebar 
         isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
-        activeTab={activeTab} onTabChange={setActiveTab} 
-        onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} 
+        activeTab={activeTab} onTabChange={setActiveTab}
         onLogout={handleLogout} 
         isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
         isMobile={isMobile}
@@ -206,7 +205,7 @@ function App() {
         className="app-main-wrapper" 
         style={{ 
           marginLeft: isMobile ? '0' : (isSidebarOpen ? '280px' : '80px'),
-          transition: 'margin-left 0.3s ease', width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column'
+          transition: 'margin-left 0.3s ease', minHeight: '100vh', display: 'flex', flexDirection: 'column'
         }}
       >
         <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onLogout={handleLogout} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
