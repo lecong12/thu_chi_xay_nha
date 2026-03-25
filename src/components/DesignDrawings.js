@@ -24,15 +24,12 @@ function DesignDrawings({ showToast }) {
     loadDrawings();
   }, [APP_ID]);
 
-  // HÀM MỞ FILE: ÉP TRÌNH DUYỆT THOÁT KHỎI DOMAIN HIỆN TẠI
-  const handleJumpToLink = (url) => {
-    if (!url) return;
-    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
-    
-    // Mở tab mới và điều hướng trực tiếp bằng lệnh của trình duyệt (Browser API)
-    const newWin = window.open();
-    newWin.opener = null;
-    newWin.location.assign(cleanUrl);
+  // LOGIC MỞ FILE: Ép trình duyệt dùng URL tuyệt đối, bỏ qua domain trang web
+  const handleOpenPdf = (rawUrl) => {
+    if (!rawUrl) return;
+    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
+    // Mở Tab mới hoàn toàn độc lập
+    window.open(cleanUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleFileUpload = async (e) => {
@@ -79,7 +76,7 @@ function DesignDrawings({ showToast }) {
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
-          <span>Tải bản vẽ PDF</span>
+          <span>Tải lên bản vẽ PDF</span>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} hidden />
         </label>
       </div>
@@ -92,8 +89,9 @@ function DesignDrawings({ showToast }) {
               <div className="drawing-meta">{d.date} • {d.size}</div>
             </div>
             <div className="drawing-actions">
-              <button className="icon-btn view" onClick={() => handleJumpToLink(d.url)}><FiEye /></button>
-              <button className="icon-btn download" onClick={() => handleJumpToLink(d.url)}><FiDownload /></button>
+              {/* DÙNG NÚT BẤM ĐỂ MỞ TAB MỚI SẠCH SẼ */}
+              <button className="icon-btn view" onClick={() => handleOpenPdf(d.url)}><FiEye /></button>
+              <button className="icon-btn download" onClick={() => handleOpenPdf(d.url)}><FiDownload /></button>
               <button className="icon-btn delete" onClick={() => {}}><FiTrash2 /></button>
             </div>
           </div>
