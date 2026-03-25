@@ -45,30 +45,19 @@ function DesignDrawings({ showToast }) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Thêm kiểm tra cấu hình Cloudinary
-    if (!CLOUD_NAME || !UPLOAD_PRESET) {
-      showToast("Lỗi: Cấu hình Cloudinary bị thiếu. Vui lòng kiểm tra file .env.", "error");
-      console.error("Cloudinary config missing", { CLOUD_NAME, UPLOAD_PRESET });
-      return;
-    }
-
-    const isPdf = file.type === "application/pdf";
-    const isImage = file.type.startsWith("image/");
-
-    if (!isPdf && !isImage) {
-      showToast("Vui lòng chỉ chọn file ảnh hoặc PDF.", "warning");
+    if (file.type !== "application/pdf") {
+      showToast("Vui lòng chỉ chọn file bản vẽ định dạng PDF.", "warning");
       return;
     }
 
     try {
       setUploading(true);
-      const resourceType = isPdf ? "raw" : "image";
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", resourceType);
+      data.append("resource_type", "raw"); // Đảm bảo PDF vào kho raw
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
         method: "POST",
         body: data
       });
@@ -85,15 +74,11 @@ function DesignDrawings({ showToast }) {
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
-        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID); // API mới map rowData trực tiếp
+        const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
         if (sheetRes.success) {
-          setDrawings(prev => [rowData, ...prev]);
-          showToast("Upload và lưu bản vẽ thành công!", "success");
-        } else {
-          showToast(`Lỗi lưu vào Sheet: ${sheetRes.message}`, "error");
+          setDrawings(prev => [rowData, ...prev]);       
+          showToast("Upload thành công!", "success");
         }
-      } else {
-        throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
     } catch (error) {
        showToast("Lỗi upload: " + error.message, "error");
@@ -134,7 +119,7 @@ function DesignDrawings({ showToast }) {
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
           <span>{uploading ? "Đang xử lý..." : `Tải lên cho ${DRAWING_CATEGORIES.find(c => c.id === activeCategory)?.label}`}</span>
-          <input type="file" accept="application/pdf,image/*" onChange={handleFileUpload} disabled={uploading} hidden />
+          <input type="file" accept="application/pdf" onChange={handleFileUpload} disabled={uploading} hidden />
         </label>
       </div>
 
@@ -145,10 +130,7 @@ function DesignDrawings({ showToast }) {
         {currentList.length === 0 && <div className="no-data-text">Chưa có bản vẽ nào trong mục này.</div>}
         {currentList.map(drawing => (
           <div key={drawing.id || drawing._RowNumber} className="drawing-card">
-            <div className="drawing-icon">
-              {(drawing.url && drawing.url.toLowerCase().endsWith('.pdf')) || 
-               (drawing.name && drawing.name.toLowerCase().endsWith('.pdf')) ? <FiFileText size={32} /> : <FiMap size={32} />}
-            </div>
+            <div className="drawing-icon"><FiMap size={32} /></div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
               <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
@@ -163,7 +145,7 @@ function DesignDrawings({ showToast }) {
       </div>
       )}
 
-      {/* Modal Trình xem PDF / Ảnh */}
+      {/* Modal Trình xem PDF */}
       {viewingPdf && (
         <div className="pdf-viewer-overlay" onClick={() => setViewingPdf(null)}>
           <div className="pdf-viewer-container" onClick={e => e.stopPropagation()}>
@@ -172,21 +154,25 @@ function DesignDrawings({ showToast }) {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) ? (
-                <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
-                  <div className="pdf-fallback" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#64748b', padding: '20px', textAlign: 'center'}}>
-                    <FiFileText size={50} />
-                    <p style={{marginTop: '15px'}}>Không thể hiển thị PDF trong khung này.</p>
-                    <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="fallback-download-btn" style={{marginTop: '10px', textDecoration: 'none', color: '#3b82f6', fontWeight: '500'}}>
-                      Mở trong tab mới <FiDownload style={{verticalAlign: 'middle'}} />
-                    </a>
-                  </div>
-                </object>
-              ) : (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                  <img src={viewingPdf.url} alt={viewingPdf.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+              <object 
+                data={viewingPdf.url} 
+                type="application/pdf" 
+                width="100%" 
+                height="100%"
+              >
+                <div className="pdf-fallback-content">
+                  <FiFileText size={48} color="#cbd5e1" />
+                  <p>Không thể hiển thị bản vẽ trực tiếp.</p>
+                  <a 
+                    href={viewingPdf.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="btn-open-fallback"
+                  >
+                    Mở bản vẽ trong tab mới <FiDownload />
+                  </a>
                 </div>
-              )}
+              </object>
             </div>
           </div>
         </div>
