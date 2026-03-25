@@ -81,13 +81,13 @@ function DesignDrawings({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
-            size: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
+            size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
         const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID); // API mới map rowData trực tiếp
         if (sheetRes.success) {
-          setDrawings(prev => [rowData, ...prev]);       
+          setDrawings(prev => [rowData, ...prev]);
           showToast("Upload và lưu bản vẽ thành công!", "success");
         } else {
           showToast(`Lỗi lưu vào Sheet: ${sheetRes.message}`, "error");
@@ -105,7 +105,7 @@ function DesignDrawings({ showToast }) {
 
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
-      const res = await deleteRowFromSheet("BanVe", id, null, APP_ID);
+      const res = await deleteRowFromSheet("BanVe", id, APP_ID);
       if (res.success) {
         setDrawings(drawings.filter(d => d.id !== id && d._RowNumber !== id));
       }
@@ -151,7 +151,7 @@ function DesignDrawings({ showToast }) {
             </div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
-              <div className="drawing-meta">{drawing.date} • {drawing.size} MB</div>
+              <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
             </div>
             <div className="drawing-actions">
               <button className="icon-btn view" onClick={(e) => { e.stopPropagation(); setViewingPdf(drawing); }} title="Xem ngay"><FiEye /></button>
