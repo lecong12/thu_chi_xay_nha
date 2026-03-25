@@ -71,7 +71,7 @@ function ConstructionContracts({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
@@ -143,7 +143,7 @@ function ConstructionContracts({ showToast }) {
                 <span className="contract-meta">{contract.date} &bull; {contract.size}</span>
               </div>
               <div className="contract-actions">
-                <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
+                <button className="action-icon view" onClick={(e) => { e.stopPropagation(); setViewingPdf(contract); }} title="Xem ngay">
                   <FiEye />
                 </button>
                 <a href={contract.url} target="_blank" rel="noreferrer" className="action-icon download" title="Tải về">

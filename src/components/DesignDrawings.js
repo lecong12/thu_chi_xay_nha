@@ -70,7 +70,7 @@ function DesignDrawings({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
@@ -136,7 +136,7 @@ function DesignDrawings({ showToast }) {
               <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
             </div>
             <div className="drawing-actions">
-              <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
+              <button className="icon-btn view" onClick={(e) => { e.stopPropagation(); setViewingPdf(drawing); }} title="Xem ngay"><FiEye /></button>
               <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
               <button className="icon-btn delete" onClick={() => handleDelete(drawing.id || drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
             </div>
