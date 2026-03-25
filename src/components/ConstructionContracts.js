@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye } from 'react-icons/fi';
-import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
+import { FiUpload, FiTrash2, FiDownload, FiLoader, FiBriefcase, FiEye } from 'react-icons/fi';
+import { fetchTableData, addRowToSheet } from '../utils/sheetsAPI';
 import './ConstructionContracts.css';
 
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '').trim();
@@ -24,51 +24,51 @@ function ConstructionContracts({ showToast }) {
     loadContracts();
   }, [APP_ID]);
 
-  // --- HÀM SỬA DỨT ĐIỂM LỖI LINK ---
-  const handleViewFile = (rawData) => {
-    if (!rawData) {
-      showToast("Không tìm thấy đường dẫn file.", "error");
-      return;
-    }
-
+  // HÀM LỌC LINK SẠCH (DÙNG CHUNG)
+  const getCleanUrl = (rawData) => {
+    if (!rawData) return "";
     let finalUrl = "";
     const strData = rawData.toString();
-
-    // 1. Nếu dính định dạng Object của AppSheet: {Url: https://..., LinkText: ...}
-    if (strData.includes("{Url:") || strData.includes("Url:")) {
-      // Dùng Regex lấy nội dung sau Url: cho đến dấu phẩy hoặc dấu đóng ngoặc
+    if (strData.includes("Url:")) {
       const match = strData.match(/Url:\s*([^,}\s"']+)/);
-      if (match && match[1]) {
-        finalUrl = match[1];
-      }
-    } 
-    // 2. Nếu là chuỗi link bình thường
-    else {
+      finalUrl = match ? match[1] : "";
+    } else {
       finalUrl = strData.replace(/['"{}]/g, "").trim();
     }
-
-    if (finalUrl) {
-      // Đảm bảo có giao thức https:// (tránh bị chèn domain Vercel)
-      if (!finalUrl.startsWith('http')) {
-        finalUrl = 'https://' + finalUrl.replace(/^\/+/, '');
-      }
-
-      // Mở Tab mới hoàn toàn độc lập
-      const newWindow = window.open(finalUrl, '_blank', 'noopener,noreferrer');
-      if (newWindow) {
-        newWindow.focus();
-      } else {
-        showToast("Trình duyệt đã chặn cửa sổ bật lên. Vui lòng cho phép để xem file.", "warning");
-      }
-    } else {
-      showToast("Định dạng link không hợp lệ.", "error");
+    if (finalUrl && !finalUrl.startsWith('http')) {
+      finalUrl = 'https://' + finalUrl.replace(/^\/+/, '');
     }
+    return finalUrl;
+  };
+
+  // 1. HÀM XEM FILE (Mở Tab mới)
+  const handleViewFile = (rawData) => {
+    const url = getCleanUrl(rawData);
+    if (!url) return showToast("Không có link file", "error");
+    const win = window.open(url, '_blank');
+    if (win) win.focus();
+    else showToast("Vui lòng cho phép trình duyệt mở Pop-up", "warning");
+  };
+
+  // 2. HÀM TẢI FILE (Ép trình duyệt tải về)
+  const handleDownloadFile = (rawData) => {
+    let url = getCleanUrl(rawData);
+    if (!url) return showToast("Không có link tải", "error");
+    if (url.includes("cloudinary.com")) {
+      url = url.replace("/upload/", "/upload/fl_attachment/");
+    }
+    const link = document.body.appendChild(document.createElement('a'));
+    link.href = url;
+    link.download = "";
+    link.target = "_blank";
+    link.click();
+    link.remove();
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || file.type !== "application/pdf") {
-      showToast("Vui lòng chọn file PDF.", "warning");
+      showToast("Chỉ chấp nhận file PDF.", "warning");
       return;
     }
     try {
@@ -82,7 +82,7 @@ function ConstructionContracts({ showToast }) {
         const rowData = {
           id: `CT_${Date.now()}`,
           name: file.name,
-          url: fileData.secure_url, // Cloudinary trả về link sạch
+          url: fileData.secure_url,
           date: new Date().toLocaleDateString('vi-VN'),
           size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
           category: activeCategory
@@ -96,16 +96,9 @@ function ConstructionContracts({ showToast }) {
     } catch (error) { showToast("Lỗi: " + error.message, "error"); } finally { setUploading(false); }
   };
 
-  const handleDelete = async (contract) => {
-    if (!window.confirm(`Xóa hợp đồng: ${contract.name}?`)) return;
-    // logic deleteRowFromSheet...
-  };
-
   return (
     <div className="contracts-container">
       <h2 className="page-title"><FiBriefcase /> Quản lý Hợp đồng</h2>
-      
-      {/* Tabs Phân loại */}
       <div className="category-tabs">
         {['tho', 'hoanthien', 'noithat'].map(id => (
           <button key={id} className={`tab-btn ${activeCategory === id ? 'active' : ''}`} onClick={() => setActiveCategory(id)}>
@@ -113,8 +106,6 @@ function ConstructionContracts({ showToast }) {
           </button>
         ))}
       </div>
-
-      {/* Box Upload */}
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
@@ -122,36 +113,23 @@ function ConstructionContracts({ showToast }) {
           <input type="file" accept="application/pdf" onChange={handleFileUpload} hidden disabled={uploading} />
         </label>
       </div>
-
-      {/* Danh sách Hợp đồng */}
       <div className="contracts-list">
-        {loading ? (
-          <div className="loading-state"><FiLoader className="spin" /> Đang tải...</div>
-        ) : (
+        {loading ? <div className="loading-state">Đang tải...</div> : 
           contracts.filter(c => c.category === activeCategory).map(c => (
-            <div key={c.id || c._RowNumber} className="contract-item">
-              <div className="contract-info">
-                <span className="contract-name">{c.name}</span>
-                <span className="contract-meta">{c.date} • {c.size}</span>
-              </div>
-              <div className="contract-actions">
-                {/* Nút Xem & Tải về đều dùng hàm lọc link mới */}
-                <button className="action-icon view" onClick={() => handleViewFile(c.url)} title="Xem trực tuyến">
-                  <FiEye />
-                </button>
-                <button className="action-icon download" onClick={() => handleViewFile(c.url)} title="Tải file">
-                  <FiDownload />
-                </button>
-                <button className="action-icon delete" onClick={() => handleDelete(c)} title="Xóa">
-                  <FiTrash2 />
-                </button>
-              </div>
+          <div key={c.id || c._RowNumber} className="contract-item">
+            <div className="contract-info">
+              <span className="contract-name">{c.name}</span>
+              <span className="contract-meta">{c.date} • {c.size}</span>
             </div>
-          ))
-        )}
+            <div className="contract-actions">
+              <button className="action-icon view" onClick={() => handleViewFile(c.url)} title="Xem"><FiEye /></button>
+              <button className="action-icon download" onClick={() => handleDownloadFile(c.url)} title="Tải về"><FiDownload /></button>
+              <button className="action-icon delete"><FiTrash2 /></button>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
-
 export default ConstructionContracts;
