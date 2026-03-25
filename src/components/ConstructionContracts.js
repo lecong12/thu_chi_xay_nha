@@ -71,26 +71,22 @@ function ConstructionContracts() {
       
       const fileData = await res.json();
       if (fileData.secure_url) {
-        const newContract = {
-          id: Date.now(),
-          name: file.name,
-          url: fileData.secure_url,
-          date: new Date().toLocaleDateString('vi-VN'),
-          size: (file.size / 1024 / 1024).toFixed(2) + ' MB'
-        };
-
         // Dữ liệu lưu vào Google Sheet
         const rowData = {
-            id: newContract.id.toString(),
-            name: newContract.name,
-            url: newContract.url,
-            date: newContract.date,
-            size: newContract.size,
+            id: `CT_${Date.now()}`,
+            name: file.name,
+            url: fileData.secure_url,
+            date: new Date().toLocaleDateString('vi-VN'),
+            size: parseFloat((file.size / (1024 * 1024)).toFixed(2)), // Gửi dạng số
             category: activeCategory
         };
         
         await addRowToSheet("HopDong", rowData, APP_ID);
-        setContracts([newContract, ...contracts]); // Optimistic update
+        // Cập nhật giao diện với dữ liệu đã được xử lý đúng
+        setContracts(prev => [{
+          ...rowData,
+          size: `${rowData.size} MB` // Thêm 'MB' để hiển thị
+        }, ...prev]); 
       } else {
         throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
