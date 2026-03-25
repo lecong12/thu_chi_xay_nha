@@ -45,6 +45,13 @@ function ConstructionContracts({ showToast }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Thêm kiểm tra cấu hình Cloudinary
+    if (!CLOUD_NAME || !UPLOAD_PRESET) {
+      showToast("Lỗi: Cấu hình Cloudinary bị thiếu. Vui lòng kiểm tra file .env.", "error");
+      console.error("Cloudinary config missing", { CLOUD_NAME, UPLOAD_PRESET });
+      return;
+    }
+
     if (file.type !== "application/pdf") {
       showToast("Vui lòng chỉ chọn file PDF.", "warning");
       return;
@@ -71,7 +78,11 @@ function ConstructionContracts({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
+<<<<<<< HEAD
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+=======
+            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
+>>>>>>> 63da28cd850555761000a6d85315f5843a2180e5
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
@@ -80,8 +91,13 @@ function ConstructionContracts({ showToast }) {
         if (sheetRes.success) {
           // Cập nhật giao diện ngay
           setContracts(prev => [rowData, ...prev]);         
-          showToast("Upload thành công!", "success");
+          showToast("Upload và lưu hợp đồng thành công!", "success");
+        } else {
+          // Hiển thị lỗi nếu lưu vào Sheet thất bại
+          showToast(`Lỗi lưu vào Sheet: ${sheetRes.message}`, "error");
         }
+      } else {
+        throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
     } catch (error) {
       showToast("Lỗi upload: " + error.message, "error");
@@ -140,7 +156,7 @@ function ConstructionContracts({ showToast }) {
               <div className="contract-icon"><FiFileText size={24} /></div>
               <div className="contract-info">
                 <span className="contract-name">{contract.name}</span>
-                <span className="contract-meta">{contract.date} &bull; {contract.size}</span>
+                <span className="contract-meta">{contract.date} &bull; {contract.size} MB</span>
               </div>
               <div className="contract-actions">
                 <button className="action-icon view" onClick={(e) => { e.stopPropagation(); setViewingPdf(contract); }} title="Xem ngay">
