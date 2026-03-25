@@ -24,14 +24,13 @@ function ConstructionContracts({ showToast }) {
     loadContracts();
   }, [APP_ID]);
 
-  // LOGIC MỞ FILE: Loại bỏ hoàn toàn nhúng (embed), mở trực tiếp link sạch
-  const handleOpenPdf = (rawUrl) => {
-    if (!rawUrl) return;
-    // Làm sạch link tuyệt đối
-    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
-    // Mở tab mới độc lập, không liên quan đến domain hiện tại
-    const newWindow = window.open(cleanUrl, '_blank', 'noopener,noreferrer');
-    if (newWindow) newWindow.focus();
+  // HÀM MỞ FILE: Ép trình duyệt nhận link tuyệt đối từ Sheets
+  const handleViewFile = (url) => {
+    if (!url) return;
+    // Làm sạch chuỗi để đảm bảo trình duyệt nhận diện đúng giao thức https
+    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
+    // Mở Tab mới hoàn toàn độc lập với domain của App
+    window.open(cleanUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleFileUpload = async (e) => {
@@ -65,27 +64,20 @@ function ConstructionContracts({ showToast }) {
     } catch (error) { showToast("Lỗi: " + error.message, "error"); } finally { setUploading(false); }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Xóa hợp đồng này?")) {
-      const res = await deleteRowFromSheet("HopDong", id, APP_ID);
-      if (res.success) setContracts(contracts.filter(c => (c.id || c._RowNumber) !== id));
-    }
-  };
-
   return (
     <div className="contracts-container">
       <h2 className="page-title"><FiBriefcase /> Quản lý Hợp đồng</h2>
       <div className="category-tabs">
         {['tho', 'hoanthien', 'noithat'].map(id => (
           <button key={id} className={`tab-btn ${activeCategory === id ? 'active' : ''}`} onClick={() => setActiveCategory(id)}>
-            {id === 'tho' ? 'Hợp đồng Thô' : id === 'hoanthien' ? 'Hoàn thiện' : 'Nội thất'}
+            {id === 'tho' ? 'Xây lắp thô' : id === 'hoanthien' ? 'Hoàn thiện' : 'Nội thất'}
           </button>
         ))}
       </div>
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
-          <span>Tải PDF lên Cloudinary</span>
+          <span>Tải PDF lên</span>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} hidden />
         </label>
       </div>
@@ -97,10 +89,10 @@ function ConstructionContracts({ showToast }) {
               <span className="contract-meta">{c.date} • {c.size}</span>
             </div>
             <div className="contract-actions">
-              {/* SỬ DỤNG onClick ĐỂ GỌI HÀM MỞ LINK SẠCH */}
-              <button className="action-icon view" onClick={() => handleOpenPdf(c.url)} title="Xem PDF"><FiEye /></button>
-              <button className="action-icon download" onClick={() => handleOpenPdf(c.url)} title="Tải về"><FiDownload /></button>
-              <button className="action-icon delete" onClick={() => handleDelete(c.id || c._RowNumber)}><FiTrash2 /></button>
+              {/* SỬ DỤNG onClick VÀ GỌI HÀM window.open ĐỂ MỞ LINK SẠCH */}
+              <button className="action-icon view" onClick={() => handleViewFile(c.url)} title="Xem"><FiEye /></button>
+              <button className="action-icon download" onClick={() => handleViewFile(c.url)} title="Tải về"><FiDownload /></button>
+              <button className="action-icon delete" onClick={() => {}}><FiTrash2 /></button>
             </div>
           </div>
         ))}
