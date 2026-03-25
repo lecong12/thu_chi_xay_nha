@@ -69,8 +69,7 @@ function DesignDrawings({ showToast }) {
             id: `BV_${Date.now()}`, // Key của dòng
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
-            date: new Date().toLocaleDateString('vi-VN'),
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            data: (file.size / 1024 / 1024).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
@@ -133,8 +132,7 @@ function DesignDrawings({ showToast }) {
             <div className="drawing-icon"><FiMap size={32} /></div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
-              <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
-            </div>
+              <div className="drawing-meta">{drawing.data} • {drawing.size}
             <div className="drawing-actions">
               <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
               <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
