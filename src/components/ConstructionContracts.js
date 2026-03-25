@@ -121,7 +121,7 @@ function ConstructionContracts({ showToast }) {
 
       <div className="contracts-content">
         <div className="upload-box">
-          <label className={`upload-btn ${uploading ? 'disabled' : ''}`>
+          <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
             {uploading ? <FiLoader className="spin" /> : <FiUpload />}
             <span>{uploading ? "Đang xử lý..." : `Tải PDF cho ${CATEGORIES.find(c => c.id === activeCategory)?.label}`}</span>
             <input type="file" accept="application/pdf" onChange={handleFileUpload} disabled={uploading} hidden />
