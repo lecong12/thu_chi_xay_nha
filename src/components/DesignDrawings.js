@@ -77,21 +77,12 @@ function DesignDrawings({ showToast }) {
       
       if (fileData.secure_url) {
         const rowData = {
-<<<<<<< HEAD
             id: `BV_${Date.now()}`, // Key của dòng
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
-=======
-            id: `BV_${Date.now()}`, // Tự tạo ID
-            name: file.name, // Lấy từ file input
-            url: fileData.secure_url, // Lấy từ Cloudinary
-            date: new Date().toLocaleDateString('vi-VN'), // Lấy ngày hiện tại
-            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
-            category: activeCategory // Lấy từ state
->>>>>>> 63da28cd850555761000a6d85315f5843a2180e5
         };
         
         const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
