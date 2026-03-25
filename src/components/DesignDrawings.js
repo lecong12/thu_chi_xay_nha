@@ -146,7 +146,8 @@ function DesignDrawings({ showToast }) {
         {currentList.map(drawing => (
           <div key={drawing.id || drawing._RowNumber} className="drawing-card">
             <div className="drawing-icon">
-              {drawing.url && drawing.url.toLowerCase().endsWith('.pdf') ? <FiFileText size={32} /> : <FiMap size={32} />}
+              {(drawing.url && drawing.url.toLowerCase().endsWith('.pdf')) || 
+               (drawing.name && drawing.name.toLowerCase().endsWith('.pdf')) ? <FiFileText size={32} /> : <FiMap size={32} />}
             </div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
@@ -171,7 +172,8 @@ function DesignDrawings({ showToast }) {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              {viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf') ? (
+              {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) || 
+               (viewingPdf.name && viewingPdf.name.toLowerCase().endsWith('.pdf')) ? (
                 <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
                   <div className="pdf-fallback">
                     <p>Không thể hiển thị PDF.</p>
