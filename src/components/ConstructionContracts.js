@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye } from 'react-icons/fi';
 import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye, FiX } from 'react-icons/fi';
 import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './ConstructionContracts.css';
