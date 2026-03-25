@@ -143,6 +143,38 @@ function App() {
           <DataTable data={filteredData} onEdit={setEditingItem} onDelete={setItemToDelete} />
         </>
       );
+      case 'all':
+        return (
+          <>
+            <div style={{ marginBottom: '20px' }}>
+              <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+                <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={handleAddNew} />
+                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={setItemToDelete} />
+              </div>
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} onUploadFile={(id, f) => handleUniversalUpload(id, "TienDo", "Ảnh nghiệm thu", f)} uploadingId={uploadingId} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <GanttChartView stages={tienDo} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <DesignDrawings onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />
+            </div>
+            <div style={{ marginBottom: '20px' }}>
+              <ConstructionContracts onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />
+            </div>
+            <div style={{ marginBottom: '80px' }}>
+              <QuickNotes />
+            </div>
+          </>
+        );
       case 'budget': return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
       case 'progress_tracker': return <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} onUploadFile={(id, f) => handleUniversalUpload(id, "TienDo", "Ảnh nghiệm thu", f)} uploadingId={uploadingId} />;
       case 'gantt_chart': return <GanttChartView stages={tienDo} />;
@@ -162,6 +194,7 @@ function App() {
         activeTab={activeTab} onTabChange={setActiveTab} 
         onLogout={() => { localStorage.removeItem("isLoggedIn"); setIsLoggedIn(false); }} 
         isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
+        isMobile={isMobile}
       />
       <div 
         className="app-main-wrapper" 
