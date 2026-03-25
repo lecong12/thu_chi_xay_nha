@@ -24,11 +24,10 @@ function DesignDrawings({ showToast }) {
     loadDrawings();
   }, [APP_ID]);
 
-  // LOGIC MỞ FILE: Ép trình duyệt dùng URL tuyệt đối, bỏ qua domain trang web
-  const handleOpenPdf = (rawUrl) => {
-    if (!rawUrl) return;
-    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
-    // Mở Tab mới hoàn toàn độc lập
+  // HÀM MỞ FILE: Dùng Browser API để thoát hoàn toàn khỏi domain website
+  const handleViewFile = (url) => {
+    if (!url) return;
+    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
     window.open(cleanUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -76,7 +75,7 @@ function DesignDrawings({ showToast }) {
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
-          <span>Tải lên bản vẽ PDF</span>
+          <span>Tải lên bản vẽ</span>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} hidden />
         </label>
       </div>
@@ -89,9 +88,8 @@ function DesignDrawings({ showToast }) {
               <div className="drawing-meta">{d.date} • {d.size}</div>
             </div>
             <div className="drawing-actions">
-              {/* DÙNG NÚT BẤM ĐỂ MỞ TAB MỚI SẠCH SẼ */}
-              <button className="icon-btn view" onClick={() => handleOpenPdf(d.url)}><FiEye /></button>
-              <button className="icon-btn download" onClick={() => handleOpenPdf(d.url)}><FiDownload /></button>
+              <button className="icon-btn view" onClick={() => handleViewFile(d.url)}><FiEye /></button>
+              <button className="icon-btn download" onClick={() => handleViewFile(d.url)}><FiDownload /></button>
               <button className="icon-btn delete" onClick={() => {}}><FiTrash2 /></button>
             </div>
           </div>
