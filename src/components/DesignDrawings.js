@@ -24,21 +24,21 @@ function DesignDrawings({ showToast }) {
     loadDrawings();
   }, [APP_ID]);
 
-  // HÀM MỞ FILE SẠCH: Đảm bảo không dính domain app
-  const handleViewPdf = (rawUrl) => {
-    if (!rawUrl) return;
-    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
-    if (cleanUrl.startsWith('http')) {
-      window.open(cleanUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      showToast("Link không hợp lệ", "error");
-    }
+  // HÀM MỞ FILE: ÉP TRÌNH DUYỆT THOÁT KHỎI DOMAIN HIỆN TẠI
+  const handleJumpToLink = (url) => {
+    if (!url) return;
+    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
+    
+    // Mở tab mới và điều hướng trực tiếp bằng lệnh của trình duyệt (Browser API)
+    const newWin = window.open();
+    newWin.opener = null;
+    newWin.location.assign(cleanUrl);
   };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file || file.type !== "application/pdf") {
-      showToast("Chỉ chấp nhận file PDF.", "warning");
+      showToast("Chỉ PDF.", "warning");
       return;
     }
     try {
@@ -60,13 +60,11 @@ function DesignDrawings({ showToast }) {
         const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);
         if (sheetRes.success) {
           setDrawings(prev => [rowData, ...prev]);
-          showToast("Đã tải lên bản vẽ!", "success");
+          showToast("Đã tải lên!", "success");
         }
       }
     } catch (error) { showToast("Lỗi: " + error.message, "error"); } finally { setUploading(false); }
   };
-
-  const currentList = drawings.filter(d => d.category === activeCategory);
 
   return (
     <div className="drawings-container">
@@ -86,7 +84,7 @@ function DesignDrawings({ showToast }) {
         </label>
       </div>
       <div className="drawings-grid">
-        {currentList.map(d => (
+        {drawings.filter(d => d.category === activeCategory).map(d => (
           <div key={d.id || d._RowNumber} className="drawing-card">
             <div className="drawing-icon"><FiFileText size={32} color="#3b82f6" /></div>
             <div className="drawing-info">
@@ -94,9 +92,9 @@ function DesignDrawings({ showToast }) {
               <div className="drawing-meta">{d.date} • {d.size}</div>
             </div>
             <div className="drawing-actions">
-              <button className="icon-btn view" onClick={() => handleViewPdf(d.url)}><FiEye /></button>
-              <button className="icon-btn download" onClick={() => handleViewPdf(d.url)}><FiDownload /></button>
-              <button className="icon-btn delete" onClick={() => {/* Hàm xóa */}}><FiTrash2 /></button>
+              <button className="icon-btn view" onClick={() => handleJumpToLink(d.url)}><FiEye /></button>
+              <button className="icon-btn download" onClick={() => handleJumpToLink(d.url)}><FiDownload /></button>
+              <button className="icon-btn delete" onClick={() => {}}><FiTrash2 /></button>
             </div>
           </div>
         ))}
