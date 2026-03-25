@@ -40,15 +40,16 @@ function QuickNotes({ showToast }) {
     const now = new Date();
     // Cấu trúc dữ liệu gửi lên Sheet
     const noteData = {
-      id: `NOTE_${Date.now()}`,
-      ngay: now, // sheetsAPI sẽ tự format thành YYYY-MM-DD
-      noiDung: newNote
+      id: `NOTE_${Date.now()}`, // Bắt buộc phải có ID duy nhất
+      ngay: now.toISOString().split('T')[0], // Format YYYY-MM-DD
+      noiDung: newNote.trim()
     };
 
     try {
         const res = await addRowToSheet("GhiChu", noteData, APP_ID);
         if (res.success) {
-            setNotes([noteData, ...notes]);
+            // Thêm ghi chú mới vào đầu danh sách trên UI
+            setNotes(prevNotes => [{ ...noteData, ngay: now }, ...prevNotes]);
             setNewNote("");
             if (showToast) showToast("Đã lưu ghi chú", "success");
         } else {
