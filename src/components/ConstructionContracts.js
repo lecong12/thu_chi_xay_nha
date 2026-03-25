@@ -24,20 +24,16 @@ function ConstructionContracts({ showToast }) {
     loadContracts();
   }, [APP_ID]);
 
-  // HÀM XỬ LÝ LINK TUYỆT ĐỐI: Bóc sạch rác để chỉ còn https://...
-  const handleViewPdf = (rawUrl) => {
-    if (!rawUrl) return;
+  // HÀM MỞ FILE: ÉP TRÌNH DUYỆT THOÁT KHỎI DOMAIN HIỆN TẠI
+  const handleJumpToLink = (url) => {
+    if (!url) return;
+    // Bóc sạch mọi thứ để đảm bảo chỉ còn chuỗi sạch
+    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
     
-    // 1. Ép kiểu về String và bóc sạch dấu ngoặc kép rác (" hoặc ') và khoảng trắng
-    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
-
-    // 2. Kiểm tra nếu link hợp lệ thì mở bằng window.location.assign
-    // Cách này an toàn hơn window.open vì nó ép trình duyệt tải lại URL mới hoàn toàn
-    if (cleanUrl.startsWith('http')) {
-      window.open(cleanUrl, '_blank', 'noopener,noreferrer');
-    } else {
-      showToast("Đường dẫn file không hợp lệ", "error");
-    }
+    // Mở tab mới và gán URL trực tiếp vào location của tab đó
+    const newWindow = window.open();
+    newWindow.opener = null;
+    newWindow.location.assign(cleanUrl); 
   };
 
   const handleFileUpload = async (e) => {
@@ -78,8 +74,6 @@ function ConstructionContracts({ showToast }) {
     }
   };
 
-  const currentList = contracts.filter(c => c.category === activeCategory);
-
   return (
     <div className="contracts-container">
       <h2 className="page-title"><FiBriefcase /> Quản lý Hợp đồng</h2>
@@ -98,16 +92,15 @@ function ConstructionContracts({ showToast }) {
         </label>
       </div>
       <div className="contracts-list">
-        {currentList.map(c => (
+        {contracts.filter(c => c.category === activeCategory).map(c => (
           <div key={c.id || c._RowNumber} className="contract-item">
             <div className="contract-info">
               <span className="contract-name">{c.name}</span>
               <span className="contract-meta">{c.date} • {c.size}</span>
             </div>
             <div className="contract-actions">
-              {/* DÙNG onClick GỌI HÀM XỬ LÝ LINK, KHÔNG DÙNG href TRỰC TIẾP */}
-              <button className="action-icon view" onClick={() => handleViewPdf(c.url)} title="Xem"><FiEye /></button>
-              <button className="action-icon download" onClick={() => handleViewPdf(c.url)} title="Tải về"><FiDownload /></button>
+              <button className="action-icon view" onClick={() => handleJumpToLink(c.url)}><FiEye /></button>
+              <button className="action-icon download" onClick={() => handleJumpToLink(c.url)}><FiDownload /></button>
               <button className="action-icon delete" onClick={() => handleDelete(c.id || c._RowNumber)}><FiTrash2 /></button>
             </div>
           </div>
