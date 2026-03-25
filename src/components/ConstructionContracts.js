@@ -66,12 +66,12 @@ function ConstructionContracts() {
       if (fileData.secure_url) {
         // Chuẩn bị dữ liệu ghi xuống Google Sheets (AppSheet)
         const rowData = {
-            id: `CT_${Date.now()}`, // Tạo ID duy nhất
-            name: file.name,
-            url: fileData.secure_url,
-            date: new Date().toLocaleDateString('vi-VN'),
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
-            category: activeCategory // Lưu vào đúng mục đang xem
+            id: `CT_${Date.now()}`, // Key của dòng
+            Tên: file.name,
+            url: fileData.secure_url, // Cột 'url' theo yêu cầu
+            Ngày: new Date().toLocaleDateString('vi-VN'),
+            "Kích thước": (file.size / 1024 / 1024).toFixed(2) + ' MB',
+            category: activeCategory // Cột 'category' theo yêu cầu
         };
         
         const sheetRes = await addRowToSheet("HopDong", rowData, APP_ID);
