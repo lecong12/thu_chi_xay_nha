@@ -93,7 +93,7 @@ function ConstructionContracts() {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
       const res = await deleteRowFromSheet("HopDong", id, APP_ID);
       if (res.success) {
-        setContracts(contracts.filter(c => (c.id !== id && c._RowNumber !== rowNumber)));
+        setContracts(contracts.filter(c => c.id !== id && c._RowNumber !== id));
       }
     }
   };

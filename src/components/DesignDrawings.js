@@ -90,7 +90,7 @@ function DesignDrawings() {
     if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
       const res = await deleteRowFromSheet("BanVe", id, APP_ID);
       if (res.success) {
-        setDrawings(drawings.filter(d => (d.id !== id && d._RowNumber !== rowNumber)));
+        setDrawings(drawings.filter(d => d.id !== id && d._RowNumber !== id));
       }
     }
   };
