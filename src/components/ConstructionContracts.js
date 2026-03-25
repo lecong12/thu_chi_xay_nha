@@ -182,14 +182,16 @@ function ConstructionContracts() {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              {/* Sử dụng iframe để xem trực tiếp, ổn định hơn object */}
-              <iframe 
-                src={`https://docs.google.com/viewer?url=${encodeURIComponent(viewingPdf.url)}&embedded=true`}
-                title="PDF Viewer"
-                width="100%" 
-                height="100%"
-                style={{ border: 'none' }}
-              />
+              {/* Sử dụng <object> để trình duyệt tự xử lý việc hiển thị PDF. Có fallback nếu không hỗ trợ. */}
+              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
+                <div className="pdf-fallback" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: '#64748b', padding: '20px', textAlign: 'center'}}>
+                  <FiFileText size={50} />
+                  <p style={{marginTop: '15px'}}>Không thể hiển thị PDF trong khung này.</p>
+                  <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="fallback-download-btn" style={{marginTop: '10px', textDecoration: 'none', color: '#3b82f6', fontWeight: '500'}}>
+                    Mở trong tab mới <FiDownload style={{verticalAlign: 'middle'}} />
+                  </a>
+                </div>
+              </object>
             </div>
           </div>
         </div>
