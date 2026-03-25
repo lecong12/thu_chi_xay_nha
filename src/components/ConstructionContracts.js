@@ -106,20 +106,10 @@ function ConstructionContracts() {
     }
   };
 
-  const handleDelete = async (id, rowNumber) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
-      await deleteRowFromSheet("HopDong", id, rowNumber, APP_ID);
+      await deleteRowFromSheet("HopDong", id, APP_ID);
       setContracts(contracts.filter(c => c.id !== id));
-    }
-  };
-
-  const handleViewPdf = (url) => {
-    if (url && typeof url === 'string') {
-      // Mở URL trong một tab mới. 
-      // Đây là cách làm ổn định và tương thích nhất với mọi trình duyệt.
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } else {
-      alert("Không tìm thấy đường dẫn hoặc đường dẫn không hợp lệ.");
     }
   };
 
@@ -167,7 +157,6 @@ function ConstructionContracts() {
               </div>
               <div className="contract-actions">
                 {/* Nút Xem ngay */}
-                <button className="action-icon view" onClick={() => handleViewPdf(contract.url)} title="Xem ngay">
                 <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
                   <FiEye />
                 </button>
