@@ -81,7 +81,7 @@ function DesignDrawings({ showToast }) {
             name: file.name, // Lấy từ file input
             url: fileData.secure_url, // Lấy từ Cloudinary
             date: new Date().toLocaleDateString('vi-VN'), // Lấy ngày hiện tại
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Tính từ file input
+            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
             category: activeCategory // Lấy từ state
         };
         
@@ -150,7 +150,7 @@ function DesignDrawings({ showToast }) {
             </div>
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
-              <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
+              <div className="drawing-meta">{drawing.date} • {drawing.size} MB</div>
             </div>
             <div className="drawing-actions">
               <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
