@@ -40,13 +40,6 @@ const Sidebar = ({ isOpen, toggle, activeTab, onTabChange, onLogout, isDarkMode,
       onClick={toggle}
     />}
     <div className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
-      <div className="sidebar-header" style={{ height: '60px', minHeight: '60px' }}>
-        {isOpen && <h3 className="app-title">Menu</h3>}
-        <button className="toggle-btn" onClick={toggle} title={isOpen ? "Thu gọn" : "Mở rộng"}>
-          {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
-        </button>
-      </div>
-
       <div className="sidebar-menu">
         {menuItems.map((item) => (
           <div

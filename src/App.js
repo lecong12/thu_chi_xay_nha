@@ -204,7 +204,7 @@ function App() {
       <div 
         className="app-main-wrapper" 
         style={{ 
-          marginLeft: isMobile ? '0' : (isSidebarOpen ? '280px' : '80px'),
+          marginLeft: isMobile ? '0' : (isSidebarOpen ? '280px' : '64px'),
           transition: 'margin-left 0.3s ease', minHeight: '100vh', display: 'flex', flexDirection: 'column'
         }}
       >
