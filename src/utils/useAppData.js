@@ -137,7 +137,7 @@ export const useAppData = (isLoggedIn) => {
 
         // Gọi API updateRowInSheet mới (Dynamic)
         // Sử dụng TABLE_TIENDO (mặc định "TienDo")
-        const result = await updateRowInSheet("TienDo", payload, APP_ID, ACCESS_KEY);
+        const result = await updateRowInSheet("TienDo", payload, APP_ID);
 
         if (!result.success) {
             setTienDo(originalTienDo); // Revert on failure
@@ -157,7 +157,7 @@ export const useAppData = (isLoggedIn) => {
             "Dự kiến": newDuKien
         };
 
-        const result = await updateRowInSheet(TABLE_NGANSACH, payload, APP_ID, ACCESS_KEY);
+        const result = await updateRowInSheet(TABLE_NGANSACH, payload, APP_ID);
 
         if (!result.success) {
             setNganSach(originalNganSach); // Revert nếu lỗi
