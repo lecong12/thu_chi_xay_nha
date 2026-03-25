@@ -24,16 +24,14 @@ function ConstructionContracts({ showToast }) {
     loadContracts();
   }, [APP_ID]);
 
-  // HÀM MỞ FILE: ÉP TRÌNH DUYỆT THOÁT KHỎI DOMAIN HIỆN TẠI
-  const handleJumpToLink = (url) => {
-    if (!url) return;
-    // Bóc sạch mọi thứ để đảm bảo chỉ còn chuỗi sạch
-    const cleanUrl = url.toString().replace(/['"]/g, "").trim();
-    
-    // Mở tab mới và gán URL trực tiếp vào location của tab đó
-    const newWindow = window.open();
-    newWindow.opener = null;
-    newWindow.location.assign(cleanUrl); 
+  // LOGIC MỞ FILE: Loại bỏ hoàn toàn nhúng (embed), mở trực tiếp link sạch
+  const handleOpenPdf = (rawUrl) => {
+    if (!rawUrl) return;
+    // Làm sạch link tuyệt đối
+    const cleanUrl = rawUrl.toString().replace(/['"]/g, "").trim();
+    // Mở tab mới độc lập, không liên quan đến domain hiện tại
+    const newWindow = window.open(cleanUrl, '_blank', 'noopener,noreferrer');
+    if (newWindow) newWindow.focus();
   };
 
   const handleFileUpload = async (e) => {
@@ -80,14 +78,14 @@ function ConstructionContracts({ showToast }) {
       <div className="category-tabs">
         {['tho', 'hoanthien', 'noithat'].map(id => (
           <button key={id} className={`tab-btn ${activeCategory === id ? 'active' : ''}`} onClick={() => setActiveCategory(id)}>
-            {id === 'tho' ? 'Xây lắp thô' : id === 'hoanthien' ? 'Hoàn thiện' : 'Nội thất'}
+            {id === 'tho' ? 'Hợp đồng Thô' : id === 'hoanthien' ? 'Hoàn thiện' : 'Nội thất'}
           </button>
         ))}
       </div>
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
-          <span>Tải lên PDF</span>
+          <span>Tải PDF lên Cloudinary</span>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} hidden />
         </label>
       </div>
@@ -99,8 +97,9 @@ function ConstructionContracts({ showToast }) {
               <span className="contract-meta">{c.date} • {c.size}</span>
             </div>
             <div className="contract-actions">
-              <button className="action-icon view" onClick={() => handleJumpToLink(c.url)}><FiEye /></button>
-              <button className="action-icon download" onClick={() => handleJumpToLink(c.url)}><FiDownload /></button>
+              {/* SỬ DỤNG onClick ĐỂ GỌI HÀM MỞ LINK SẠCH */}
+              <button className="action-icon view" onClick={() => handleOpenPdf(c.url)} title="Xem PDF"><FiEye /></button>
+              <button className="action-icon download" onClick={() => handleOpenPdf(c.url)} title="Tải về"><FiDownload /></button>
               <button className="action-icon delete" onClick={() => handleDelete(c.id || c._RowNumber)}><FiTrash2 /></button>
             </div>
           </div>
