@@ -172,23 +172,19 @@ function DesignDrawings({ showToast }) {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) || 
-               (viewingPdf.name && viewingPdf.name.toLowerCase().endsWith('.pdf')) ? (
-                <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
-                  <div className="pdf-fallback">
-                    <p>Không thể hiển thị PDF.</p>
-                    <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
-                      Mở trong tab mới
-                    </a>
-                  </div>
-                </object>
-              ) : (
-                <img 
-                  src={viewingPdf.url} 
-                  alt={viewingPdf.name} 
-                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', background: '#333' }} 
-                />
-              )}
+              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
+                <div className="pdf-fallback">
+                  <p>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
+                  <a 
+                    href={viewingPdf.url} 
+                    target="_blank" 
+                    rel="noreferrer" 
+                    className="fallback-download-btn"
+                  >
+                    Mở trong tab mới
+                  </a>
+                </div>
+              </object>
             </div>
           </div>
         </div>
