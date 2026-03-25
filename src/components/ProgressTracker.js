@@ -92,7 +92,7 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast;
       <h3 className="chart-title">Theo dõi tiến độ thi công</h3>
       <div className="stages-grid" style={{ maxHeight: "80vh", overflowY: "auto", paddingRight: "10px" }}>
         {stages.map((stage) => (
-          <div key={stage.id}   
+          <div key={stage.id} className="stage-card">
             <select
               value={stage.status}
               onChange={(e) => handleUpdateStatus(stage.id, e.target.value)}
