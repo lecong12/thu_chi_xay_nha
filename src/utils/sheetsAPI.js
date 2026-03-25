@@ -1,10 +1,6 @@
 // AppSheet API Configuration
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
-// Sử dụng endpoint chuẩn của AppSheet
-const getApiUrl = (appId, tableName) => 
-  `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
-
 const formatRowId = (id) => {
   if (typeof id === 'string' && id.startsWith('GD_')) {
     const numericPart = id.replace(/\D/g, '');
@@ -13,15 +9,19 @@ const formatRowId = (id) => {
   return id;
 };
 
+// Sử dụng endpoint chuẩn của AppSheet, có thể thay đổi tên bảng linh hoạt
+const getApiUrl = (appId, tableName) => 
+  `https://www.appsheet.com/api/v2/apps/${appId}/tables/${encodeURIComponent(tableName)}/Action`;
+
 /**
  * Hàm lấy dữ liệu chung cho bất kỳ bảng nào từ AppSheet
  */
-export const fetchTableData = async (tableName, appId, accessKey) => {
+export const fetchTableData = async (tableName, appId) => {
   try {
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -51,19 +51,18 @@ export const fetchTableData = async (tableName, appId, accessKey) => {
 /**
  * Cập nhật dòng linh hoạt cho MỌI bảng
  */
-export const updateRowInSheet = async (tableName, rowData, appId, accessKey) => {
+export const updateRowInSheet = async (tableName, rowData, appId) => {
   try {
     const payload = { ...rowData };
-    if (payload.id) payload.id = formatRowId(payload.id);
-    if (payload.keyId) {
-       if (!payload.id) payload.id = formatRowId(payload.keyId);
-       delete payload.keyId;
+    // AppSheet cần ID để biết dòng nào cần sửa
+    if (!payload.id) {
+        throw new Error("Thiếu 'id' để cập nhật dòng.");
     }
 
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -91,15 +90,12 @@ export const updateRowInSheet = async (tableName, rowData, appId, accessKey) => 
 /**
  * Thêm dòng mới linh hoạt
  */
-export const addRowToSheet = async (tableName, rowData, appId, accessKey) => {
+export const addRowToSheet = async (tableName, rowData, appId) => {
   try {
-    const payload = { ...rowData };
-    if (payload.id) payload.id = formatRowId(payload.id);
-
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -108,7 +104,7 @@ export const addRowToSheet = async (tableName, rowData, appId, accessKey) => {
           Locale: "vi-VN",
           Timezone: "Asia/Ho_Chi_Minh",
         },
-        Rows: [payload],
+        Rows: [rowData], // Gửi trực tiếp rowData
       }),
     });
 
@@ -127,18 +123,18 @@ export const addRowToSheet = async (tableName, rowData, appId, accessKey) => {
 /**
  * Xóa dòng khỏi bất kỳ bảng nào
  */
-export const deleteRowFromSheet = async (tableName, rowId, appId, accessKey) => {
+export const deleteRowFromSheet = async (tableName, rowId, appId) => {
   try {
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
-        "ApplicationAccessKey": accessKey || APPSHEET_ACCESS_KEY,
+        "ApplicationAccessKey": APPSHEET_ACCESS_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         Action: "Delete",
         Properties: { Locale: "vi-VN" },
-        Rows: [{ id: formatRowId(rowId) }],
+        Rows: [{ id: formatRowId(rowId) }], // Chỉ cần gửi ID của dòng cần xóa
       }),
     });
 
@@ -153,6 +149,3 @@ export const deleteRowFromSheet = async (tableName, rowId, appId, accessKey) => 
     return { success: false, message: error.message };
   }
 };
-
-// Wrapper để tương thích ngược với code cũ trong App.js nếu chưa sửa hết
-export const fetchDataFromAppSheet = (appId) => fetchTableData("GiaoDich", appId);
