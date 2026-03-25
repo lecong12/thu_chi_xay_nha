@@ -1,15 +1,21 @@
-import React, { useState } from 'react';
-import { FiCamera, FiLoader, FiSave, FiX } from 'react-icons/fi';
+import React, { useState } from "react";
+import { FiCamera, FiLoader, FiSave, FiX } from "react-icons/fi";
 
 // Cấu hình Cloudinary
-const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
-const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
+const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(
+  /['"]/g,
+  ""
+);
+const UPLOAD_PRESET = (
+  process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || ""
+).replace(/['"]/g, "");
 
 function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
   const [uploadingStageId, setUploadingStageId] = useState(null);
   const [pendingFiles, setPendingFiles] = useState({});
 
   const handleUpdateStatus = async (stageId, newStatus) => {
+    // Gọi hàm được truyền từ App.js để xử lý logic cập nhật
     await onUpdateStage(stageId, { status: newStatus });
   };
 
@@ -17,20 +23,20 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
     const file = e.target.files[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      alert("Vui lòng chỉ chọn file ảnh.");
+      showToast("Vui lòng chỉ chọn file ảnh.", "warning");
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert("File ảnh quá lớn ( > 10MB). Vui lòng chọn ảnh nhỏ hơn.");
+      showToast("File ảnh quá lớn ( > 10MB). Vui lòng chọn ảnh nhỏ hơn.", "warning");
       return;
     }
     const preview = URL.createObjectURL(file);
-    setPendingFiles(prev => ({ ...prev, [stageId]: { file, preview } }));
+    setPendingFiles((prev) => ({ ...prev, [stageId]: { file, preview } }));
     e.target.value = null;
   };
 
   const handleCancelUpload = (stageId) => {
-    setPendingFiles(prev => {
+    setPendingFiles((prev) => {
       const newState = { ...prev };
       if (newState[stageId]?.preview) URL.revokeObjectURL(newState[stageId].preview);
       delete newState[stageId];
@@ -42,18 +48,11 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
     const { file } = pendingFiles[stageId] || {};
     if (!file) return;
 
-    const notify = (message, type = "info") => {
-      if (showToast) showToast(message, type);
-      else alert(message);
-    };
-
     try {
       setUploadingStageId(stageId);
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      // data.append("resource_type", "image"); // Mặc định là image, không cần gửi auto
-      notify("Đang upload ảnh...", "info");
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 20000);
@@ -69,22 +68,21 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
       
       if (fileData.secure_url) {
         // Gửi đúng tên cột "Ảnh nghiệm thu" lên AppSheet
-        const result = await onUpdateStage(stageId, { "Ảnh nghiệm thu": fileData.secure_url });
+        const result = await onUpdateStage(stageId, {
+          "Ảnh nghiệm thu": fileData.secure_url,
+        });
         if (result && result.success) {
-          notify("Lưu thành công!", "success");
+          showToast("Lưu ảnh thành công!", "success");
           handleCancelUpload(stageId);
         } else {
           throw new Error(result.message || "Không thể lưu link ảnh.");
         }
       } else {
-        throw new Error(fileData.error?.message || "Lỗi upload Cloudinary.");
+        throw new Error(fileData.error?.message || "Lỗi upload lên Cloudinary.");
       }
     } catch (error) {
       let msg = "Lỗi upload: " + error.message;
-      if (error.name === 'AbortError') {
-        msg = "Upload thất bại: Quá thời gian chờ (Timeout).";
-      }
-      notify(msg, "error");
+      showToast(msg, "error");
     } finally {
       setUploadingStageId(null);
     }

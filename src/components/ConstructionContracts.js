@@ -90,7 +90,7 @@ function ConstructionContracts() {
         };
         
         await addRowToSheet("HopDong", rowData, APP_ID);
-        setContracts([rowData, ...contracts]); // Optimistic update
+        setContracts([newContract, ...contracts]); // Optimistic update
       } else {
         throw new Error(fileData.error?.message || "Lỗi không xác định từ Cloudinary");
       }
