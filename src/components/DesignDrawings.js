@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { FiUpload, FiTrash2, FiEye, FiDownload, FiLoader, FiMap, FiX, FiFileText } from 'react-icons/fi';
+import { FiUpload, FiTrash2, FiEye, FiDownload, FiLoader, FiMap, FiFileText } from 'react-icons/fi';
 import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './DesignDrawings.css';
 
-// Lấy cấu hình từ biến môi trường
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
 
@@ -18,7 +17,6 @@ function DesignDrawings({ showToast }) {
   const [activeCategory, setActiveCategory] = useState('kientruc');
   const [drawings, setDrawings] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [viewingPdf, setViewingPdf] = useState(null);
   const [loading, setLoading] = useState(true);
   const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
@@ -27,26 +25,32 @@ function DesignDrawings({ showToast }) {
       setLoading(true);
       try {
         const res = await fetchTableData("BanVe", APP_ID);
-        if (res.success) {
-          setDrawings(res.data || []);
-        }
+        if (res.success) setDrawings(res.data || []);
       } catch (error) {
         console.error("Lỗi tải bản vẽ:", error);
       } finally {
         setLoading(false);
       }
     };
-
     loadDrawings();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [APP_ID]);
+
+  // HÀM MỞ LINK SẠCH: Đảm bảo không bị bọc bởi domain trang web
+  const openUrlClean = (rawUrl) => {
+    if (!rawUrl) return;
+    // Bóc tách sạch sẽ dấu ngoặc kép và khoảng trắng dư thừa
+    const pureUrl = rawUrl.toString().replace(/['"]/g, "").trim();
+    
+    // Sử dụng window.open trực tiếp để trình duyệt nhận diện đây là External Link
+    const newWindow = window.open(pureUrl, '_blank', 'noopener,noreferrer');
+    if (newWindow) newWindow.focus();
+  };
 
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     if (file.type !== "application/pdf") {
-      showToast("Vui lòng chỉ chọn file bản vẽ định dạng PDF.", "warning");
+      showToast("Vui lòng chỉ chọn file PDF.", "warning");
       return;
     }
 
@@ -55,7 +59,7 @@ function DesignDrawings({ showToast }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "raw"); // Đảm bảo PDF vào kho raw
+      data.append("resource_type", "raw");
 
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
         method: "POST",
@@ -66,22 +70,22 @@ function DesignDrawings({ showToast }) {
       
       if (fileData.secure_url) {
         const rowData = {
-            id: `BV_${Date.now()}`, // Key của dòng
+            id: `BV_${Date.now()}`,
             name: file.name,
-            url: fileData.secure_url, // Cột 'url' theo yêu cầu
+            url: fileData.secure_url, 
             date: new Date().toLocaleDateString('vi-VN'),
             size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
-            category: activeCategory // Cột 'category' theo yêu cầu
+            category: activeCategory
         };
         
         const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
         if (sheetRes.success) {
           setDrawings(prev => [rowData, ...prev]);       
-          showToast("Upload thành công!", "success");
+          showToast("Tải bản vẽ lên thành công!", "success");
         }
       }
     } catch (error) {
-       showToast("Lỗi upload: " + error.message, "error");
+       showToast("Lỗi: " + error.message, "error");
     } finally {
       setUploading(false);
       e.target.value = null;
@@ -89,7 +93,7 @@ function DesignDrawings({ showToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
+    if (window.confirm("Xóa bản vẽ này khỏi hệ thống?")) {
       const res = await deleteRowFromSheet("BanVe", id, APP_ID);
       if (res.success) {
         setDrawings(drawings.filter(d => d.id !== id && d._RowNumber !== id));
@@ -118,64 +122,38 @@ function DesignDrawings({ showToast }) {
       <div className="upload-box">
         <label className={`upload-btn ${uploading ? 'disabled' : ''}`}>
           {uploading ? <FiLoader className="spin" /> : <FiUpload />}
-          <span>{uploading ? "Đang xử lý..." : `Tải lên cho ${DRAWING_CATEGORIES.find(c => c.id === activeCategory)?.label}`}</span>
+          <span>{uploading ? "Đang xử lý PDF..." : `Tải lên bản vẽ mới`}</span>
           <input type="file" accept="application/pdf" onChange={handleFileUpload} disabled={uploading} hidden />
         </label>
       </div>
 
       {loading ? (
-        <div className="loading-text">Đang đồng bộ dữ liệu bản vẽ...</div>
+        <div className="loading-text">Đang tải hồ sơ thiết kế...</div>
       ) : (
       <div className="drawings-grid">
-        {currentList.length === 0 && <div className="no-data-text">Chưa có bản vẽ nào trong mục này.</div>}
+        {currentList.length === 0 && <div className="no-data-text">Danh mục này hiện chưa có bản vẽ.</div>}
         {currentList.map(drawing => (
           <div key={drawing.id || drawing._RowNumber} className="drawing-card">
-            <div className="drawing-icon"><FiMap size={32} /></div>
+            <div className="drawing-icon"><FiFileText size={32} color="#3b82f6" /></div>
             <div className="drawing-info">
-              <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
+              <div className="drawing-name">{drawing.name}</div>
               <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
             </div>
             <div className="drawing-actions">
-              <button className="icon-btn view" onClick={(e) => { e.stopPropagation(); setViewingPdf(drawing); }} title="Xem ngay"><FiEye /></button>
-              <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
-              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id || drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
+              {/* SỬ DỤNG HÀM MỞ LINK SẠCH CHO CẢ XEM VÀ TẢI */}
+              <button className="icon-btn view" onClick={() => openUrlClean(drawing.url)} title="Xem bản vẽ">
+                <FiEye />
+              </button>
+              <button className="icon-btn download" onClick={() => openUrlClean(drawing.url)} title="Lưu về máy">
+                <FiDownload />
+              </button>
+              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id || drawing._RowNumber)} title="Xóa">
+                <FiTrash2 />
+              </button>
             </div>
           </div>
         ))}
       </div>
-      )}
-
-      {/* Modal Trình xem PDF */}
-      {viewingPdf && (
-        <div className="pdf-viewer-overlay" onClick={() => setViewingPdf(null)}>
-          <div className="pdf-viewer-container" onClick={e => e.stopPropagation()}>
-            <div className="pdf-header">
-              <h3>{viewingPdf.name}</h3>
-              <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
-            </div>
-            <div className="pdf-body">
-              <object 
-                data={viewingPdf.url} 
-                type="application/pdf" 
-                width="100%" 
-                height="100%"
-              >
-                <div className="pdf-fallback-content">
-                  <FiFileText size={48} color="#cbd5e1" />
-                  <p>Không thể hiển thị bản vẽ trực tiếp.</p>
-                  <a 
-                    href={viewingPdf.url} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="btn-open-fallback"
-                  >
-                    Mở bản vẽ trong tab mới <FiDownload />
-                  </a>
-                </div>
-              </object>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );
