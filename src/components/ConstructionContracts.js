@@ -184,7 +184,7 @@ function ConstructionContracts() {
             <div className="pdf-body">
               {/* Sử dụng iframe để xem trực tiếp, ổn định hơn object */}
               <iframe 
-                src={viewingPdf.url} 
+                src={`https://docs.google.com/viewer?url=${encodeURIComponent(viewingPdf.url)}&embedded=true`}
                 title="PDF Viewer"
                 width="100%" 
                 height="100%"

@@ -174,7 +174,7 @@ function DesignDrawings({ showToast }) {
             <div className="pdf-body">
               {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) ? (
                 <iframe 
-                  src={viewingPdf.url} 
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(viewingPdf.url)}&embedded=true`}
                   title="PDF Viewer"
                   width="100%" 
                   height="100%"
