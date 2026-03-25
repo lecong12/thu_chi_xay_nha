@@ -10,8 +10,7 @@ const UPLOAD_PRESET = (
   process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || ""
 ).replace(/['"]/g, "");
 
-function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
-  const [uploadingStageId, setUploadingStageId] = useState(null);
+function ProgressTracker({ stages = [], onUpdateStage, showToast;
   const [pendingFiles, setPendingFiles] = useState({});
 
   const handleUpdateStatus = async (stageId, newStatus) => {
@@ -93,8 +92,7 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
       <h3 className="chart-title">Theo dõi tiến độ thi công</h3>
       <div className="stages-grid" style={{ maxHeight: "80vh", overflowY: "auto", paddingRight: "10px" }}>
         {stages.map((stage) => (
-          <div key={stage.id} className="stage-card" style={{ color: 'var(--text-main)' }}>
-            <span className="stage-name">{stage.name.replace(/^\d+\.\s*/, "")}</span>
+          <div key={stage.id}   
             <select
               value={stage.status}
               onChange={(e) => handleUpdateStatus(stage.id, e.target.value)}

@@ -173,7 +173,7 @@ function App() {
               <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />
             </div>
             <div style={{ marginBottom: '20px' }}>
-              <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} />
+              <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} isDarkMode={isDarkMode} />
             </div>
             <div style={{ marginBottom: '20px' }}>
               <GanttChartView stages={tienDo} />
@@ -190,7 +190,7 @@ function App() {
           </>
         );
       case 'budget': return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
-      case 'progress_tracker': return <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} />;
+      case 'progress_tracker': return <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} isDarkMode={isDarkMode} />;
       case 'gantt_chart': return <GanttChartView stages={tienDo} />;
       case 'drawings': return <DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />;
       case 'contracts': return <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />;
