@@ -66,10 +66,12 @@ function DesignDrawings({ showToast }) {
       
       if (fileData.secure_url) {
         const rowData = {
-            id: `BV_${Date.now()}`, // Key của dòng
-            name: file.name,
-            url: fileData.secure_url, // Cột 'url' theo yêu cầu
-            dateilry: activeCategory
+            id: `BV_${Date.now()}`, // Tự tạo ID
+            name: file.name, // Lấy từ file input
+            url: fileData.secure_url, // Lấy từ Cloudinary
+            date: new Date().toLocaleDateString('vi-VN'), // Lấy ngày hiện tại
+            size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Tính từ file input
+            category: activeCategory // Lấy từ state
         };
         
         const sheetRes = await addRowToSheet("BanVe", rowData, APP_ID);       
@@ -132,7 +134,9 @@ function DesignDrawings({ showToast }) {
             <div className="drawing-info">
               <div className="drawing-name" title={drawing.name}>{drawing.name}</div>
               <div className="drawing-meta">{drawing.date} • {drawing.size}</div>
-            <div className="drawing-actions">f(drawing)} title="Xem ngay"><FiEye /></button>
+            </div>
+            <div className="drawing-actions">
+              <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
               <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
               <button className="icon-btn delete" onClick={() => handleDelete(drawing.id || drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
             </div>
