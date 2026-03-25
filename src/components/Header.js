@@ -1,39 +1,47 @@
-import React from 'react';
-import { FiRefreshCw, FiPlus, FiMenu } from 'react-icons/fi';
-import './Header.css';
+import React from "react";
+import { FiRefreshCw, FiLogOut, FiMenu, FiHome, FiPlus } from "react-icons/fi";
+import "./Header.css";
 
-const Header = ({ onRefresh, loading, onAdd, onToggleSidebar, isDarkMode }) => {
+function Header({ onRefresh, loading, onLogout, onToggleSidebar, onAdd }) {
   return (
-    <header className={`app-header ${isDarkMode ? 'dark-theme' : ''}`}>
-      <div className="header-left">
-        {/* Nút mở Sidebar - Cực kỳ quan trọng trên Mobile */}
-        <button className="icon-btn menu-toggle" onClick={onToggleSidebar} title="Menu">
-          <FiMenu size={22} />
-        </button>
-        <h2 className="header-title">THU CHI XÂY NHÀ</h2>
-      </div>
+    <header className="header" style={{ height: '60px', minHeight: '60px' }}>
+      <div className="header-content">
+        <div className="header-left">
+          <button className="menu-btn" onClick={onToggleSidebar}>
+            <FiMenu size={24} />
+          </button>
+          <div className="logo">
+            <FiHome className="logo-icon" />
+            <span className="logo-text">Sổ Tay Làm Nhà</span>
+          </div>
+        </div>
 
-      <div className="header-right">
-        {/* Nút làm mới dữ liệu */}
-        <button 
-          className={`icon-btn refresh-btn ${loading ? 'spinning' : ''}`} 
-          onClick={onRefresh} 
-          disabled={loading}
-          title="Làm mới"
-        >
-          <FiRefreshCw size={20} />
-        </button>
-
-        {/* Nút Thêm mới nhanh - Chỉ hiện biểu tượng trên Mobile để tiết kiệm chỗ */}
-        <button className="primary-btn add-btn" onClick={onAdd}>
-          <FiPlus size={20} />
-          <span className="btn-text">Thêm mới</span>
-        </button>
-
-        {/* GHI CHÚ: ĐÃ LOẠI BỎ NÚT LOGOUT TẠI ĐÂY VÌ ĐÃ CÓ TRONG SIDEBAR */}
+        <div className="header-right">
+          {onAdd && (
+            <button className="add-btn" onClick={onAdd} title="Thêm mới">
+              <FiPlus />
+              <span>Thêm mới</span>
+            </button>
+          )}
+          <button
+            className={`refresh-btn ${loading ? "loading" : ""}`}
+            onClick={onRefresh}
+            disabled={loading}
+            title="Làm mới dữ liệu"
+          >
+            <FiRefreshCw />
+            <span>Làm mới</span>
+          </button>
+          {onLogout && (
+            <button className="logout-btn" onClick={onLogout} title="Đăng xuất">
+              <FiLogOut />
+              <span>Thoát</span>
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
-};
+}
 
 export default Header;

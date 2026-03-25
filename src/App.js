@@ -203,7 +203,7 @@ function App() {
           transition: 'margin-left 0.3s ease', width: '100%', minHeight: '100vh', display: 'flex', flexDirection: 'column'
         }}
       >
-        <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
+        <Header onRefresh={fetchAllData} loading={loading} onAdd={handleAddNew} onLogout={handleLogout} onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} isDarkMode={isDarkMode} />
         <main className="main-content" style={{ flex: 1 }}>
           {loading ? <div className="loading-spinner"></div> : renderContent()}
         </main>
