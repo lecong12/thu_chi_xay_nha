@@ -70,7 +70,7 @@ function ConstructionContracts({ showToast }) {
             id: `CT_${Date.now()}`, // Key của dòng
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
-            data: new Date().toLocaleDateString('vi-VN'),
+            date: new Date().toLocaleDateString('vi-VN'),
             size: (file.size / 1024 / 1024).toFixed(2) + ' MB',
             category: activeCategory // Cột 'category' theo yêu cầu
         };
@@ -140,7 +140,7 @@ function ConstructionContracts({ showToast }) {
               <div className="contract-icon"><FiFileText size={24} /></div>
               <div className="contract-info">
                 <span className="contract-name">{contract.name}</span>
-                <span className="contract-meta">{contract.data} &bull; {contract.size}</span>
+                <span className="contract-meta">{contract.date} &bull; {contract.size}</span>
               </div>
               <div className="contract-actions">
                 <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
