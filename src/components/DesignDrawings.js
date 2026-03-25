@@ -81,7 +81,7 @@ function DesignDrawings({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
-            size: parseFloat((file.size / (1024 * 1024)).toFixed(2)), // Gửi dưới dạng số
+            size: parseFloat((file.size / (1024 * 1024)).toFixed(2)),
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
