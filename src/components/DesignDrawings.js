@@ -163,7 +163,7 @@ function DesignDrawings({ showToast }) {
       </div>
       )}
 
-      {/* Modal Trình xem PDF */}
+      {/* Modal Trình xem PDF / Ảnh */}
       {viewingPdf && (
         <div className="pdf-viewer-overlay" onClick={() => setViewingPdf(null)}>
           <div className="pdf-viewer-container" onClick={e => e.stopPropagation()}>
@@ -172,19 +172,21 @@ function DesignDrawings({ showToast }) {
               <button className="close-pdf-btn" onClick={() => setViewingPdf(null)}><FiX size={24} /></button>
             </div>
             <div className="pdf-body">
-              <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
-                <div className="pdf-fallback">
-                  <p>Trình duyệt không hỗ trợ xem PDF trực tiếp.</p>
-                  <a 
-                    href={viewingPdf.url} 
-                    target="_blank" 
-                    rel="noreferrer" 
-                    className="fallback-download-btn"
-                  >
-                    Mở trong tab mới
-                  </a>
+              {(viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf')) ? (
+                <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
+                  <div className="pdf-fallback">
+                    <FiFileText size={50} color="#94a3b8" />
+                    <p>Không thể hiển thị PDF trực tiếp trong khung này.</p>
+                    <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
+                      Mở tệp trong tab mới <FiDownload />
+                    </a>
+                  </div>
+                </object>
+              ) : (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                  <img src={viewingPdf.url} alt={viewingPdf.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                 </div>
-              </object>
+              )}
             </div>
           </div>
         </div>
