@@ -114,7 +114,7 @@ function App() {
   const handleTabChange = (tabId) => {
     if (tabId === 'zalo') {
       // THAY LINK NHÓM ZALO CỦA BẠN VÀO ĐÂY
-      window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
+      window.open("https://zalo.me/g/kphczy388", "_blank");
       return;
     }
     setActiveTab(tabId);

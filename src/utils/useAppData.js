@@ -124,16 +124,9 @@ export const useAppData = (isLoggedIn) => {
         
         // Chuẩn bị payload gửi lên AppSheet
         const payload = {
-            [stageToUpdate.keyColumn || 'id']: stageToUpdate.keyId
+            id: stageToUpdate.keyId, // Sử dụng keyId để xác định dòng cần sửa
+            ...updates // Gửi trực tiếp các trường cần cập nhật
         };
-
-        // Map dữ liệu từ Dashboard (camelCase) sang tên cột thực tế trong Sheet (Tiếng Việt)
-        if (updates.anhNghiemThu !== undefined) {
-            payload[stageToUpdate.imgColumn || "Ảnh nghiệm thu"] = updates.anhNghiemThu; // Giữ nguyên tên cột có dấu
-        }
-        if (updates.status !== undefined) {
-            payload["Trạng thái"] = updates.status;
-        }
 
         // Gọi API updateRowInSheet mới (Dynamic)
         // Sử dụng TABLE_TIENDO (mặc định "TienDo")
