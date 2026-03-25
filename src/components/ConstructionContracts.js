@@ -89,9 +89,9 @@ function ConstructionContracts() {
     }
   };
 
-  const handleDelete = async (id, rowNumber) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa hợp đồng này?")) {
-      const res = await deleteRowFromSheet("HopDong", id, rowNumber, APP_ID);
+      const res = await deleteRowFromSheet("HopDong", id, APP_ID);
       if (res.success) {
         setContracts(contracts.filter(c => (c.id !== id && c._RowNumber !== rowNumber)));
       }
@@ -148,7 +148,7 @@ function ConstructionContracts() {
                 <a href={contract.url} target="_blank" rel="noreferrer" className="action-icon download" title="Tải về">
                   <FiDownload />
                 </a>
-                <button className="action-icon delete" onClick={() => handleDelete(contract.id, contract._RowNumber)} title="Xóa">
+                <button className="action-icon delete" onClick={() => handleDelete(contract.id || contract._RowNumber)} title="Xóa">
                   <FiTrash2 />
                 </button>
               </div>

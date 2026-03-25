@@ -86,9 +86,9 @@ function DesignDrawings() {
     }
   };
 
-  const handleDelete = async (id, rowNumber) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
-      const res = await deleteRowFromSheet("BanVe", id, rowNumber, APP_ID);
+      const res = await deleteRowFromSheet("BanVe", id, APP_ID);
       if (res.success) {
         setDrawings(drawings.filter(d => (d.id !== id && d._RowNumber !== rowNumber)));
       }
@@ -136,7 +136,7 @@ function DesignDrawings() {
             <div className="drawing-actions">
               <button className="icon-btn view" onClick={() => setViewingPdf(drawing)} title="Xem ngay"><FiEye /></button>
               <a href={drawing.url} target="_blank" rel="noreferrer" className="icon-btn download" title="Tải về"><FiDownload /></a>
-              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id, drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
+              <button className="icon-btn delete" onClick={() => handleDelete(drawing.id || drawing._RowNumber)} title="Xóa"><FiTrash2 /></button>
             </div>
           </div>
         ))}
