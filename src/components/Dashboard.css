@@ -124,7 +124,7 @@
 }
 
 .chart-title {
-  color: #1f2937;
+  color: var(--text-main); /* Sử dụng biến màu để linh hoạt với Dark Mode */
   font-size: 16px;
   font-weight: 600;
   margin-bottom: 16px;

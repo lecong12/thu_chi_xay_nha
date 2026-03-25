@@ -174,7 +174,7 @@ function Dashboard({ stats, data, extraData }) {
         <div className="chart-card">
           <h3 className="chart-title">Top 5 Hạng mục chi tiêu nhiều nhất</h3>
           {barData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
+            <ResponsiveContainer width="100%" height={300} className="bar-chart-container">
               <BarChart data={barData} layout="vertical">
                 <XAxis
                   type="number"

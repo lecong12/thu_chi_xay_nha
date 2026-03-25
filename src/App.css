@@ -91,3 +91,9 @@ td {
   border: 4px solid var(--border-color);
   border-top-color: var(--accent-color);
 }
+
+/* Chế độ tối cho Bar Chart */
+.dark-theme .bar-chart-container .recharts-text.recharts-yAxis-tick-value {
+  fill: #f87171 !important; /* Màu đỏ nhạt (red-400) */
+}
+}
