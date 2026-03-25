@@ -179,10 +179,10 @@ function App() {
               <GanttChartView stages={tienDo} />
             </div>
             <div style={{ marginBottom: '20px' }}>
-              <DesignDrawings onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />
+              <DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />
             </div>
             <div style={{ marginBottom: '20px' }}>
-              <ConstructionContracts onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />
+              <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />
             </div>
             <div style={{ marginBottom: '80px' }}>
               <QuickNotes />
@@ -192,8 +192,8 @@ function App() {
       case 'budget': return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
       case 'progress_tracker': return <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} onUploadFile={(id, f) => handleUniversalUpload(id, "TienDo", "Ảnh nghiệm thu", f)} uploadingId={uploadingId} />;
       case 'gantt_chart': return <GanttChartView stages={tienDo} />;
-      case 'drawings': return <DesignDrawings onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />;
-      case 'contracts': return <ConstructionContracts onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />;
+      case 'drawings': return <DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />;
+      case 'contracts': return <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />;
       case 'notes': return <QuickNotes />;
       default: return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
     }

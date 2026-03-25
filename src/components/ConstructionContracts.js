@@ -13,7 +13,7 @@ const CATEGORIES = [
   { id: 'noithat', label: 'Hợp đồng Thi công nội thất' }
 ];
 
-function ConstructionContracts() {
+function ConstructionContracts({ showToast }) {
   const [activeCategory, setActiveCategory] = useState('tho');
   const [contracts, setContracts] = useState([]);
   const [uploading, setUploading] = useState(false);
