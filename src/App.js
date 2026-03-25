@@ -111,6 +111,15 @@ function App() {
     } catch (error) { showToast(`Lỗi: ${error.message}`, "error"); } finally { setUploadingId(null); }
   };
 
+  const handleTabChange = (tabId) => {
+    if (tabId === 'zalo') {
+      // THAY LINK NHÓM ZALO CỦA BẠN VÀO ĐÂY
+      window.open("https://zalo.me/g/YOUR_GROUP_ID", "_blank");
+      return;
+    }
+    setActiveTab(tabId);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
     setIsLoggedIn(false);
@@ -196,7 +205,7 @@ function App() {
     <div className={`app ${isDarkMode ? 'dark-theme' : ''}`}>
       <Sidebar 
         isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
-        activeTab={activeTab} onTabChange={setActiveTab}
+        activeTab={activeTab} onTabChange={handleTabChange}
         onLogout={handleLogout} 
         isDarkMode={isDarkMode} toggleDarkMode={() => setIsDarkMode(!isDarkMode)} 
         isMobile={isMobile}
