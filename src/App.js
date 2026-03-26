@@ -13,6 +13,7 @@ import FilterBar from "./components/FilterBar";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; 
+import BusinessScanner from "./components/BusinessScanner"; // <--- IMPORT MỚI
 import { useAppData } from "./utils/useAppData"; 
 import Toast from "./components/Toast"; 
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
@@ -113,7 +114,6 @@ function App() {
 
   const handleTabChange = (tabId) => {
     if (tabId === 'zalo') {
-      // THAY LINK NHÓM ZALO CỦA BẠN VÀO ĐÂY
       window.open("https://zalo.me/g/kphczy388", "_blank");
       return;
     }
@@ -145,12 +145,14 @@ function App() {
     });
   }, [data, filters]);
 
+  // HÀM ĐIỀU HƯỚNG NỘI DUNG CHÍNH
   const renderContent = () => {
     const stats = { tongThu: 0, tongChi: filteredData.reduce((s, i) => s + i.soTien, 0), soGiaoDich: filteredData.length };
     const extraData = { top5: [], chartData: [], nganSach, tienDo };
 
     switch (activeTab) {
       case 'dashboard': return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
+      case 'scanner': return <BusinessScanner showToast={showToast} />; // <--- TAB MỚI
       case 'list': return (
         <>
           <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={handleAddNew} />
@@ -160,33 +162,13 @@ function App() {
       case 'all':
         return (
           <>
-            <div style={{ marginBottom: '20px' }}>
-              <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-                <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={handleAddNew} />
-                <DataTable data={filteredData} onEdit={setEditingItem} onDelete={setItemToDelete} />
-              </div>
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} isDarkMode={isDarkMode} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <GanttChartView stages={tienDo} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} />
-            </div>
-            <div style={{ marginBottom: '20px' }}>
-              <ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} />
-            </div>
-            <div style={{ marginBottom: '80px' }}>
-              <QuickNotes showToast={showToast} />
-            </div>
+            <div style={{ marginBottom: '20px' }}><Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} /></div>
+            <div style={{ marginBottom: '20px' }}><BusinessScanner showToast={showToast} /></div>
+            <div style={{ marginBottom: '20px' }}><BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} /></div>
+            <div style={{ marginBottom: '20px' }}><ProgressTracker stages={tienDo} onUpdateStage={handleUpdateStage} showToast={showToast} isDarkMode={isDarkMode} /></div>
+            <div style={{ marginBottom: '20px' }}><DesignDrawings showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "BanVe", "url", f)} uploadingId={uploadingId} /></div>
+            <div style={{ marginBottom: '20px' }}><ConstructionContracts showToast={showToast} onUploadPDF={(id, f) => handleUniversalUpload(id, "HopDong", "url", f)} uploadingId={uploadingId} /></div>
+            <div style={{ marginBottom: '80px' }}><QuickNotes showToast={showToast} /></div>
           </>
         );
       case 'budget': return <BudgetView budget={nganSach} onUpdateBudget={handleUpdateBudget} showToast={showToast} />;
@@ -221,7 +203,7 @@ function App() {
         <main className="main-content" style={{ flex: 1 }}>
           {loading ? <div className="loading-spinner"></div> : renderContent()}
         </main>
-        {isMobile && !isSidebarOpen && <MobileFooter activeTab={activeTab} onTabChange={setActiveTab} />}
+        {isMobile && !isSidebarOpen && <MobileFooter activeTab={activeTab} onTabChange={handleTabChange} />}
       </div>
       {editingItem && <EditModal item={editingItem} onClose={() => setEditingItem(null)} onSave={handleSaveEdit} showToast={showToast} />}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
