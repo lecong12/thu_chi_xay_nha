@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { FiUpload, FiTrash2, FiEye, FiDownload, FiLoader, FiMap, FiX, FiFileText } from 'react-icons/fi';
 import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './DesignDrawings.css';
-
+import { fetchFileData } from '../utils/sheetsAPI'; // Import fetchFileData
 // Lấy cấu hình từ biến môi trường
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
@@ -25,8 +25,8 @@ function DesignDrawings({ showToast }) {
   useEffect(() => {
     const loadDrawings = async () => {
       setLoading(true);
-      try {
-        const res = await fetchTableData("BanVe", APP_ID);
+      try { // Use fetchFileData for better URL mapping
+        const res = await fetchFileData("BanVe", APP_ID);
         if (res.success) {
           setDrawings(res.data || []);
         }
@@ -81,7 +81,7 @@ function DesignDrawings({ showToast }) {
             name: file.name, // Lấy từ file input
             url: fileData.secure_url, // Lấy từ Cloudinary
             date: new Date().toLocaleDateString('vi-VN'), // Lấy ngày hiện tại
-            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
+            size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Gửi dưới dạng chuỗi với MB
             category: activeCategory // Lấy từ state
         };
         
@@ -174,8 +174,9 @@ function DesignDrawings({ showToast }) {
               {viewingPdf.url && viewingPdf.url.toLowerCase().endsWith('.pdf') ? (
                 <object data={viewingPdf.url} type="application/pdf" width="100%" height="100%">
                   <div className="pdf-fallback">
-                    <p>Không thể hiển thị PDF.</p>
-                    <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
+                   <FiFileText size={50} color="#94a3b8" />
+                   <p>Không thể hiển thị PDF trực tiếp trong khung này.</p>
+                   <a href={viewingPdf.url} target="_blank" rel="noreferrer" className="btn-open-new">
                       Mở trong tab mới
                     </a>
                   </div>

@@ -48,6 +48,25 @@ export const fetchTableData = async (tableName, appId) => {
   }
 };
 
+// Helper function to fetch data with specific column mapping for files (Contracts, Drawings)
+export const fetchFileData = async (tableName, appId) => {
+  try {
+    const { success, data, message } = await fetchTableData(tableName, appId);
+    if (!success) return { success, data, message };
+
+    return {
+      success: true,
+      data: data.map(row => ({
+        ...row,
+        url: row.url || row.URL || row.Link || row['Link PDF'] || row['File URL'] || row.file || '' // Flexible URL mapping
+      }))
+    };
+  } catch (error) {
+    console.error(`Error fetching ${tableName}:`, error);
+    return { success: false, message: error.message };
+  }
+};
+
 /**
  * Cập nhật dòng linh hoạt cho MỌI bảng
  */
