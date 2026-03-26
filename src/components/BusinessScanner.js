@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FiCamera, FiLoader, FiPhone, FiCheckCircle, FiClock } from 'react-icons/fi';
+import React, { useState, useEffect, useCallback } from 'react';
+import { FiCamera, FiLoader, FiPhone, FiCheckCircle, FiClock, FiUserPlus } from 'react-icons/fi';
 import { addRowToSheet, fetchTableData } from '../utils/sheetsAPI'; // Removed unused updateRowInSheet
 import './BusinessScanner.css';
 
@@ -56,6 +56,23 @@ const normalizeScanData = (rowData) => {
     if (rowData[key]) { normalized["Ngày Quét"] = rowData[key]; normalized.NgayQuet = rowData[key]; break; } // Assign to both
   }
   return normalized;
+};
+
+// Function to generate VCF content
+const generateVCard = (companyName, phoneNumber) => {
+  let vcard = `BEGIN:VCARD\nVERSION:3.0\n`;
+  if (companyName && companyName !== "Chưa xác định") {
+    vcard += `ORG:${companyName}\nFN:${companyName}\n`;
+  } else if (phoneNumber && phoneNumber !== "Không tìm thấy") {
+    vcard += `FN:${phoneNumber}\n`; // Fallback to phone number as name if company is unknown
+  } else {
+    vcard += `FN:Contact\n`; // Generic name
+  }
+  if (phoneNumber && phoneNumber !== "Không tìm thấy") {
+    vcard += `TEL;TYPE=WORK,VOICE:${phoneNumber}\n`;
+  }
+  vcard += `END:VCARD`;
+  return vcard;
 };
 
 function BusinessScanner({ showToast }) {
@@ -133,6 +150,26 @@ function BusinessScanner({ showToast }) {
     finally { setUploading(false); }
   };
 
+  const handleSaveContact = useCallback(() => {
+    if (!latestScan || (!latestScan.TenDoanhNghiep && !latestScan.SoDienThoai)) {
+      showToast("Không có thông tin để lưu danh bạ.", "warning");
+      return;
+    }
+
+    const vcardContent = generateVCard(latestScan.TenDoanhNghiep, latestScan.SoDienThoai);
+    const blob = new Blob([vcardContent], { type: 'text/vcard;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${latestScan.TenDoanhNghiep || latestScan.SoDienThoai || 'contact'}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url); // Clean up the URL object
+    showToast("Đã tạo file VCF để lưu danh bạ.", "success");
+  }, [latestScan, showToast]);
+
   return (
     <div className="scanner-wrapper">
       <div className="scanner-main-card">
@@ -171,6 +208,13 @@ function BusinessScanner({ showToast }) {
                         </a>
                       )}
                       <button 
+                        className="save-contact-button" // New class for styling
+                        onClick={handleSaveContact}
+                        disabled={!latestScan.TenDoanhNghiep && !latestScan.SoDienThoai}
+                      >
+                        <FiUserPlus /> Lưu danh bạ
+                      </button>
+                      <button 
                         className="reset-button" 
                         onClick={() => { 
                           setLatestScan(null); 
@@ -178,7 +222,7 @@ function BusinessScanner({ showToast }) {
                         }}
                       >
                         Quét lại
-                      </a>
+                      </button>
                     </div>
                   </div>
                 )}

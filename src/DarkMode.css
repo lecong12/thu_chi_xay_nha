@@ -165,3 +165,11 @@ body.dark-theme {
 .dark-theme ::-webkit-scrollbar-thumb:hover {
   background: #475569;
 }
+
+/* Dark mode for Save Contact button */
+.dark-theme .save-contact-button {
+  background-color: #3b82f6 !important;
+}
+.dark-theme .save-contact-button:hover {
+  background-color: #2563eb !important;
+}
