@@ -28,47 +28,51 @@ const BusinessScanner = () => {
   };
 
   const startCamera = async () => {
-    try {
-      setScannedData(null);
-      // Dừng các luồng cũ nếu có
-      if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(t => t.stop());
-      }
+    setScannedData(null);
+    setCameraActive(false);
 
-      // Cấu hình ép dùng Camera Sau (environment)
-      const constraints = {
-        video: { 
-          facingMode: { exact: "environment" },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
-        }
-      };
+    // Dừng tất cả các luồng cũ để giải phóng thiết bị
+    if (window.localStream) {
+        window.localStream.getTracks().forEach(track => track.stop());
+    }
 
-      let stream;
+    // Danh sách các cấu hình thử nghiệm (từ gắt đến lỏng dần)
+    const constraintsList = [
+      { video: { facingMode: { exact: "environment" } } },
+      { video: { facingMode: "environment" } },
+      { video: true }
+    ];
+
+    let stream = null;
+
+    for (const constraint of constraintsList) {
       try {
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-      } catch (err) {
-        console.warn("Không tìm thấy cam 'exact environment', thử chế độ ưu tiên...");
-        // Nếu ép 'exact' lỗi (do trình duyệt cũ), thử lại với 'ideal'
-        stream = await navigator.mediaDevices.getUserMedia({ 
-          video: { facingMode: "environment" } 
-        });
+        stream = await navigator.mediaDevices.getUserMedia(constraint);
+        if (stream) break; // Nếu lấy được stream thì thoát vòng lặp
+      } catch (e) {
+        console.warn("Thử cấu hình tiếp theo do lỗi:", e.name);
       }
+    }
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
-          setCameraActive(true);
-        };
-      }
-    } catch (err) {
-      alert("Không mở được cam sau. Anh hãy dùng Safari/Chrome và cấp quyền nhé!");
+    if (stream && videoRef.current) {
+      window.localStream = stream; // Lưu lại để xóa sau này
+      videoRef.current.srcObject = stream;
+      
+      // Đợi metadata load xong mới cho chạy
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current.play()
+          .then(() => setCameraActive(true))
+          .catch(err => alert("Không thể phát video: " + err.message));
+      };
+    } else {
+      alert("Trình duyệt không cho phép mở Camera hoặc thiết bị bận. Anh hãy tải lại trang (F5) nhé!");
     }
   };
 
   const captureAndScan = async () => {
+    if (!videoRef.current || !cameraActive) return;
     setLoading(true);
+
     const canvas = canvasRef.current;
     const video = videoRef.current;
     canvas.width = video.videoWidth;
@@ -76,7 +80,10 @@ const BusinessScanner = () => {
     canvas.getContext('2d').drawImage(video, 0, 0);
     const imageData = canvas.toDataURL('image/jpeg', 0.8);
 
-    video.srcObject.getTracks().forEach(t => t.stop());
+    // Dừng cam ngay
+    if (window.localStream) {
+        window.localStream.getTracks().forEach(track => track.stop());
+    }
     setCameraActive(false);
 
     const result = await callGeminiOCR(imageData);
@@ -87,21 +94,39 @@ const BusinessScanner = () => {
   return (
     <div className="scanner-wrapper">
       <div className="scanner-main-card">
-        <h4 style={{margin: '0 0 10px 0'}}>QUÉT CARD & BẢNG HIỆU</h4>
-        <div className="scan-display" style={{background: '#000'}}>
-          {cameraActive ? (
-            <video ref={videoRef} autoPlay playsInline muted />
-          ) : scannedData ? (
+        <h4 style={{margin: '0 0 10px 0', color: '#1e293b'}}>QUÉT CARD & BẢNG HIỆU</h4>
+        
+        <div className="scan-display" style={{ background: '#000', position: 'relative' }}>
+          {/* Luôn render thẻ video, điều khiển hiển thị bằng opacity để tránh lag */}
+          <video 
+            ref={videoRef} 
+            autoPlay 
+            playsInline 
+            muted 
+            style={{ 
+                width: '100%', 
+                height: '100%', 
+                objectFit: 'cover',
+                display: cameraActive ? 'block' : 'none'
+            }} 
+          />
+          
+          {scannedData && !cameraActive && (
             <img src={scannedData.img} className="card-thumb" alt="Card" />
-          ) : (
-            <div style={{color: '#94a3b8'}}>Đang chờ mở Camera Sau...</div>
+          )}
+
+          {!cameraActive && !scannedData && (
+            <div style={{color: '#94a3b8', textAlign: 'center', padding: '20px'}}>
+               <i className="fas fa-video-slash fa-2x"></i>
+               <p>Đang kết nối Cam Sau...</p>
+            </div>
           )}
         </div>
 
         {scannedData && (
           <div className="scan-result">
             <div style={{flex: 1}}>
-              <strong>{scannedData.name}</strong><br/>
+              <strong style={{fontSize: '15px'}}>{scannedData.name}</strong><br/>
               <span style={{color: '#10b981', fontWeight: 'bold', fontSize: '18px'}}>{scannedData.phone}</span>
             </div>
             {scannedData.phone && (
@@ -110,9 +135,15 @@ const BusinessScanner = () => {
           </div>
         )}
 
-        <button className="capture-btn" onClick={cameraActive ? captureAndScan : startCamera} disabled={loading}>
-          {loading ? "ĐANG ĐỌC CHỮ..." : (cameraActive ? "CHỤP & TRÍCH XUẤT" : "MỞ CAMERA SAU")}
+        <button 
+          className="capture-btn" 
+          onClick={cameraActive ? captureAndScan : startCamera} 
+          disabled={loading}
+          style={{marginTop: '10px'}}
+        >
+          {loading ? "ĐANG ĐỌC CHỮ..." : (cameraActive ? "BẤM CHỤP NGAY" : "MỞ CAMERA SAU")}
         </button>
+
         <canvas ref={canvasRef} style={{ display: 'none' }} />
       </div>
     </div>
