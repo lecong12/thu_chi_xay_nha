@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiCamera, FiLoader, FiSave, FiX, FiImage, FiSearch, FiFileText } from 'react-icons/fi';
+import { FiCamera, FiLoader, FiSave, FiImage, FiSearch, FiPhoneCall } from 'react-icons/fi';
 import Tesseract from 'tesseract.js';
 import { addRowToSheet } from '../utils/sheetsAPI';
 import './BusinessScanner.css';
@@ -17,10 +17,8 @@ function BusinessScanner({ showToast }) {
   const [saving, setSaving] = useState(false);
   
   const [scannedData, setScannedData] = useState({
-    ngay: new Date().toISOString().split('T')[0],
-    noiDung: "",
-    soTien: "",
-    doiTuongThuChi: "Khác",
+    tenDoanhNghiep: "",
+    soDienThoai: "",
     hinhAnh: ""
   });
 
@@ -76,26 +74,21 @@ function BusinessScanner({ showToast }) {
     try {
       const { data: { text } } = await Tesseract.recognize(url, 'vie');
       const extracted = { ...scannedData };
+      
+      // 1. Tìm số điện thoại (Regex cho số VN)
+      const phoneMatch = text.match(/(0[3|5|7|8|9][0-9]{8}|02[0-9]{8,9})/);
+      if (phoneMatch) extracted.soDienThoai = phoneMatch[0];
 
-      // 1. Tìm số tiền (Số lớn nhất thường là tổng tiền)
-      const numbers = text.match(/\d{1,3}(?:[.,]\d{3})*(?:,\d+)?/g);
-      if (numbers) {
-        const amounts = numbers.map(n => parseFloat(n.replace(/[.,]/g, ''))).filter(n => n > 1000 && n < 100000000);
-        if (amounts.length > 0) extracted.soTien = Math.max(...amounts).toString();
+      // 2. Tìm tên doanh nghiệp (Thường là dòng đầu tiên hoặc dòng có chữ in hoa)
+      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
+      if (lines.length > 0) {
+        // Ưu tiên dòng không chứa quá nhiều số
+        const nameLine = lines.find(l => !/\d{5,}/.test(l)) || lines[0];
+        extracted.tenDoanhNghiep = nameLine;
       }
-
-      // 2. Tìm ngày tháng
-      const dateMatch = text.match(/(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/);
-      if (dateMatch) {
-        extracted.ngay = `${dateMatch[3]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[1].padStart(2, '0')}`;
-      }
-
-      // 3. Gợi ý nội dung (Dòng đầu tiên có độ dài vừa phải)
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 10);
-      if (lines.length > 0) extracted.noiDung = lines[0];
 
       setScannedData(extracted);
-      showToast("Đã nhận diện thông tin hóa đơn!", "success");
+      showToast("Đã nhận diện thông tin liên hệ!", "success");
     } catch (error) {
       console.error("OCR Error:", error);
       showToast("Không thể tự động đọc văn bản.", "warning");
@@ -106,30 +99,28 @@ function BusinessScanner({ showToast }) {
 
   // Lưu vào AppSheet
   const handleSave = async () => {
-    if (!scannedData.soTien || !scannedData.noiDung) {
-      showToast("Vui lòng nhập đủ Số tiền và Nội dung.", "warning");
+    if (!scannedData.tenDoanhNghiep) {
+      showToast("Vui lòng nhập Tên doanh nghiệp.", "warning");
       return;
     }
 
     setSaving(true);
     try {
       const payload = {
-        "id": `GD_${Date.now()}`,
-        "Ngày": scannedData.ngay,
-        "Hạng mục": scannedData.doiTuongThuChi,
-        "Nội dung": scannedData.noiDung,
-        "Số tiền": scannedData.soTien,
-        "Chứng từ": scannedData.hinhAnh
+        "id": `DB_${Date.now()}`,
+        "Tên": scannedData.tenDoanhNghiep,
+        "SĐT": scannedData.soDienThoai,
+        "Ảnh": scannedData.hinhAnh,
+        "Ngày lưu": new Date().toLocaleDateString('vi-VN')
       };
 
-      const res = await addRowToSheet("GiaoDich", payload, APP_ID);
+      const res = await addRowToSheet("DanhBa", payload, APP_ID);
       if (res.success) {
-        showToast("Đã thêm giao dịch mới!", "success");
+        showToast("Đã lưu vào Danh bạ!", "success");
         // Reset form
         setImage(null);
         setScannedData({ 
-          ngay: new Date().toISOString().split('T')[0], 
-          noiDung: "", soTien: "", doiTuongThuChi: "Khác", hinhAnh: "" 
+          tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "" 
         });
       }
     } catch (error) {
@@ -143,13 +134,13 @@ function BusinessScanner({ showToast }) {
     <div className="scanner-container">
       <div className="scanner-card">
         <div className="scanner-header">
-          <h3><FiCamera /> Quét Card & Hóa đơn</h3>
-          <p>Tải ảnh lên để tự động nhập liệu chi tiêu</p>
+          <h3><FiCamera /> Quét Card & Bảng hiệu</h3>
+          <p>Lưu nhanh thông tin nhà thầu, cửa hàng</p>
         </div>
 
         <div className="scanner-body">
           {/* Khu vực xem trước / Upload */}
-          <div className="scan-preview-zone" onClick={() => !uploading && fileInputRef.current.click()}>
+          <div className={`scan-preview-zone ${image ? 'has-img' : ''}`} onClick={() => !uploading && fileInputRef.current.click()}>
             {uploading ? (
               <div className="scan-overlay"><FiLoader className="spin" /> <span>Đang tải lên...</span></div>
             ) : image ? (
@@ -166,29 +157,32 @@ function BusinessScanner({ showToast }) {
           {/* Form kết quả quét */}
           <div className="scan-result-form">
             <div className="scan-input-group">
-              <label>Ngày giao dịch</label>
-              <input type="date" value={scannedData.ngay} onChange={e => setScannedData({...scannedData, ngay: e.target.value})} />
+              <label>Tên Doanh nghiệp / Chủ thợ</label>
+              <input type="text" value={scannedData.tenDoanhNghiep} placeholder="Tên đơn vị..." onChange={e => setScannedData({...scannedData, tenDoanhNghiep: e.target.value})} />
             </div>
             
             <div className="scan-input-group">
-              <label>Số tiền (VNĐ)</label>
+              <label>Số điện thoại</label>
               <div className="input-icon-wrapper">
-                <input type="number" value={scannedData.soTien} placeholder="Nhập số tiền..." onChange={e => setScannedData({...scannedData, soTien: e.target.value})} />
+                <input type="tel" value={scannedData.soDienThoai} placeholder="090..." onChange={e => setScannedData({...scannedData, soDienThoai: e.target.value})} />
                 {scanning && <FiLoader className="spin icon-inside" />}
               </div>
             </div>
 
-            <div className="scan-input-group">
-              <label>Nội dung chi tiết</label>
-              <textarea rows="2" value={scannedData.noiDung} placeholder="Ví dụ: Mua 10 bao xi măng..." onChange={e => setScannedData({...scannedData, noiDung: e.target.value})} />
-            </div>
+            {scannedData.soDienThoai && (
+              <div className="quick-call-zone">
+                <a href={`tel:${scannedData.soDienThoai}`} className="btn-call">
+                  <FiPhoneCall /> Gọi ngay: {scannedData.soDienThoai}
+                </a>
+              </div>
+            )}
 
             <div className="scan-actions">
               <button className="btn-secondary" onClick={() => handleOCR(image)} disabled={!image || scanning}>
                 <FiSearch /> {scanning ? "Đang quét..." : "Quét lại ảnh"}
               </button>
               <button className="btn-primary" onClick={handleSave} disabled={saving || !image}>
-                {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu vào Sổ thu chi
+                {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
               </button>
             </div>
           </div>
