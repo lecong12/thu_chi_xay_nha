@@ -114,9 +114,6 @@ function QuickNotes({ showToast }) {
       <div className="notes-header">
         <h3 className="chart-title">Ghi chú nhanh & Liên kết</h3>
         <div className="external-links">
-          <button className="ext-btn notion" onClick={() => openExternalApp('https://www.notion.so/')} title="Mở Notion">
-             Notion <FiExternalLink />
-          </button>
           <button className="ext-btn keep" onClick={() => openExternalApp('https://keep.google.com/')} title="Mở Google Keep">
              Keep <FiExternalLink />
           </button>

@@ -1,11 +1,12 @@
 import React from "react";
-import { FiHome, FiList, FiGrid } from "react-icons/fi";
+import { FiHome, FiList, FiGrid, FiCamera } from "react-icons/fi";
 import "./MobileFooter.css";
 
 function MobileFooter({ activeTab, onTabChange }) {
   const tabs = [
     { id: "dashboard", icon: FiHome, label: "Tổng quan" },
     { id: "list", icon: FiList, label: "Danh sách" },
+    { id: "scanner", icon: FiCamera, label: "Quét Card" },
     { id: "all", icon: FiGrid, label: "Tất cả" },
   ];
 

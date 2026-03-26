@@ -96,7 +96,11 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast, isDarkMode }) 
                 {stage.status === 'Hoàn thành' ? <FiCheckCircle color="#22c55e" /> : <FiClock color="#64748b" />}
                 <span className="stage-name-text">{stage.name || stage.ten_hang_muc}</span>
               </div>
-              <p className="stage-date-text">{stage.date || "Chưa xác định ngày"}</p>
+              <p className="stage-date-text">
+                {stage.ngayBatDau && stage.ngayKetThuc
+                  ? `${stage.ngayBatDau.toLocaleDateString('vi-VN')} - ${stage.ngayKetThuc.toLocaleDateString('vi-VN')}`
+                  : "Chưa xác định ngày"}
+              </p>
             </div>
 
             <select

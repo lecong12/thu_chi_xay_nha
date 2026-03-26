@@ -13,13 +13,16 @@
 
 .footer-nav {
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
   align-items: center;
-  max-width: 500px;
+  width: 100%;
+  max-width: 600px;
   margin: 0 auto;
+  padding: 0 4px;
 }
 
 .nav-item {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -27,12 +30,12 @@
   background: none;
   border: none;
   color: #9ca3af;
-  padding: 8px 16px;
+  padding: 8px 0;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
   position: relative;
-  min-width: 64px;
+  min-width: 0;
 }
 
 .nav-item:hover {
@@ -67,9 +70,10 @@
 }
 
 .nav-label {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 500;
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 .nav-indicator {
