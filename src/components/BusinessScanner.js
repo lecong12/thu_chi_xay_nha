@@ -23,31 +23,31 @@ const normalizeScanData = (rowData) => {
   // Normalize Company Name
   const companyKeys = ['Tên Doanh Nghiệp', 'Ten Doanh Nghiep', 'Company Name', 'Company'];
   for (const key of companyKeys) {
-    if (rowData[key]) { normalized["Tên Doanh Nghiệp"] = rowData[key]; break; }
+    if (rowData[key]) { normalized["Tên Doanh Nghiệp"] = rowData[key]; normalized.TenDoanhNghiep = rowData[key]; break; }
   }
 
   // Normalize Phone Number
   const phoneKeys = ['Số Điện Thoại', 'So Dien Thoai', 'Phone Number', 'Phone', 'SDT'];
   for (const key of phoneKeys) {
-    if (rowData[key]) { normalized["Số Điện Thoại"] = rowData[key]; break; }
+    if (rowData[key]) { normalized["Số Điện Thoại"] = rowData[key]; normalized.SoDienThoai = rowData[key]; break; }
   }
 
   // Normalize Status
   const statusKeys = ['Trạng Thái', 'Trang Thai', 'Status'];
   for (const key of statusKeys) {
-    if (rowData[key]) { normalized["Trạng Thái"] = rowData[key]; break; }
+    if (rowData[key]) { normalized["Trạng Thái"] = rowData[key]; normalized.TrangThai = rowData[key]; break; }
   }
 
   // Normalize Image URL
   const imageKeys = ['Ảnh Card', 'Anh Card', 'Image URL', 'Image'];
   for (const key of imageKeys) {
-    if (rowData[key]) { normalized["Ảnh Card"] = rowData[key]; break; }
+    if (rowData[key]) { normalized["Ảnh Card"] = rowData[key]; normalized.AnhCard = rowData[key]; break; }
   }
 
   // Normalize Ngay Quet
   const dateKeys = ['Ngày Quét', 'Ngay Quet', 'Scan Date', 'Date'];
   for (const key of dateKeys) {
-    if (rowData[key]) { normalized["Ngày Quét"] = rowData[key]; break; }
+    if (rowData[key]) { normalized["Ngày Quét"] = rowData[key]; normalized.NgayQuet = rowData[key]; break; }
   }
   return normalized;
 };
