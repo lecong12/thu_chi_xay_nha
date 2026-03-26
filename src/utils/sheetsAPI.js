@@ -2,9 +2,14 @@
 const APPSHEET_ACCESS_KEY = process.env.REACT_APP_APPSHEET_ACCESS_KEY;
 
 const formatRowId = (id) => {
-  if (typeof id === 'string' && id.startsWith('GD_')) {
-    const numericPart = id.replace(/\D/g, '');
-    return numericPart ? Number(numericPart) : id;
+  if (id === null || id === undefined) return id;
+  if (typeof id === 'string') {
+    // Nếu chuỗi có định dạng PREFIX_12345 hoặc chỉ là số
+    const parts = id.split('_');
+    const possibleNum = parts.length > 1 ? parts[1] : parts[0];
+    if (!isNaN(possibleNum) && possibleNum.trim() !== "") {
+      return Number(possibleNum);
+    }
   }
   return id;
 };
@@ -77,6 +82,12 @@ export const updateRowInSheet = async (tableName, payload, appId) => {
         throw new Error("Thiếu 'id' để cập nhật dòng.");
     }
 
+    // Đảm bảo ID được định dạng là số nếu AppSheet yêu cầu (loại bỏ GD_, CT_, BV_...)
+    const formattedPayload = { 
+      ...payload, 
+      id: formatRowId(payload.id) 
+    };
+
     // AppSheet cần ID để biết dòng nào cần sửa, và các trường khác để cập nhật
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
@@ -90,7 +101,7 @@ export const updateRowInSheet = async (tableName, payload, appId) => {
           Locale: "vi-VN", // Dùng vi-VN khi ghi để tương thích số liệu/ngày tháng tiếng Việt
           Timezone: "Asia/Ho_Chi_Minh",
         },
-        Rows: [payload],
+        Rows: [formattedPayload],
       }),
     });
 
@@ -111,6 +122,12 @@ export const updateRowInSheet = async (tableName, payload, appId) => {
  */
 export const addRowToSheet = async (tableName, payload, appId) => {
   try {
+    // Đảm bảo ID được định dạng chuẩn số trước khi thêm mới
+    const formattedPayload = { 
+      ...payload, 
+      id: formatRowId(payload.id) 
+    };
+
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
@@ -123,7 +140,7 @@ export const addRowToSheet = async (tableName, payload, appId) => {
           Locale: "vi-VN",
           Timezone: "Asia/Ho_Chi_Minh",
         },
-        Rows: [payload], // Gửi trực tiếp payload
+        Rows: [formattedPayload], // Gửi payload đã chuẩn hóa
       }),
     });
 

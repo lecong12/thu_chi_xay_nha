@@ -67,11 +67,17 @@ function BusinessScanner({ showToast }) {
           );
 
           console.log("Raw updatedRow from AppSheet during polling:", updatedRow);
+          if (updatedRow && updatedRow.Goi_Gemini) { // Log the content of Goi_Gemini if it exists
+            console.log("Content of Goi_Gemini from AppSheet:", updatedRow.Goi_Gemini);
+          }
           const normalizedUpdatedRow = normalizeScanData(updatedRow);
           if (normalizedUpdatedRow && normalizedUpdatedRow.TrangThai === "Completed") { // Use camelCase key for status check
             setLatestScan(normalizedUpdatedRow); // <--- This is where latestScan is updated
             setPolling(false);
             showToast("AI đã trích xuất xong!", "success"); //
+            if (normalizedUpdatedRow.TenDoanhNghiep === "Chưa xác định" && normalizedUpdatedRow.SoDienThoai === "Không tìm thấy") {
+              showToast("AI không trích xuất được Tên Doanh Nghiệp và Số Điện Thoại. Vui lòng kiểm tra lại ảnh hoặc cấu hình Bot AppSheet.", "warning");
+            }
           }
         }
       }, 3000); // Kiểm tra mỗi 3 giây

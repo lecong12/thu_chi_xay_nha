@@ -80,7 +80,7 @@ function App() {
     try {
       const isEdit = !!updatedItem.id;
       const apiPayload = {
-        "id": updatedItem.keyId || updatedItem.id || `GD_${Date.now()}`,
+        "id": isEdit ? (updatedItem.keyId || updatedItem.id) : Date.now(),
         "Ngày": updatedItem.ngay instanceof Date ? updatedItem.ngay.toISOString().split("T")[0] : updatedItem.ngay,
         "Hạng mục": updatedItem.doiTuongThuChi,
         "Nội dung": updatedItem.noiDung,

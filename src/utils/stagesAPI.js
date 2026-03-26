@@ -8,18 +8,27 @@ const parseDate = (value) => {
   if (!value) return null;
   if (value instanceof Date) return value;
   
+  console.log("Attempting to parse date:", value); // Log raw date value
+
   // Nếu là chuỗi
   if (typeof value === 'string') {
     if (!value.trim()) return null;
 
-    // Updated regex to match dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, dd mm yyyy
-    const parts = value.match(/^(\d{1,2})[/\-. ](\d{1,2})[/\-. ](\d{4})$/);
+    // Try dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, dd mm yyyy
+    let parts = value.match(/^(\d{1,2})[/\-. ](\d{1,2})[/\-. ](\d{4})$/);
     if (parts) {
       // parts[1]=day, parts[2]=month, parts[3]=year -> new Date(year, monthIndex, day)
       const d = new Date(parts[3], parts[2] - 1, parts[1]);
       if (!isNaN(d.getTime())) return d;
     }
     
+    // Try yyyy-mm-dd (ISO format)
+    parts = value.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+    if (parts) {
+      const d = new Date(parts[1], parts[2] - 1, parts[3]);
+      if (!isNaN(d.getTime())) return d;
+    }
+
     // Thử parse chuẩn ISO (yyyy-mm-dd) nếu regex trên không khớp
     const d = new Date(value);
     return isNaN(d.getTime()) ? null : d;
