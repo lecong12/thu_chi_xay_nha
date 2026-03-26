@@ -1,216 +1,91 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { FiCamera, FiLoader, FiPhone, FiCheckCircle, FiClock, FiUserPlus } from 'react-icons/fi';
-import { addRowToSheet, fetchTableData } from '../utils/sheetsAPI'; // Removed unused updateRowInSheet
-import './BusinessScanner.css';
+import React, { useState, useRef } from 'react';
 
-const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '').trim();
-const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '').trim();
+const BusinessScanner = () => {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
 
-// Helper to normalize scanned data from AppSheet
-const normalizeScanData = (rowData) => {
-  if (!rowData) return null;
-
-  const normalized = {
-    id: rowData.ID || rowData.id || rowData._RowNumber,
-    ID: rowData.ID || rowData.id || rowData._RowNumber,
-    TenDoanhNghiep: rowData.TenDoanhNghiep || "Chưa xác định",
-    SoDienThoai: rowData.SoDienThoai || "Không tìm thấy",
-    TrangThai: rowData.TrangThai || "Processing",
-    AnhCard: rowData.AnhCard || "",
-    NgayQuet: rowData.NgayQuet || "", // Assuming NgayQuet is the column name for scan date
-    ...rowData // Keep all other original properties, but prioritize explicit normalized keys
-  };
-
-  return normalized;
-};
-
-// Function to generate VCF content
-const generateVCard = (companyName, phoneNumber) => {
-  let vcard = `BEGIN:VCARD\nVERSION:3.0\n`;
-  if (companyName && companyName !== "Chưa xác định") {
-    vcard += `ORG:${companyName}\nFN:${companyName}\n`;
-  } else if (phoneNumber && phoneNumber !== "Không tìm thấy") {
-    vcard += `FN:${phoneNumber}\n`; // Fallback to phone number as name if company is unknown
-  } else {
-    vcard += `FN:Contact\n`; // Generic name
-  }
-  if (phoneNumber && phoneNumber !== "Không tìm thấy") {
-    vcard += `TEL;TYPE=WORK,VOICE:${phoneNumber}\n`;
-  }
-  vcard += `END:VCARD`;
-  return vcard;
-};
-
-function BusinessScanner({ showToast }) {
-  const [uploading, setUploading] = useState(false);
-  const [latestScan, setLatestScan] = useState(null);
-  const [polling, setPolling] = useState(false);
-  const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
-
-  // Hàm tự động kiểm tra xem AI đã quét xong chưa (Polling)
-  useEffect(() => {
-    let interval;
-    if (polling && latestScan) {
-      // Use a more robust polling mechanism: fetch only the specific row if possible,
-      // or filter more carefully. For now, fetching all and filtering is okay.
-      interval = setInterval(async () => {
-        const res = await fetchTableData("DanhBa", APP_ID); // Fetch all data from "DanhBa"
-        if (res.success && res.data) {
-          // Find the specific row that was just added by its ID
-          // Note: AppSheet might return different casing for ID, so normalize
-          // Also, latestScan.ID is the ID we generated (e.g., SCAN_12345)
-          const updatedRow = res.data.find(r => 
-            (r.ID && r.ID === latestScan.ID) || 
-            (r.id && r.id === latestScan.ID) ||
-            (r._RowNumber && r._RowNumber === latestScan._RowNumber) || // Fallback to _RowNumber if ID isn't reliable
-            (r.ID && r.ID === latestScan.id) // Check against normalized 'id'
-          );
-
-          console.log("Raw updatedRow from AppSheet during polling:", updatedRow);
-          if (updatedRow && updatedRow.Goi_Gemini) { // Log the content of Goi_Gemini if it exists
-            console.log("Content of Goi_Gemini from AppSheet:", updatedRow.Goi_Gemini);
-          }
-          const normalizedUpdatedRow = normalizeScanData(updatedRow);
-          if (normalizedUpdatedRow && normalizedUpdatedRow.TrangThai === "Completed") { // Use camelCase key for status check
-            setLatestScan(normalizedUpdatedRow); // <--- This is where latestScan is updated
-            setPolling(false);
-            showToast("AI đã trích xuất xong!", "success"); //
-            if (normalizedUpdatedRow.TenDoanhNghiep === "Chưa xác định" && normalizedUpdatedRow.SoDienThoai === "Không tìm thấy") {
-              showToast("AI không trích xuất được Tên Doanh Nghiệp và Số Điện Thoại. Vui lòng kiểm tra lại ảnh hoặc cấu hình Bot AppSheet.", "warning");
-            }
-          }
-        }
-      }, 3000); // Kiểm tra mỗi 3 giây
-    }
-    return () => clearInterval(interval);
-  }, [polling, latestScan, APP_ID, showToast]);
-
-  const handleCapture = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploading(true);
+  // 1. Hàm mở Camera (Ưu tiên camera sau - Environment)
+  const startCamera = async () => {
     try {
-      showToast("Đang tải ảnh...", "info");
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-      const fileData = await res.json();
-
-      if (fileData.secure_url) {
-        const rowData = {
-          "ID": `SCAN_${Date.now()}`,
-          "AnhCard": fileData.secure_url, // Exact column name from sheet
-          "TenDoanhNghiep": "Đang phân tích...", // Exact column name from sheet
-          "SoDienThoai": "", // Exact column name from sheet
-          "NgayQuet": new Date().toLocaleString('vi-VN'), // Exact column name from sheet
-          "TrangThai": "Processing" // Exact column name from sheet
-        };
-
-        const sheetRes = await addRowToSheet("DanhBa", rowData, APP_ID);
-        if (sheetRes.success) {
-          setLatestScan(normalizeScanData(rowData)); // Normalize initial data as well
-          setPolling(true);
-          showToast("Đã gửi ảnh. Vui lòng chờ AI trong giây lát.", "info");
-        } else {
-          // Log the error message from AppSheet API
-          showToast(`Lỗi lưu vào Sheet: ${sheetRes.message}`, "error");
-        }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" }
+      });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
       }
-    } catch (error) { showToast("Lỗi: " + error.message, "error"); }
-    finally { setUploading(false); }
+    } catch (err) {
+      alert("Không thể mở Camera. Anh hãy kiểm tra quyền truy cập!");
+      console.error(err);
+    }
   };
 
-  const handleSaveContact = useCallback(() => {
-    if (!latestScan || (!latestScan.TenDoanhNghiep && !latestScan.SoDienThoai)) {
-      showToast("Không có thông tin để lưu danh bạ.", "warning");
-      return;
+  // 2. Hàm chụp ảnh và gửi đi quét (OCR)
+  const captureAndScan = async () => {
+    setLoading(true);
+    
+    // Tự động dừng xoay sau 20 giây nếu bị treo
+    const timer = setTimeout(() => {
+      if (loading) {
+        setLoading(false);
+        alert("Quá thời gian chờ. Anh hãy thử chụp lại nhé!");
+      }
+    }, 20000);
+
+    try {
+      const canvas = canvasRef.current;
+      const video = videoRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext('2d').drawImage(video, 0, 0);
+
+      // Chuyển ảnh sang dạng Base64
+      const imageData = canvas.toDataURL('image/jpeg', 0.8);
+
+      // Gửi sang Cloudinary (để lấy link sạch)
+      const cloudRes = await fetch("https://api.cloudinary.com/v1_1/dqc9u6v8v/image/upload", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          file: imageData,
+          upload_preset: "ml_default" // Preset của anh
+        })
+      });
+      const cloudData = await cloudRes.json();
+      const cleanUrl = cloudData.secure_url;
+
+      // 3. Gửi link sạch sang Gemini/AppSheet để đọc hóa đơn
+      // Chỗ này anh thay bằng API quét của anh nhé
+      console.log("Link ảnh sạch để quét:", cleanUrl);
+      
+      // Giả lập kết quả thành công
+      setResult("Đã đọc được hóa đơn!");
+      clearTimeout(timer);
+    } catch (error) {
+      alert("Lỗi quét hóa đơn: " + error.message);
+    } finally {
+      setLoading(false);
     }
-
-    const vcardContent = generateVCard(latestScan.TenDoanhNghiep, latestScan.SoDienThoai);
-    const blob = new Blob([vcardContent], { type: 'text/vcard;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${latestScan.TenDoanhNghiep || latestScan.SoDienThoai || 'contact'}.vcf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url); // Clean up the URL object
-    showToast("Đã tạo file VCF để lưu danh bạ.", "success");
-  }, [latestScan, showToast]);
+  };
 
   return (
-    <div className="scanner-wrapper">
-      <div className="scanner-main-card">
-        <h3>Quét Card AI</h3>
-        
-        <div className="scan-display">
-          {!latestScan ? (
-            <div className="empty-state">Chụp bảng hiệu hoặc card để lưu danh bạ</div>
-          ) : (
-            <div className="scan-result-container"> {/* New container for image + info */}
-              <img src={latestScan.AnhCard} alt="Card" className="card-thumb" /> {/* Use camelCase key */}
-              
-                {polling ? (
-                  <div className="status-loading"><FiClock className="spin" /> AI đang đọc dữ liệu...</div>
-                ) : (
-                  <div className="result-card">
-                    <p className="result-title">Thông tin tìm thấy:</p>
-                    
-                    <div className="info-row">
-                      <p className="label">Doanh nghiệp:</p>
-                      <p className="value">{latestScan.TenDoanhNghiep || "Chưa xác định"}</p> {/* Use camelCase key */}
-                    </div>
-
-                    <div className="info-row">
-                      <p className="label">Số điện thoại:</p>
-                      <p className="value">{latestScan.SoDienThoai || "Không tìm thấy"}</p> {/* Use camelCase key */}
-                    </div>
-
-                    <div className="button-group">
-                      {latestScan.SoDienThoai && latestScan.SoDienThoai !== "Không tìm thấy" && (
-                        <a 
-                          href={`tel:${latestScan.SoDienThoai.replace(/\D/g,'')}`} 
-                          className="call-button"
-                        >
-                          📞 Gọi ngay
-                        </a>
-                      )}
-                      <button 
-                        className="save-contact-button" // New class for styling
-                        onClick={handleSaveContact}
-                        disabled={!latestScan.TenDoanhNghiep && !latestScan.SoDienThoai}
-                      >
-                        <FiUserPlus /> Lưu danh bạ
-                      </button>
-                      <button 
-                        className="reset-button" 
-                        onClick={() => { 
-                          setLatestScan(null); 
-                          setPolling(false); 
-                        }}
-                      >
-                        Quét lại
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-          )}
-        </div>
-
-        <label className={`capture-btn ${uploading ? 'disabled' : ''}`}>
-          {uploading ? <FiLoader className="spin" /> : <FiCamera />}
-          <span>{uploading ? "Đang xử lý..." : "Chụp ảnh mới"}</span>
-          <input type="file" accept="image/*" capture="environment" onChange={handleCapture} hidden disabled={uploading} />
-        </label>
+    <div className="scanner-container">
+      <h3>Quét Hóa Đơn / Chụp Tiến Độ</h3>
+      <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '8px' }} />
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
+      
+      <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+        <button onClick={startCamera}>Mở Camera</button>
+        <button onClick={captureAndScan} disabled={loading}>
+          {loading ? "Đang quét..." : "Chụp & Quét"}
+        </button>
       </div>
+
+      {loading && <div className="spinner">Đang xử lý, anh đợi tí...</div>}
+      {result && <div className="result-box">{result}</div>}
     </div>
   );
-}
+};
 
 export default BusinessScanner;
