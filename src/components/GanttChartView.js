@@ -31,6 +31,9 @@ function GanttChartView({ stages = [], onUpdateStage, isDarkMode }) {
       const d1 = new Date(s.ngayBatDau);
       const d2 = new Date(s.ngayKetThuc);
       return s.ngayBatDau && s.ngayKetThuc && !isNaN(d1.getTime()) && !isNaN(d2.getTime());
+    }).sort((a, b) => {
+      // Sort by start date for logical Gantt chart order
+      return new Date(a.ngayBatDau).getTime() - new Date(b.ngayBatDau).getTime();
     });
 
     if (validStages.length === 0) return [];
@@ -83,13 +86,13 @@ function GanttChartView({ stages = [], onUpdateStage, isDarkMode }) {
               type="number" 
               domain={['dataMin', 'dataMax + 5']} 
               tickFormatter={(tick) => `Ngày ${tick}`} 
-              tick={{ fill: "var(--text-muted)", fontSize: 11 }} 
+              tick={{ fill: isDarkMode ? 'var(--text-muted)' : '#6b7280', fontSize: 11 }} 
             />
             <YAxis 
               type="category" 
               dataKey="name" 
               width={120} 
-              tick={{ fill: "var(--text-main)", fontSize: 12 }} 
+              tick={{ fill: isDarkMode ? 'var(--text-main)' : '#374151', fontSize: 12 }} 
               interval={0} 
             />
             <Tooltip cursor={{fill: 'rgba(239, 246, 255, 0.5)'}} content={<GanttTooltip />} allowEscapeViewBox={{ x: true, y: true }} />
@@ -107,7 +110,7 @@ function GanttChartView({ stages = [], onUpdateStage, isDarkMode }) {
 
       {/* Menu nhỏ để đổi trạng thái */}
       {activeBar && (
-        <div className="gantt-status-menu" style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', background: 'white', padding: '10px', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 100 }}>
+        <div className="gantt-status-menu" style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', background: isDarkMode ? 'var(--bg-card)' : 'white', padding: '10px', borderRadius: '8px', boxShadow: isDarkMode ? 'var(--shadow)' : '0 4px 12px rgba(0,0,0,0.15)', zIndex: 100 }}>
           <p style={{margin: 0, marginBottom: '10px', fontWeight: 600, fontSize: '14px'}}>{activeBar.name}</p>
           <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
             <button onClick={() => handleStatusChange(activeBar.id, 'Chưa bắt đầu')} disabled={activeBar.status === 'Chưa bắt đầu'}>Chưa bắt đầu</button>

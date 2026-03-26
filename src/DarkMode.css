@@ -173,3 +173,16 @@ body.dark-theme {
 .dark-theme .save-contact-button:hover {
   background-color: #2563eb !important;
 }
+
+/* Header specific dark mode */
+.dark-theme .add-btn {
+  background: #334155 !important; /* Darker background */
+  color: #4ade80 !important; /* Accent color */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
+.dark-theme .add-btn:hover {
+  background: #475569 !important; /* Slightly lighter on hover */
+  color: #6ee7b7 !important; /* Lighter accent on hover */
+  transform: translateY(-1px);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.4) !important;
+}
