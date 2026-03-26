@@ -23,7 +23,7 @@ const GanttTooltip = ({ active, payload }) => {
   return null;
 };
 
-function GanttChartView({ stages = [], onUpdateStage }) {
+function GanttChartView({ stages = [], onUpdateStage, isDarkMode }) {
   const [activeBar, setActiveBar] = useState(null);
 
   const ganttData = useMemo(() => {
@@ -79,8 +79,19 @@ function GanttChartView({ stages = [], onUpdateStage }) {
       {ganttData.length > 0 ? (
         <ResponsiveContainer width="100%" height={dynamicHeight}>
           <BarChart data={ganttData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <XAxis type="number" domain={['dataMin', 'dataMax + 5']} tickFormatter={(tick) => `Ngày ${tick}`} tick={{ fill: "#6b7280", fontSize: 11 }} />
-            <YAxis type="category" dataKey="name" width={120} tick={{ fill: "#374151", fontSize: 12 }} interval={0} />
+            <XAxis 
+              type="number" 
+              domain={['dataMin', 'dataMax + 5']} 
+              tickFormatter={(tick) => `Ngày ${tick}`} 
+              tick={{ fill: "var(--text-muted)", fontSize: 11 }} 
+            />
+            <YAxis 
+              type="category" 
+              dataKey="name" 
+              width={120} 
+              tick={{ fill: "var(--text-main)", fontSize: 12 }} 
+              interval={0} 
+            />
             <Tooltip cursor={{fill: 'rgba(239, 246, 255, 0.5)'}} content={<GanttTooltip />} allowEscapeViewBox={{ x: true, y: true }} />
             <Bar dataKey="startDay" stackId="a" fill="transparent" />
             <Bar dataKey="duration" stackId="a" radius={[4, 4, 4, 4]} onClick={handleBarClick}>

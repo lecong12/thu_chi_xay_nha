@@ -58,7 +58,8 @@ body.dark-theme {
 .dark-theme .budget-section,
 .dark-theme .contract-item,
 .dark-theme .drawing-card,
-.dark-theme .upload-box {
+.dark-theme .upload-box,
+.dark-theme .scanner-main-card {
   background-color: #1e293b !important;
   border: 1px solid #334155 !important;
   color: #f1f5f9 !important;
