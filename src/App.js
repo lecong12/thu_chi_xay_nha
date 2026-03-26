@@ -13,7 +13,7 @@ import FilterBar from "./components/FilterBar";
 import Login from "./components/Login";
 import EditModal from "./components/EditModal";
 import ConfirmModal from "./components/ConfirmModal"; 
-import BusinessScanner from "./components/BusinessScanner"; // <--- IMPORT MỚI
+import BusinessScanner from "./components/BusinessScanner"; // Đã khai báo thành công
 import { useAppData } from "./utils/useAppData"; 
 import Toast from "./components/Toast"; 
 import { updateRowInSheet, addRowToSheet, deleteRowFromSheet } from "./utils/sheetsAPI";
@@ -38,7 +38,15 @@ function App() {
   const [uploadingId, setUploadingId] = useState(null);
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = () => {
+      const width = window.innerWidth;
+      setWindowWidth(width);
+      if (width > 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -63,13 +71,8 @@ function App() {
 
   const handleAddNew = () => {
     setEditingItem({
-      ngay: new Date(),
-      soTien: 0,
-      loaiThuChi: "Chi",
-      noiDung: "",
-      doiTuongThuChi: "",
-      nguoiCapNhat: "",
-      hinhAnh: ""
+      ngay: new Date(), soTien: 0, loaiThuChi: "Chi", noiDung: "",
+      doiTuongThuChi: "", nguoiCapNhat: "", hinhAnh: ""
     });
   };
 
@@ -118,6 +121,7 @@ function App() {
       return;
     }
     setActiveTab(tabId);
+    if (isMobile) setIsSidebarOpen(false); // Đóng menu mobile ngay khi chọn xong Tab
   };
 
   const handleLogout = () => {
@@ -145,14 +149,13 @@ function App() {
     });
   }, [data, filters]);
 
-  // HÀM ĐIỀU HƯỚNG NỘI DUNG CHÍNH
   const renderContent = () => {
     const stats = { tongThu: 0, tongChi: filteredData.reduce((s, i) => s + i.soTien, 0), soGiaoDich: filteredData.length };
     const extraData = { top5: [], chartData: [], nganSach, tienDo };
 
     switch (activeTab) {
       case 'dashboard': return <Dashboard stats={stats} data={filteredData} extraData={extraData} isDarkMode={isDarkMode} />;
-      case 'scanner': return <BusinessScanner showToast={showToast} />; // <--- TAB MỚI
+      case 'scanner': return <BusinessScanner showToast={showToast} />; // Render component Quét Card
       case 'list': return (
         <>
           <FilterBar filters={filters} filterOptions={filterOptions} onFilterChange={(k, v) => setFilters(p => ({ ...p, [k]: v }))} onReset={() => setFilters({ loaiThuChi: "", nguoiCapNhat: "", doiTuongThuChi: "", startDate: "", endDate: "", searchText: "" })} onAdd={handleAddNew} />
@@ -185,6 +188,10 @@ function App() {
 
   return (
     <div className={`app ${isDarkMode ? 'dark-theme' : ''}`}>
+      {isMobile && isSidebarOpen && (
+        <div className="sidebar-overlay open" onClick={() => setIsSidebarOpen(false)}></div>
+      )}
+
       <Sidebar 
         isOpen={isSidebarOpen} toggle={() => setIsSidebarOpen(!isSidebarOpen)} 
         activeTab={activeTab} onTabChange={handleTabChange}
