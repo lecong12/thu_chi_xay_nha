@@ -48,11 +48,13 @@ function QuickNotes({ showToast }) {
     const dateStr = now.toISOString().split('T')[0];
     const noteId = `NOTE_${Date.now()}`;
 
-    // 1. Cấu trúc dữ liệu gửi lên API (Dùng tên cột Tiếng Việt để khớp với Sheet)
+    // 1. Cấu trúc dữ liệu gửi lên API (Gửi đa dạng tên cột để đảm bảo trúng đích)
     const apiPayload = {
       "id": noteId, 
       "Ngày": dateStr, 
-      "Nội dung": newNote.trim()
+      "Nội dung": newNote.trim(),
+      "ngay": dateStr,
+      "noiDung": newNote.trim()
     };
 
     // 2. Cấu trúc dữ liệu để hiển thị ngay trên UI (Dùng tên biến code)

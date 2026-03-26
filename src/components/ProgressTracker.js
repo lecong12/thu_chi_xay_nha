@@ -6,7 +6,7 @@ import './ProgressTracker.css';
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, "");
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, "");
 
-function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
+function ProgressTracker({ stages = [], onUpdateStage, showToast, isDarkMode }) {
   const [pendingFiles, setPendingFiles] = useState({});
   const [uploadingStageId, setUploadingStageId] = useState(null);
 
@@ -90,7 +90,7 @@ function ProgressTracker({ stages = [], onUpdateStage, showToast }) {
     <div className="progress-tracker-section">
       <div className="stages-grid">
         {stages.map((stage) => (
-          <div key={stage.id} className="stage-card">
+          <div key={stage.id} className="stage-card" style={{ color: isDarkMode ? '#ffffff' : 'inherit' }}>
             <div className="stage-info">
               <div className="stage-header-row">
                 {stage.status === 'Hoàn thành' ? <FiCheckCircle color="#22c55e" /> : <FiClock color="#64748b" />}
