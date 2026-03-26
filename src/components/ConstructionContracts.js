@@ -155,7 +155,7 @@ function ConstructionContracts({ showToast }) {
                 <span className="contract-meta">{contract.date} &bull; {contract.size} MB</span>
               </div>
               <div className="contract-actions">
-                <button className="action-icon view" onClick={(e) => { e.stopPropagation(); setViewingPdf(contract); }} title="Xem ngay">
+                <button className="action-icon view" onClick={() => setViewingPdf(contract)} title="Xem ngay">
                   <FiEye />
                 </button>
                 <a href={contract.url} target="_blank" rel="noreferrer" className="action-icon download" title="Tải về">
