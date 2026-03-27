@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUpload, FiTrash2, FiFileText, FiDownload, FiLoader, FiBriefcase, FiEye, FiX } from 'react-icons/fi';
-import { fetchTableData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
+import { fetchFileData, addRowToSheet, deleteRowFromSheet } from '../utils/sheetsAPI';
 import './ConstructionContracts.css';
-import { fetchFileData } from '../utils/sheetsAPI'; // Import fetchFileData
 // Lấy cấu hình từ môi trường
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
@@ -62,9 +61,9 @@ function ConstructionContracts({ showToast }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", "raw"); // Đảm bảo đẩy vào kho 'raw' để trình duyệt đọc được
+      data.append("resource_type", "auto"); 
 
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
         method: "POST",
         body: data,
       });
@@ -78,7 +77,7 @@ function ConstructionContracts({ showToast }) {
             name: file.name,
             url: fileData.secure_url, // Cột 'url' theo yêu cầu
             date: new Date().toLocaleDateString('vi-VN'),
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Gửi dưới dạng chuỗi với MB
+            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
             category: activeCategory // Cột 'category' theo yêu cầu
         };
         
