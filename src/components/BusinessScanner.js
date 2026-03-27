@@ -77,18 +77,22 @@ function BusinessScanner({ showToast }) {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      formData.append("resource_type", "auto");
+      const resourceType = isPdf ? "raw" : "image";
+      formData.append("resource_type", resourceType);
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
         method: "POST",
         body: formData,
         signal: controller.signal
       });
       clearTimeout(timeoutId);
 
-      if (!res.ok) throw new Error(`Lỗi Cloudinary: ${res.status}`);
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error?.message || `Lỗi Cloudinary: ${res.status}`);
+      }
 
       const fileData = await res.json();
       if (fileData.secure_url) {
