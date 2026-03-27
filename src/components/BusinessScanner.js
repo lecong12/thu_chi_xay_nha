@@ -35,7 +35,11 @@ function BusinessScanner({ showToast }) {
       const res = await fetchTableData("DanhBa", APP_ID);
       if (res.success && res.data) {
         // Lấy 10 bản ghi mới nhất (đảo ngược mảng)
-        setRecentContacts(res.data.slice().reverse().slice(0, 10));
+        setRecentContacts(res.data.slice().reverse().slice(0, 10).map(item => ({
+          id: item.ID || item.id,
+          Tên: item.TenDoanhNghiep || item.ten || "Không tên",
+          SĐT: item.SoDienThoai || item.sdt || "Không có số"
+        })));
       }
     } catch (e) {
       console.error("Lỗi tải danh bạ:", e);
@@ -148,7 +152,7 @@ function BusinessScanner({ showToast }) {
           if (!nameLine) {
             nameLine = cleanLines.find(l => {
               const hasFewNumbers = (l.match(/\d/g) || []).length < 5;
-              const notAddress = !/(số|đường|phường|quận|tp|huyện|tỉnh|địa chỉ|đ\/c|hotline|tel|fax|mst|email|website|web)/i.test(l);
+              const notAddress = !/(số|đường|phường|quận|tp|huyện|tỉnh|địa chỉ|đ\/c|đc|hotline|tel|fax|mst|email|website|web)/i.test(l);
               const notEmail = !/@/.test(l) && !/\.com|\.vn/.test(l);
               return hasFewNumbers && notAddress && notEmail;
             });
@@ -174,22 +178,26 @@ function BusinessScanner({ showToast }) {
 
   // Lưu vào AppSheet
   const handleSave = async () => {
-    if (!scannedData.tenDoanhNghiep) {
-      showToast("Vui lòng nhập Tên doanh nghiệp.", "warning");
+    if (!scannedData.tenDoanhNghiep && !scannedData.soDienThoai) {
+      showToast("Vui lòng nhập Tên hoặc Số điện thoại.", "warning");
+      return;
+    }
+
+    if (uploading) {
+      showToast("Vui lòng chờ ảnh tải lên xong...", "warning");
       return;
     }
 
     setSaving(true);
     try {
-      // Đảm bảo lấy link ảnh từ state image hoặc scannedData
-      const currentImg = image || scannedData.hinhAnh;
+      // Chỉ sử dụng scannedData.hinhAnh (Cloudinary URL), không dùng link blob preview
       const payload = {
-        "id": Date.now().toString(),
-        "Tên": scannedData.tenDoanhNghiep,
-        "SĐT": scannedData.soDienThoai,
-        "Ảnh": currentImg,
-        "Ngày lưu": new Date().toLocaleDateString('vi-VN'),
-        "ngay": new Date().toISOString().split('T')[0] // Bổ sung dự phòng
+        "ID": `DB_${Date.now()}`,
+        "AnhCard": scannedData.hinhAnh,
+        "TenDoanhNghiep": scannedData.tenDoanhNghiep,
+        "SoDienThoai": scannedData.soDienThoai,
+        "NgayQuet": new Date().toLocaleString('vi-VN'),
+        "TrangThai": "Hoàn thành"
       };
 
       const res = await addRowToSheet("DanhBa", payload, APP_ID);
@@ -240,7 +248,7 @@ function BusinessScanner({ showToast }) {
             </div>
             
             <div className="scan-input-group">
-              <label>Số điện thoại</label>
+              <label>Số điện thoại {uploading && <small>(Đang tải ảnh...)</small>}</label>
               <div className="input-icon-wrapper">
                 <input type="tel" value={scannedData.soDienThoai} placeholder="090..." onChange={e => setScannedData({...scannedData, soDienThoai: e.target.value})} />
                 {scanning && <FiLoader className="spin icon-inside" />}
@@ -259,7 +267,7 @@ function BusinessScanner({ showToast }) {
               <button className="btn-secondary" onClick={() => handleOCR(image)} disabled={!image || scanning}>
                 <FiSearch /> {scanning ? "Đang quét..." : "Quét lại ảnh"}
               </button>
-              <button className="btn-primary" onClick={handleSave} disabled={saving || !image}>
+              <button className="btn-primary" onClick={handleSave} disabled={saving || !scannedData.hinhAnh}>
                 {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
               </button>
             </div>
