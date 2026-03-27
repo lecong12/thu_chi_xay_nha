@@ -45,35 +45,47 @@ app.post('/api/gemini-extract', async (req, res) => {
 
     if (!imageUrl) return res.status(400).json({ error: 'Thiếu link ảnh' });
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    // Cấu hình Model với hướng dẫn hệ thống nghiêm ngặt
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-1.5-flash",
+      generationConfig: {
+        responseMimeType: "application/json",
+      }
+    });
     
     // Tải ảnh từ Cloudinary để gửi cho Gemini
     const imageResp = await fetch(imageUrl).then(response => response.arrayBuffer());
     
     let prompt = "";
     if (type === 'card') {
-      prompt = "Phân tích ảnh card visit hoặc bảng hiệu này. Trích xuất chính xác: 1. Tên doanh nghiệp/cửa hàng (bỏ qua các chữ rác trong logo), 2. Số điện thoại (giữ nguyên dấu + nếu có, nếu không thấy thì để trống, tuyệt đối không bịa số). Trả về định dạng JSON thuần túy: {\"ten\": \"...\", \"sdt\": \"...\"}. Đảm bảo tiếng Việt có dấu chính xác.";
+      prompt = `Bạn là một chuyên gia OCR chính xác 100%. Hãy phân tích ảnh Card Visit hoặc Bảng hiệu.
+      Yêu cầu:
+      1. "ten": Trích xuất tên doanh nghiệp hoặc tên cửa hàng to nhất. Bỏ qua các từ mô tả chung chung nếu có tên riêng.
+      2. "sdt": Tìm số điện thoại di động hoặc hotline. Chỉ lấy các chữ số, giữ dấu + nếu có.
+      Lưu ý: Nếu không tìm thấy, hãy để chuỗi rỗng "". Tuyệt đối không tự bịa thông tin.
+      Trả về JSON: {"ten": "...", "sdt": "..."}`;
     } else {
-      prompt = "Phân tích hóa đơn này. Trích xuất: 1. Ngày giao dịch (YYYY-MM-DD), 2. Tổng số tiền (số nguyên), 3. Nội dung vật tư/dịch vụ. Trả về JSON: {\"ngay\": \"...\", \"soTien\": 0, \"noiDung\": \"...\"}. Tiếng Việt chính xác.";
+      prompt = `Bạn là một kế toán chuyên nghiệp. Hãy phân tích hóa đơn/biên lai vật tư xây dựng này.
+      Yêu cầu:
+      1. "ngay": Tìm ngày giao dịch. Nếu định dạng là dd/mm/yyyy, hãy chuyển về YYYY-MM-DD. Nếu không thấy năm, hãy giả định là 2024 hoặc 2025.
+      2. "soTien": Tìm "Tổng cộng" hoặc "Thành tiền" cuối cùng. Chỉ lấy giá trị số nguyên, bỏ qua ký hiệu tiền tệ.
+      3. "noiDung": Tóm tắt ngắn gọn các mặt hàng (Ví dụ: "Xi măng Hà Tiên", "Cát xây tô").
+      Lưu ý: Ưu tiên độ chính xác hơn là số lượng. Nếu chữ quá mờ không đọc được, để giá trị "".
+      Trả về JSON: {"ngay": "...", "soTien": 0, "noiDung": "..."}`;
     }
 
     const result = await model.generateContent([
-      prompt,
       {
         inlineData: {
           data: Buffer.from(imageResp).toString("base64"),
           mimeType: "image/jpeg"
         }
-      }
+      },
+      prompt
     ]);
 
     const response = await result.response;
-    let text = response.text();
-    
-    // Làm sạch chuỗi JSON nếu Gemini trả về kèm markdown ```json
-    text = text.replace(/```json|```/g, "").trim();
-    
-    const data = JSON.parse(text);
+    const data = JSON.parse(response.text());
     res.json(data);
   } catch (error) {
     console.error('Gemini Error:', error);

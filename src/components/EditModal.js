@@ -146,6 +146,8 @@ function EditModal({ item, onClose, onSave, showToast }) {
       if (fileData.secure_url) {
         console.log("Upload thành công:", fileData.secure_url);
         setFormData((prev) => ({ ...prev, hinhAnh: fileData.secure_url }));
+        // Sau khi có link ảnh từ Cloudinary, gọi Gemini để trích xuất AI chính xác hơn
+        if (!isPdf) extractWithGemini(fileData.secure_url);
       } else {
         throw new Error(fileData.error?.message || `Lỗi HTTP: ${res.status}`);
       }
@@ -162,6 +164,34 @@ function EditModal({ item, onClose, onSave, showToast }) {
       }
     } finally {
       setUploading(false);
+    }
+  };
+
+  // Hàm trích xuất thông tin hóa đơn bằng Gemini AI
+  const extractWithGemini = async (imageUrl) => {
+    setOcrScanning(true);
+    try {
+      const res = await fetch('/api/gemini-extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl, type: 'invoice' })
+      });
+      const data = await res.json();
+      
+      if (data && !data.error) {
+        setFormData(prev => ({
+          ...prev,
+          ngay: data.ngay || prev.ngay,
+          // Format số tiền trả về từ AI thành dạng 1.000.000
+          soTien: data.soTien ? new Intl.NumberFormat('vi-VN').format(data.soTien) : prev.soTien,
+          noiDung: data.noiDung || prev.noiDung
+        }));
+        showToast("Gemini AI đã tối ưu hóa thông tin hóa đơn!", "success");
+      }
+    } catch (e) {
+      console.error("Lỗi Gemini AI:", e);
+    } finally {
+      setOcrScanning(false);
     }
   };
 
