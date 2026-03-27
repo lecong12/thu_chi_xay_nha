@@ -32,7 +32,7 @@ const auth = new google.auth.GoogleAuth({
 const sheets = google.sheets({ version: 'v4', auth });
 
 // Cấu hình Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI("AIzaSyBLOov5tK4IF6qVzfVIou6MiR_0VYqJRfc");
 
 // API trích xuất thông tin bằng AI
 app.post('/api/gemini-extract', async (req, res) => {
