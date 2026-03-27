@@ -66,37 +66,27 @@ app.post('/api/gemini-extract', async (req, res) => {
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Bạn là một chuyên gia OCR và phân tích dữ liệu chuyên nghiệp. Nhiệm vụ: Trích xuất thông tin doanh nghiệp từ ảnh danh thiếp hoặc biển hiệu.
-      CÁC TRƯỜNG CẦN LẤY:
-      1. "ten": Tên thương hiệu, cửa hàng hoặc công ty chính (thường là chữ to nhất).
-      2. "sdt": Số điện thoại liên hệ. 
-      3. "diaChi": Địa chỉ kinh doanh đầy đủ nếu có.
-      4. "mst": Mã số thuế doanh nghiệp nếu có.
-
-      QUY TẮC NGHIÊM NGẶT:
-      - CHỈ lấy dãy số nếu nó đi kèm với các từ khóa: SĐT, Hotline, Tel, Mobile, Zalo, hoặc nằm cạnh icon điện thoại.
-      - Định dạng: Trả về chuỗi chỉ gồm các chữ số (Ví dụ: 0908123456).
-      - LOẠI TRỪ: Tuyệt đối không nhầm lẫn với Mã số thuế (thường 10 hoặc 13 số) hoặc Số tài khoản ngân hàng.
-      - Nếu không thấy trường nào, trả về chuỗi rỗng "".
-      - Trả về JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
+      prompt = `Hãy đóng vai một máy quét OCR. 
+      BƯỚC 1: Đọc và liệt kê toàn bộ văn bản có trong ảnh.
+      BƯỚC 2: Từ văn bản đã đọc, trích xuất chính xác vào JSON:
+      1. "ten": Tên cửa hàng/Công ty.
+      2. "sdt": Tìm các dãy số có 10-11 chữ số bắt đầu bằng 0. Chỉ lấy số, không lấy dấu cách/chấm. Loại bỏ MST (10/13 số).
+      3. "diaChi": Địa chỉ.
+      4. "mst": Mã số thuế.
+      
+      Nếu không thấy SĐT rõ ràng, hãy để "". TUYỆT ĐỐI KHÔNG TỰ BỊA SỐ.
+      JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
     } else {
-      prompt = `Bạn là một kế toán kiểm tra chứng từ chuyên nghiệp. Hãy phân tích hóa đơn/biên lai này.
-      CÁC TRƯỜNG CẦN LẤY:
-      1. "ten": Tên đơn vị BÁN HÀNG (doanh nghiệp cung cấp vật tư).
-      2. "sdt": Số điện thoại của đơn vị BÁN HÀNG.
-      3. "ngay": Ngày giao dịch (định dạng YYYY-MM-DD).
-      4. "soTien": Tổng số tiền thanh toán cuối cùng (Số nguyên, không lấy dấu phân cách).
-      5. "noiDung": Tóm tắt danh sách vật tư chính.
-
-      QUY TẮC TRÍCH XUẤT SĐT:
-      - Tìm ở khu vực tiêu đề hóa đơn (thông tin người bán).
-      - SĐT thường bắt đầu bằng số 0, có khoảng 10 chữ số.
-      - Nếu có nhiều số, ưu tiên số di động hoặc Hotline cửa hàng.
-      - Phải làm sạch: Xóa bỏ mọi dấu chấm, dấu gạch ngang, khoảng trắng. Chỉ để lại chữ số.
-
-      YÊU CẦU:
-      - KHÔNG lấy thông tin khách hàng (người mua), CHỈ lấy thông tin người bán.
-      - Nếu thông tin mờ hoặc không có, để "". Trả về JSON: {"ten": "...", "sdt": "...", "ngay": "...", "soTien": 0, "noiDung": "..."}`;
+      prompt = `Phân tích hóa đơn này như một máy quét OCR chính xác. 
+      Trích xuất thông tin người BÁN (thông tin ở đầu trang):
+      1. "ten": Tên cửa hàng vật tư.
+      2. "sdt": SĐT người bán (thường ở tiêu đề, bắt đầu bằng 0). Chỉ lấy chữ số.
+      3. "ngay": Ngày bán (YYYY-MM-DD).
+      4. "soTien": Tổng cộng tiền (Số nguyên).
+      5. "noiDung": Các mặt hàng đã mua.
+      
+      Lưu ý: Không lấy thông tin người mua. Nếu mờ, để "". 
+      JSON: {"ten": "...", "sdt": "...", "ngay": "...", "soTien": 0, "noiDung": "..."}`;
     }
 
     const result = await model.generateContent([
