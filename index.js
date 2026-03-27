@@ -66,25 +66,33 @@ app.post('/api/gemini-extract', async (req, res) => {
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Bạn là một chuyên gia OCR chính xác tuyệt đối. Nhiệm vụ: Trích xuất thông tin doanh nghiệp từ danh thiếp hoặc biển hiệu kinh doanh.
+      prompt = `Bạn là một chuyên gia OCR và phân tích dữ liệu chuyên nghiệp. Nhiệm vụ: Trích xuất thông tin doanh nghiệp từ ảnh danh thiếp hoặc biển hiệu.
       CÁC TRƯỜNG CẦN LẤY:
       1. "ten": Tên thương hiệu, cửa hàng hoặc công ty chính (thường là chữ to nhất).
-      2. "sdt": Số điện thoại liên hệ. QUY TẮC: Trả về chuỗi chỉ gồm các chữ số (VD: 0901234567). KHÔNG lấy mã số thuế hay số tài khoản.
+      2. "sdt": Số điện thoại liên hệ. 
       3. "diaChi": Địa chỉ kinh doanh đầy đủ nếu có.
       4. "mst": Mã số thuế doanh nghiệp nếu có.
 
       QUY TẮC NGHIÊM NGẶT:
-      - Phân biệt kỹ SDT (đi kèm nhãn: Tel, Mobile, Hotline, icon điện thoại) với STK hay MST.
+      - CHỈ lấy dãy số nếu nó đi kèm với các từ khóa: SĐT, Hotline, Tel, Mobile, Zalo, hoặc nằm cạnh icon điện thoại.
+      - Định dạng: Trả về chuỗi chỉ gồm các chữ số (Ví dụ: 0908123456).
+      - LOẠI TRỪ: Tuyệt đối không nhầm lẫn với Mã số thuế (thường 10 hoặc 13 số) hoặc Số tài khoản ngân hàng.
       - Nếu không thấy trường nào, trả về chuỗi rỗng "".
-      - Tuyệt đối không tự bịa thông tin. Trả về JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
+      - Trả về JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
     } else {
-      prompt = `Bạn là một chuyên gia phân tích hóa đơn. Hãy phân tích hóa đơn/biên lai vật tư xây dựng này.
+      prompt = `Bạn là một kế toán kiểm tra chứng từ chuyên nghiệp. Hãy phân tích hóa đơn/biên lai này.
       CÁC TRƯỜNG CẦN LẤY:
       1. "ten": Tên đơn vị BÁN HÀNG (doanh nghiệp cung cấp vật tư).
-      2. "sdt": Số điện thoại của đơn vị bán hàng (làm sạch chỉ để lại số).
+      2. "sdt": Số điện thoại của đơn vị BÁN HÀNG.
       3. "ngay": Ngày giao dịch (định dạng YYYY-MM-DD).
       4. "soTien": Tổng số tiền thanh toán cuối cùng (Số nguyên, không lấy dấu phân cách).
       5. "noiDung": Tóm tắt danh sách vật tư chính.
+
+      QUY TẮC TRÍCH XUẤT SĐT:
+      - Tìm ở khu vực tiêu đề hóa đơn (thông tin người bán).
+      - SĐT thường bắt đầu bằng số 0, có khoảng 10 chữ số.
+      - Nếu có nhiều số, ưu tiên số di động hoặc Hotline cửa hàng.
+      - Phải làm sạch: Xóa bỏ mọi dấu chấm, dấu gạch ngang, khoảng trắng. Chỉ để lại chữ số.
 
       YÊU CẦU:
       - KHÔNG lấy thông tin khách hàng (người mua), CHỈ lấy thông tin người bán.
