@@ -62,48 +62,105 @@ function BusinessScanner({ showToast }) {
 
     try {
       setUploading(true);
+      setScanning(true);
       
-      // 1. Tạo link xem trước cục bộ để hiển thị và quét OCR ngay lập tức
+      // 1. HIỂN THỊ ẢNH XEM TRƯỚC TỨC THÌ (Local Preview)
       const localUrl = URL.createObjectURL(file);
       setImage(localUrl);
 
       const isPdf = file.type === "application/pdf";
-      // Nếu là ảnh thì quét OCR song song luôn, không đợi upload
-      if (!isPdf) {
-        handleOCR(file);
-      }
-
-      // 2. Tiến hành upload lên Cloudinary đồng thời
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
       const resourceType = isPdf ? "raw" : "image";
-      formData.append("resource_type", resourceType);
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
-        method: "POST",
-        body: formData,
-        signal: controller.signal
+      // TÁC VỤ 1: Upload lên Cloudinary
+      const uploadTask = async () => {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        formData.append("resource_type", resourceType);
+
+        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
+          method: "POST",
+          body: formData
+        });
+
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error?.message || "Lỗi upload");
+        }
+        const data = await res.json();
+        return getCleanUrl(data.secure_url);
+      };
+
+      // TÁC VỤ 2: Quét OCR (Chạy trực tiếp từ file cục bộ)
+      const ocrTask = async () => {
+        if (isPdf) return { ten: "", sdt: "" };
+        const { data: { text } } = await Tesseract.recognize(file, 'vie');
+        
+        // Trích xuất SĐT
+        const cleanTextForPhone = text.replace(/[^\d]/g, '');
+        const phoneMatch = cleanTextForPhone.match(/(03|05|07|08|09|02)\d{8,9}/);
+        const sdt = phoneMatch ? phoneMatch[0] : "";
+
+        // Trích xuất Tên Doanh nghiệp
+        const businessKeywords = ['công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'nhà thầu', 'tiệm'];
+        const cleanLines = text.split('\n')
+          .map(l => l.trim().replace(/[|\\\[\]{}()_*~^]/g, '').replace(/^[^\w\sÀ-ỹ0-9]+|[^\w\sÀ-ỹ0-9]+$/g, ''))
+          .filter(l => l.length > 2 && !/^\d+$/.test(l));
+
+        let nameLine = cleanLines.find(l => businessKeywords.some(kw => l.toLowerCase().includes(kw)));
+        if (!nameLine) {
+          nameLine = cleanLines.find(l => {
+            const upperCount = (l.match(/[A-ZÀ-Ỹ]/g) || []).length;
+            return l.length > 5 && (upperCount / l.length) > 0.5;
+          });
+        }
+        const ten = (nameLine || cleanLines[0] || "").replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC)[:\s\-]*/i, '').trim();
+        
+        return { ten, sdt };
+      };
+
+      showToast("Đang xử lý dữ liệu...", "info");
+
+      // CHẠY SONG SONG HAI TÁC VỤ
+      const [cloudinaryUrl, extractedInfo] = await Promise.all([uploadTask(), ocrTask()]);
+
+      // Cập nhật State để hiển thị lên Form
+      setScannedData({
+        tenDoanhNghiep: extractedInfo.ten,
+        soDienThoai: extractedInfo.sdt,
+        hinhAnh: cloudinaryUrl
       });
-      clearTimeout(timeoutId);
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error?.message || `Lỗi Cloudinary: ${res.status}`);
+      setUploading(false);
+      setScanning(false);
+
+      // TỰ ĐỘNG GHI VÀO SHEET DANHBA (Nếu trích xuất được thông tin)
+      if (extractedInfo.ten || extractedInfo.sdt) {
+        setSaving(true);
+        const payload = {
+          "ID": `DB_${Date.now()}`,
+          "AnhCard": cloudinaryUrl,
+          "TenDoanhNghiep": extractedInfo.ten,
+          "SoDienThoai": extractedInfo.sdt,
+          "NgayQuet": new Date().toLocaleString('vi-VN'),
+          "TrangThai": "Hoàn thành"
+        };
+
+        const res = await addRowToSheet("DanhBa", payload, APP_ID);
+        if (res.success) {
+          showToast("Đã tự động lưu vào danh bạ!", "success");
+          loadRecentContacts();
+        }
+        setSaving(false);
       }
 
-      const fileData = await res.json();
-      if (fileData.secure_url) {
-        const cleanUrl = getCleanUrl(fileData.secure_url);
-        setScannedData(prev => ({ ...prev, hinhAnh: cleanUrl }));
-        showToast("Tải ảnh chứng từ thành công!", "success");
-      }
     } catch (error) {
       showToast("Lỗi upload: " + error.message, "error");
-    } finally {
       setUploading(false);
+      setScanning(false);
+      setSaving(false);
+    } finally {
+      // Clean up URL object nếu cần
     }
   };
 
