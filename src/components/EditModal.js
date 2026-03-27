@@ -242,13 +242,13 @@ function EditModal({ item, onClose, onSave, showToast }) {
       }
 
       // 3. Tìm Nội dung (Tìm các từ khóa vật tư phổ biến có dấu tiếng Việt)
-      const keywords = ['xi măng', 'cát', 'đá', 'gạch', 'sắt', 'thép', 'ống nước', 'dây điện', 'thợ', 'nhân công', 'sơn', 'gỗ', 'thiết bị'];
+      const keywords = ['xi măng', 'cát', 'đá', 'gạch', 'sắt', 'thép', 'ống nước', 'dây điện', 'thợ', 'nhân công', 'sơn', 'gỗ', 'thiết bị', 'đá 1x2', 'đá 4x6', 'tôn', 'xà gồ', 'gạch men', 'thiết bị vệ sinh', 'đèn', 'công thợ'];
       const lines = text.split('\n');
       for (const line of lines) {
         const lowerLine = line.toLowerCase();
         // Tìm dòng chứa từ khóa và làm sạch nhiễu OCR xung quanh
         if (keywords.some(kw => lowerLine.includes(kw))) {
-          parsedData.noiDung = line.trim().replace(/[|\\\[\]{}()_*~^]/g, '');
+          parsedData.noiDung = line.trim().replace(/[|\\\[\]{}()_*~^]/g, '').replace(/^[^a-zA-ZÀ-ỹđĐ0-9]+|[^a-zA-ZÀ-ỹđĐ0-9]+$/g, '');
           foundSomething = true;
           break; // Lấy dòng đầu tiên tìm thấy
         }

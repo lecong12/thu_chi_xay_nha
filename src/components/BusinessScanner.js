@@ -127,36 +127,54 @@ function BusinessScanner({ showToast }) {
   const ocrTask = async (file) => {
     const { data: { text } } = await Tesseract.recognize(file, 'vie');
     
-    // Trích xuất SĐT (Hỗ trợ dấu + quốc tế và các định dạng có dấu cách/chấm)
-    const phoneRegex = /(\+[\d\s.]{7,15}|(?:03|05|07|08|09|02)[\d\s.]{8,12})/g;
+    // 1. Trích xuất SĐT (Cải tiến: Tìm chuỗi có số, dấu + ở đầu, hỗ trợ khoảng trắng/chấm)
+    // Regex này tìm các chuỗi số dài từ 9-15 ký tự có thể bắt đầu bằng + hoặc 0
+    const phoneRegex = /(?:\+?\d[\d\s.]{8,15})/g;
     const phoneMatches = text.match(phoneRegex);
     let sdt = "";
     if (phoneMatches) {
-      const rawPhone = phoneMatches[0].trim();
-      const digits = rawPhone.replace(/[^\d]/g, '');
-      sdt = rawPhone.startsWith('+') ? `+${digits}` : digits;
+      // Lọc các kết quả, lấy số đầu tiên có độ dài thực tế hợp lý (9-11 số)
+      const validPhone = phoneMatches.map(p => p.trim()).find(p => {
+        const clean = p.replace(/[^\d]/g, '');
+        return clean.length >= 9 && clean.length <= 12;
+      });
+      if (validPhone) {
+        const digits = validPhone.replace(/[^\d\+]/g, ''); // Giữ lại số và dấu +
+        sdt = digits;
+      }
     }
 
-    // Trích xuất Tên Doanh nghiệp
-    const businessKeywords = ['công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'nhà thầu', 'nội thất', 'thiết kế', 'kiến trúc', 'điện nước'];
+    // 2. Trích xuất Tên Doanh nghiệp (Cải tiến xử lý Tiếng Việt)
+    const businessKeywords = ['công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'nhà thầu', 'nội thất', 'thiết kế', 'kiến trúc', 'điện nước', 'tiệm', 'doanh nghiệp', 'văn phòng'];
     const cleanLines = text.split('\n')
-      .map(l => l.trim().replace(/[|\\\[\]{}()_*~^]/g, '').replace(/^[^a-zA-ZÀ-ỹ0-9]+|[^\w\sÀ-ỹ0-9]+$/g, ''))
+      .map(l => {
+        return l.trim()
+          .replace(/[|\\\[\]{}()_*~^]/g, '') // Chỉ xóa ký tự rác OCR thực sự
+          .replace(/^[^a-zA-ZÀ-ỹđĐ0-9]+|[^a-zA-ZÀ-ỹđĐ0-9]+$/g, ''); // Xóa ký tự lạ ở đầu/cuối nhưng giữ lại chữ Tiếng Việt
+      })
       .filter(l => {
         if (l.length < 4) return false; // Bỏ qua dòng quá ngắn
-        if (/^(fb|zalo|web|mst|stk|id|đc|add|tel|hotline|email|www|http)/i.test(l)) return false; // Bỏ qua các từ khóa liên hệ
+        if (/^(fb|zalo|web|mst|stk|id|đc|add|tel|hotline|email|www|http|phone|mobile)/i.test(l)) return false; // Bỏ qua thông tin liên hệ
         return !/^[\d\s.,\-:/]+$/.test(l); // Bỏ dòng chỉ toàn số/phân cách
       });
 
     let ten = "";
     if (cleanLines.length > 0) {
+      // Ưu tiên dòng chứa từ khóa ngành nghề
       let nameLine = cleanLines.find(l => businessKeywords.some(kw => l.toLowerCase().includes(kw)));
+      
       if (!nameLine) {
         nameLine = cleanLines.find(l => {
-          const upperCount = (l.match(/[A-ZÀ-ỸĐ]/g) || []).length; // Thêm Đ vào danh sách chữ hoa
+          // Ưu tiên dòng có nhiều chữ Hoa (thường là tên thương hiệu)
+          const upperCount = (l.match(/[A-ZÀ-ỸĐ]/g) || []).length;
           return l.length > 6 && (upperCount / l.length) > 0.5; // Tỉ lệ chữ hoa cao
         });
       }
-      ten = (nameLine || cleanLines[0] || "").replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC|SĐT|Tel|MST|Zalo|FB|Facebook)[:\s\-]*/i, '').trim();
+      
+      // Nếu vẫn không thấy, lấy dòng đầu tiên không phải số
+      const rawName = (nameLine || cleanLines[0] || "").trim();
+      // Làm sạch tiền tố rác
+      ten = rawName.replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC|SĐT|Tel|MST|Zalo|FB|Facebook|Add|Địa chỉ)[:\s\-]*/i, '').trim();
     }
     return { ten, sdt };
   };
