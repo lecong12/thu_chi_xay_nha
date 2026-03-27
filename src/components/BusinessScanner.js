@@ -76,11 +76,15 @@ function BusinessScanner({ showToast }) {
       const { data: { text } } = await Tesseract.recognize(url, 'vie');
       const extracted = { ...scannedData };
       
-      // 1. Tìm số điện thoại (Regex VN oneRegex);
+      // 1. Tìm số điện thoại (Regex VN: hỗ trợ 0x.xxx.xxxx, 0x xxx xxxx, 02x...)
+      const phoneRegex = /(0[35789][0-9]{1}[\s\.]?[0-9]{3}[\s\.]?[0-9]{4}|02[0-9]{1,2}[\s\.]?[0-9]{3,4}[\s\.]?[0-9]{4}|[0-9]{4}[\s\.]?[0-9]{3}[\s\.]?[0-9]{3})/g;
+      const phoneMatches = text.match(phoneRegex);
       if (phoneMatches) {
         // Lấy số dài nhất tìm được (tránh lấy nhầm mã số thuế)
         const longestPhone = phoneMatches.reduce((a, b) => a.length > b.length ? a : b);
-        extr\
+        extracted.soDienThoai = longestPhone.replace(/[\s\.]/g, '');
+      }
+
       // 2. Tìm tên doanh nghiệp (Thường là dòng đầu tiên hoặc dòng có chữ in hoa)
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
       if (lines.length > 0) {
@@ -111,7 +115,8 @@ function BusinessScanner({ showToast }) {
       // Đảm bảo lấy link ảnh từ state image hoặc scannedData
       const currentImg = image || scannedData.hinhAnh;
       const payload = {
-        "
+        "id": `DB_${Date.now()}`,
+        "Tên": scannedData.tenDoanhNghiep,
         "SĐT": scannedData.soDienThoai,
         "Ảnh": currentImg,
         "Ngày": new Date().toLocaleDateString('vi-VN')
