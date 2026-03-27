@@ -140,6 +140,48 @@ function BusinessScanner({ showToast }) {
     return { ten, sdt };
   };
 
+  // Hàm trích xuất thông tin nâng cao bằng Gemini AI qua Backend
+  const extractWithGemini = async (imageUrl) => {
+    setScanning(true);
+    try {
+      // Gọi API backend bạn đã tạo trong index.js
+      const res = await fetch('/api/gemini-extract', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl, type: 'card' })
+      });
+      const data = await res.json();
+      
+      if (data && !data.error) {
+        setScannedData(prev => ({
+          ...prev,
+          tenDoanhNghiep: data.ten || prev.tenDoanhNghiep,
+          soDienThoai: data.sdt || prev.soDienThoai
+        }));
+        showToast("Gemini AI đã tối ưu thông tin!", "success");
+      }
+    } catch (e) {
+      console.error("Lỗi Gemini AI:", e);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Xử lý quét OCR thủ công khi nhấn nút "Quét lại ảnh"
+  const handleOCR = async (source) => {
+    if (!source) return;
+    setScanning(true);
+    try {
+      const extracted = await ocrTask(source);
+      setScannedData(prev => ({ ...prev, tenDoanhNghiep: extracted.ten, soDienThoai: extracted.sdt }));
+      showToast("Đã quét lại ảnh!", "success");
+    } catch (err) {
+      console.error("OCR Retry Error:", err);
+    } finally {
+      setScanning(false);
+    }
+  };
+
   // Lưu vào AppSheet
   const handleSave = async () => {
     if (!scannedData.tenDoanhNghiep && !scannedData.soDienThoai) {
