@@ -60,178 +60,96 @@ function BusinessScanner({ showToast }) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // 1. HIỂN THỊ ẢNH XEM TRƯỚC TỨC THÌ (Local Preview)
+    const localUrl = URL.createObjectURL(file);
+    setImage(localUrl);
+
+    // Reset form để bắt đầu tiến trình mới
+    setScannedData({ tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "" });
+    setUploading(true);
+    setScanning(true);
+    showToast("Bắt đầu xử lý...", "info");
+
+    const isPdf = file.type === "application/pdf";
+    const resourceType = isPdf ? "raw" : "image";
+
+    // TÁC VỤ 1: QUÉT OCR (Chạy đồng thời, dùng file cục bộ cho tốc độ tối đa)
+    if (!isPdf) {
+      handleOCR(file); // Quét trực tiếp file object
+    } else {
+      setScanning(false);
+    }
+
+    // TÁC VỤ 2: UPLOAD LÊN CLOUDINARY (Chạy ngầm)
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("resource_type", resourceType);
+
+    fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
+      method: "POST",
+      body: formData
+    })
+    .then(async (res) => {
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error?.message || "Lỗi server Cloudinary");
+      }
+      return res.json();
+    })
+    .then((fileData) => {
+      if (fileData.secure_url) {
+        const cleanUrl = getCleanUrl(fileData.secure_url);
+        setScannedData(prev => ({ ...prev, hinhAnh: cleanUrl }));
+        setUploading(false);
+        showToast("Ảnh đã tải lên, có thể lưu!", "success");
+      }
+    })
+    .catch((error) => {
+      console.error("Upload error:", error);
+      setUploading(false);
+      showToast("Lỗi upload ngầm: " + error.message, "error");
+    });
+  };
+
+  const handleOCR = async (source) => {
+    const ocrSource = source || image;
+    if (!ocrSource) return;
+
+    setScanning(true);
     try {
-      setUploading(true);
-      setScanning(true);
-      
-      // 1. HIỂN THỊ ẢNH XEM TRƯỚC TỨC THÌ (Local Preview)
-      const localUrl = URL.createObjectURL(file);
-      setImage(localUrl);
+      const { data: { text } } = await Tesseract.recognize(ocrSource, 'vie');
 
-      const isPdf = file.type === "application/pdf";
-      const resourceType = isPdf ? "raw" : "image";
-
-      // TÁC VỤ 1: Upload lên Cloudinary
-      const uploadTask = async () => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("upload_preset", UPLOAD_PRESET);
-        formData.append("resource_type", resourceType);
-
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
-          method: "POST",
-          body: formData
-        });
-
-        if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error?.message || "Lỗi upload");
-        }
-        const data = await res.json();
-        return getCleanUrl(data.secure_url);
-      };
-
-      // TÁC VỤ 2: Quét OCR (Chạy trực tiếp từ file cục bộ)
-      const ocrTask = async () => {
-        if (isPdf) return { ten: "", sdt: "" };
-        const { data: { text } } = await Tesseract.recognize(file, 'vie');
+      setScannedData(prev => {
+        const extracted = { ...prev };
         
         // Trích xuất SĐT
-        const cleanTextForPhone = text.replace(/[^\d]/g, '');
-        const phoneMatch = cleanTextForPhone.match(/(03|05|07|08|09|02)\d{8,9}/);
-        const sdt = phoneMatch ? phoneMatch[0] : "";
+        const digitsOnly = text.replace(/[^\d]/g, '');
+        const phoneMatch = digitsOnly.match(/(03|05|07|08|09|02)\d{8,9}/);
+        if (phoneMatch) extracted.soDienThoai = phoneMatch[0];
 
         // Trích xuất Tên Doanh nghiệp
-        const businessKeywords = ['công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'nhà thầu', 'tiệm'];
+        const businessKeywords = ['công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'nhà thầu', 'nội thất'];
         const cleanLines = text.split('\n')
           .map(l => l.trim().replace(/[|\\\[\]{}()_*~^]/g, '').replace(/^[^\w\sÀ-ỹ0-9]+|[^\w\sÀ-ỹ0-9]+$/g, ''))
           .filter(l => l.length > 2 && !/^\d+$/.test(l));
 
-        let nameLine = cleanLines.find(l => businessKeywords.some(kw => l.toLowerCase().includes(kw)));
-        if (!nameLine) {
-          nameLine = cleanLines.find(l => {
-            const upperCount = (l.match(/[A-ZÀ-Ỹ]/g) || []).length;
-            return l.length > 5 && (upperCount / l.length) > 0.5;
-          });
-        }
-        const ten = (nameLine || cleanLines[0] || "").replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC)[:\s\-]*/i, '').trim();
-        
-        return { ten, sdt };
-      };
-
-      showToast("Đang xử lý dữ liệu...", "info");
-
-      // CHẠY SONG SONG HAI TÁC VỤ
-      const [cloudinaryUrl, extractedInfo] = await Promise.all([uploadTask(), ocrTask()]);
-
-      // Cập nhật State để hiển thị lên Form
-      setScannedData({
-        tenDoanhNghiep: extractedInfo.ten,
-        soDienThoai: extractedInfo.sdt,
-        hinhAnh: cloudinaryUrl
-      });
-
-      setUploading(false);
-      setScanning(false);
-
-      // TỰ ĐỘNG GHI VÀO SHEET DANHBA (Nếu trích xuất được thông tin)
-      if (extractedInfo.ten || extractedInfo.sdt) {
-        setSaving(true);
-        const payload = {
-          "ID": `DB_${Date.now()}`,
-          "AnhCard": cloudinaryUrl,
-          "TenDoanhNghiep": extractedInfo.ten,
-          "SoDienThoai": extractedInfo.sdt,
-          "NgayQuet": new Date().toLocaleString('vi-VN'),
-          "TrangThai": "Hoàn thành"
-        };
-
-        const res = await addRowToSheet("DanhBa", payload, APP_ID);
-        if (res.success) {
-          showToast("Đã tự động lưu vào danh bạ!", "success");
-          loadRecentContacts();
-        }
-        setSaving(false);
-      }
-
-    } catch (error) {
-      showToast("Lỗi upload: " + error.message, "error");
-      setUploading(false);
-      setScanning(false);
-      setSaving(false);
-    } finally {
-      // Clean up URL object nếu cần
-    }
-  };
-
-  // Xử lý quét văn bản (OCR) - Chấp nhận cả URL hoặc File object
-  const handleOCR = async (source) => {
-    if (!source) return;
-    setScanning(true);
-    if (!uploading) showToast("Đang phân tích hình ảnh...", "info");
-    
-    try {
-      const { data: { text } } = await Tesseract.recognize(source, 'vie');
-
-      // Sử dụng functional update để tránh stale state (dữ liệu cũ ghi đè dữ liệu mới)
-      setScannedData(prev => {
-        const extracted = { ...prev };
-        
-        // 1. Tìm số điện thoại (Regex VN cải tiến)
-        const phoneRegex = /(0[35789][0-9\s\.]{8,12}|02[0-9\s\.]{9,13})/g;
-        const cleanTextForPhone = text.replace(/[^\d]/g, ''); // Chỉ giữ lại số để tìm SĐT
-        const phoneMatch = cleanTextForPhone.match(/(03|05|07|08|09|02)\d{8,9}/);
-        if (phoneMatch) extracted.soDienThoai = phoneMatch[0];
-
-        // 2. Tìm tên doanh nghiệp (Logic trích xuất tiếng Việt)
-        const businessKeywords = [
-          'công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'văn phòng', 
-          'showroom', 'doanh nghiệp', 'hộ kinh doanh', 'tiệm', 'cơ sở', 
-          'nhà thầu', 'vật liệu', 'trang trí', 'nội thất', 'điện nước'
-        ];
-        
-        const cleanLines = text.split('\n')
-          .map(l => l.trim()
-            .replace(/[|\\\[\]{}()_*~^]/g, '') // Xóa ký tự nhiễu OCR
-            .replace(/^[^\w\sÀ-ỹ0-9]+|[^\w\sÀ-ỹ0-9]+$/g, '') // Xóa rác đầu/cuối
-          )
-          .filter(l => l.length > 2 && !/^\d+$/.test(l)); // Bỏ dòng chỉ toàn số
-
         if (cleanLines.length > 0) {
-          let nameLine = cleanLines.find(l => 
-            businessKeywords.some(kw => l.toLowerCase().includes(kw))
-          );
-
+          let nameLine = cleanLines.find(l => businessKeywords.some(kw => l.toLowerCase().includes(kw)));
           if (!nameLine) {
             nameLine = cleanLines.find(l => {
               const upperCount = (l.match(/[A-ZÀ-Ỹ]/g) || []).length;
-              const letterCount = (l.match(/[a-zA-ZÀ-ỹ]/g) || []).length;
-              return letterCount > 5 && (upperCount / letterCount) > 0.5;
+              return l.length > 5 && (upperCount / l.length) > 0.5;
             });
           }
-
-          if (!nameLine) {
-            nameLine = cleanLines.find(l => {
-              const hasFewNumbers = (l.match(/\d/g) || []).length < 5;
-              const notAddress = !/(số|đường|phường|quận|tp|huyện|tỉnh|địa chỉ|đ\/c|đc|hotline|tel|fax|mst|email|website|web)/i.test(l);
-              const notEmail = !/@/.test(l) && !/\.com|\.vn/.test(l);
-              return hasFewNumbers && notAddress && notEmail;
-            });
-          }
-          
-          let finalName = (nameLine || cleanLines[0]).trim();
-          // Làm sạch lần cuối: Xóa các nhãn thông tin nếu còn sót
-          finalName = finalName.replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC)[:\s\-]*/i, '');
-          extracted.tenDoanhNghiep = finalName;
+          const ten = (nameLine || cleanLines[0] || "").replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC)[:\s\-]*/i, '').trim();
+          extracted.tenDoanhNghiep = ten;
         }
-
         return extracted;
       });
-
-      showToast("Đã nhận diện thông tin liên hệ!", "success");
+      showToast("Đã nhận diện thông tin!", "success");
     } catch (error) {
       console.error("OCR Error:", error);
-      showToast("Không thể tự động đọc văn bản.", "warning");
     } finally {
       setScanning(false);
     }
@@ -328,7 +246,7 @@ function BusinessScanner({ showToast }) {
               <button className="btn-secondary" onClick={() => handleOCR(image)} disabled={!image || scanning}>
                 <FiSearch /> {scanning ? "Đang quét..." : "Quét lại ảnh"}
               </button>
-              <button className="btn-primary" onClick={handleSave} disabled={saving || !scannedData.hinhAnh}>
+              <button className="btn-primary" onClick={handleSave} disabled={saving || uploading || !scannedData.hinhAnh}>
                 {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
               </button>
             </div>
