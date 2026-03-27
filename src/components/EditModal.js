@@ -179,8 +179,8 @@ function EditModal({ item, onClose, onSave, showToast }) {
       const parsedData = { noiDung: formData.noiDung, soTien: formData.soTien, ngay: formData.ngay };
       let foundSomething = false;
 
-      // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy) - Cải tiến để lấy ngày hợp lý nhất
-      const dateRegex = /(\d{1,2})[\s\/\\-\.]+(\d{1,2})[\s\/\\-\.]+(\d{4})/g;
+      // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy) - Fix lỗi Range out of order
+      const dateRegex = /(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/g;
       const dateMatches = [...text.matchAll(dateRegex)];
       
       if (dateMatches.length > 0) {

@@ -76,14 +76,11 @@ function BusinessScanner({ showToast }) {
       const { data: { text } } = await Tesseract.recognize(url, 'vie');
       const extracted = { ...scannedData };
       
-      // 1. Tìm số điện thoại (Regex VN: hỗ trợ cả dấu chấm, dấu cách giữa các số)
-      const phoneRegex = /(0[35789][0-9]{1}[\s\.]?[0-9]{3}[\s\.]?[0-9]{4}|02[0-9]{1,2}[\s\.]?[0-9]{3,4}[\s\.]?[0-9]{4})/g;
-      const phoneMatches = text.match(phoneRegex);
+      // 1. Tìm số điện thoại (Regex VN oneRegex);
       if (phoneMatches) {
-        // Làm sạch số điện thoại (xóa dấu cách, dấu chấm)
-        extracted.soDienThoai = phoneMatches[0].replace(/[\s\.]/g, '');
-      }
-
+        // Lấy số dài nhất tìm được (tránh lấy nhầm mã số thuế)
+        const longestPhone = phoneMatches.reduce((a, b) => a.length > b.length ? a : b);
+        extr\
       // 2. Tìm tên doanh nghiệp (Thường là dòng đầu tiên hoặc dòng có chữ in hoa)
       const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 3);
       if (lines.length > 0) {
@@ -111,19 +108,16 @@ function BusinessScanner({ showToast }) {
 
     setSaving(true);
     try {
-      const currentUrl = image || scannedData.hinhAnh;
+      // Đảm bảo lấy link ảnh từ state image hoặc scannedData
+      const currentImg = image || scannedData.hinhAnh;
       const payload = {
-        "id": Date.now(), // AppSheet thường dùng Numeric ID hoặc String
-        "Tên": scannedData.tenDoanhNghiep,
+        "
         "SĐT": scannedData.soDienThoai,
-        "Ảnh": currentUrl,
-        "Ngày lưu": new Date().toLocaleDateString('vi-VN')
+        "Ảnh": currentImg,
+        "Ngày": new Date().toLocaleDateString('vi-VN')
       };
-
       const res = await addRowToSheet("DanhBa", payload, APP_ID);
       if (res.success) {
-        showToast("Đã lưu vào Danh bạ!", "success");
-        // Reset form
         setImage(null);
         setScannedData({ 
           tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "" 
