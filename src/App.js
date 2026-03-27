@@ -80,7 +80,7 @@ function App() {
     try {
       const isEdit = !!updatedItem.id;
       const apiPayload = {
-        "id": updatedItem.keyId || updatedItem.id || `GD_${Date.now()}`,
+        "id": isEdit ? (updatedItem.keyId || updatedItem.id) : Date.now(),
         "Ngày": updatedItem.ngay instanceof Date ? updatedItem.ngay.toISOString().split("T")[0] : updatedItem.ngay,
         "Hạng mục": updatedItem.doiTuongThuChi,
         "Nội dung": updatedItem.noiDung,
@@ -93,6 +93,8 @@ function App() {
         showToast("Lưu thành công!", "success");
         setEditingItem(null);
         await fetchAllData();
+      } else {
+        throw new Error(result.message || "Không thể lưu dữ liệu vào AppSheet");
       }
     } catch (error) { showToast(error.message, "error"); }
   };

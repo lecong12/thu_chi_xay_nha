@@ -66,7 +66,7 @@ function DesignDrawings({ showToast }) {
       const data = new FormData();
       data.append("file", file);
       data.append("upload_preset", UPLOAD_PRESET);
-      data.append("resource_type", resourceType);
+      data.append("resource_type", "auto"); // Sử dụng auto để Cloudinary tự nhận diện
 
       const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/${resourceType}/upload`, {
         method: "POST",
@@ -81,7 +81,7 @@ function DesignDrawings({ showToast }) {
             name: file.name, // Lấy từ file input
             url: fileData.secure_url, // Lấy từ Cloudinary
             date: new Date().toLocaleDateString('vi-VN'), // Lấy ngày hiện tại
-            size: (file.size / 1024 / 1024).toFixed(2) + ' MB', // Gửi dưới dạng chuỗi với MB
+            size: parseFloat((file.size / 1024 / 1024).toFixed(2)), // Gửi dưới dạng số
             category: activeCategory // Lấy từ state
         };
         
@@ -105,7 +105,7 @@ function DesignDrawings({ showToast }) {
 
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa bản vẽ này?")) {
-      const res = await deleteRowFromSheet("BanVe", id, APP_ID);
+      const res = await deleteRowFromSheet("BanVe", id, APP_ID); // Pass tableName
       if (res.success) {
         setDrawings(drawings.filter(d => d.id !== id && d._RowNumber !== id));
       }

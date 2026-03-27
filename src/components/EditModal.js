@@ -117,8 +117,15 @@ function EditModal({ item, onClose, onSave, showToast }) {
 
     try {
       setUploading(true);
+      // Tạo preview cục bộ
+      const localUrl = URL.createObjectURL(file);
+      setFormData((prev) => ({ ...prev, hinhAnh: localUrl })); // Hiển thị ảnh ngay lập tức
+
       const isPdf = file.type === "application/pdf";
       const resourceType = isPdf ? "raw" : "image";
+
+      // Tự động quét OCR ngay khi chọn ảnh (không áp dụng cho PDF)
+      if (!isPdf) handleOCR(file);
 
       const data = new FormData();
       data.append("file", file);
@@ -138,28 +145,31 @@ function EditModal({ item, onClose, onSave, showToast }) {
       const fileData = await res.json();
       
       if (fileData.secure_url) {
-        console.log("Upload thành công:", fileData.secure_url);
-        setFormData((prev) => ({ ...prev, hinhAnh: fileData.secure_url }));
+        const cleanUrl = fileData.secure_url.replace(/%22/g, '').replace(/["'}]/g, ''); // Làm sạch link
+        console.log("Upload thành công:", cleanUrl);
+        setFormData((prev) => ({ ...prev, hinhAnh: cleanUrl })); // Cập nhật link Cloudinary
       } else {
-        throw new Error(fileData.error?.message || "Lỗi không xác định");
+        throw new Error(fileData.error?.message || `Lỗi HTTP: ${res.status}`);
       }
     } catch (error) {
       console.error("Upload error:", error);
       if (error.name === 'AbortError') {
         alert("Upload thất bại: Mạng quá chậm hoặc mất kết nối.");
       } else {
-        alert("Lỗi upload: " + error.message);
+        alert("Lỗi upload: " + error.message + "\n\nVui lòng kiểm tra cấu hình Cloudinary trong file .env.");
       }
+      setFormData((prev) => ({ ...prev, hinhAnh: "" })); // Xóa ảnh preview nếu upload lỗi
     } finally {
       setUploading(false);
     }
   };
 
-  // Xử lý OCR (Quét hóa đơn)
-  const handleOCR = async () => {
-    const imageUrl = formData.hinhAnh;
-    if (!imageUrl) {
-      alert("Vui lòng tải ảnh lên hoặc chọn ảnh hóa đơn trước khi quét.");
+  // Xử lý OCR (Quét hóa đơn) - Hỗ trợ cả File và URL
+  const handleOCR = async (source) => {
+    // Nếu gọi từ nút bấm mà không truyền source, lấy từ state
+    const ocrSource = source || formData.hinhAnh;
+    if (!ocrSource) {
+      if (!source) alert("Vui lòng tải ảnh lên trước khi quét.");
       return;
     }
 
@@ -168,7 +178,7 @@ function EditModal({ item, onClose, onSave, showToast }) {
 
     try {
       const result = await Tesseract.recognize(
-        imageUrl,
+        ocrSource,
         'vie', // Sử dụng ngôn ngữ tiếng Việt
         { logger: m => console.log(m) } // Log tiến độ ra console
       );
@@ -179,15 +189,38 @@ function EditModal({ item, onClose, onSave, showToast }) {
       const parsedData = { noiDung: formData.noiDung, soTien: formData.soTien, ngay: formData.ngay };
       let foundSomething = false;
 
-      // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy)
-      const dateRegex = /(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/;
-      const dateMatch = text.match(dateRegex);
-      if (dateMatch) {
-        const day = dateMatch[1].padStart(2, '0');
-        const month = dateMatch[2].padStart(2, '0');
-        const year = dateMatch[3];
-        parsedData.ngay = `${year}-${month}-${day}`;
-        foundSomething = true;
+      // 1. Tìm Ngày tháng (dd/mm/yyyy hoặc dd-mm-yyyy) - Cải tiến để lấy ngày hợp lý nhất
+      const dateRegex = /(\d{1,2})[\s\/\-\.]+(\d{1,2})[\s\/\-\.]+(\d{4})/g;
+      const dateMatches = [...text.matchAll(dateRegex)];
+      
+      if (dateMatches.length > 0) {
+        const currentYear = new Date().getFullYear();
+        
+        // Chuyển đổi và sửa lỗi OCR (ví dụ: Tesseract hay đọc nhầm 202x thành 201x)
+        const validDates = dateMatches.map(m => {
+          const day = m[1].padStart(2, '0');
+          const month = m[2].padStart(2, '0');
+          let year = m[3];
+          
+          // Logic sửa lỗi: Nếu năm đọc ra là 201x nhưng thực tế là 202x
+          if (year.startsWith("201") && currentYear >= 2024) {
+            year = year.replace("201", "202");
+          }
+          
+          return { day, month, year, full: `${year}-${month}-${day}` };
+        }).filter(d => {
+          const y = parseInt(d.year);
+          return y >= currentYear - 1 && y <= currentYear + 1; // Chỉ lấy ngày trong khoảng +/- 1 năm
+        });
+
+        if (validDates.length > 0) {
+          const bestDate = validDates[validDates.length - 1]; // Lấy ngày cuối cùng tìm thấy
+          parsedData.ngay = bestDate.full;
+          foundSomething = true;
+        } else {
+          // Fallback: Nếu không có ngày nào trong dải năm hợp lý, lấy ngày đầu tiên tìm được
+          parsedData.ngay = `${dateMatches[0][3]}-${dateMatches[0][2].padStart(2, '0')}-${dateMatches[0][1].padStart(2, '0')}`;
+        }
       }
 
       // 2. Tìm Số tiền (Lấy số lớn nhất tìm thấy trong văn bản)
@@ -305,7 +338,7 @@ function EditModal({ item, onClose, onSave, showToast }) {
                 )}
                 <div style={{ fontSize: '10px', color: '#16a34a', marginTop: '4px', wordBreak: 'break-all' }}>
                   ✓ Đã có link: {formData.hinhAnh.substring(0, 30)}...
-                </div>
+                </div> {/* */}
               </div>
             ) : (
               <div className="upload-placeholder" onClick={() => fileInputRef.current.click()}>
@@ -424,7 +457,7 @@ function EditModal({ item, onClose, onSave, showToast }) {
           </div>
 
           <div className="modal-actions">
-            <button type="button" className="btn-ocr" onClick={handleOCR} disabled={ocrScanning || uploading}>
+            <button type="button" className="btn-ocr" onClick={() => handleOCR()} disabled={ocrScanning || uploading || !formData.hinhAnh}>
               {ocrScanning ? <FiLoader className="spin" /> : <FiImage />} 
               {ocrScanning ? " Đang xử lý..." : " Quét OCR"}
             </button>

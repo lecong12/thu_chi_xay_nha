@@ -1,106 +1,312 @@
-import React, { useState, useEffect } from 'react';
-import { FiCamera, FiLoader, FiPhone, FiCheckCircle, FiClock } from 'react-icons/fi';
+import React, { useState, useRef, useEffect } from 'react';
+import { FiCamera, FiLoader, FiSave, FiImage, FiSearch, FiPhoneCall, FiUser, FiExternalLink } from 'react-icons/fi';
 import { addRowToSheet, fetchTableData } from '../utils/sheetsAPI';
 import './BusinessScanner.css';
 
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '').trim();
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '').trim();
+const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
 function BusinessScanner({ showToast }) {
-  const [uploading, setUploading] = useState(false);
-  const [latestScan, setLatestScan] = useState(null);
-  const [polling, setPolling] = useState(false);
-  const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
+  const fileInputRef = useRef(null);
+  const [image, setImage] = useState(null); // Dùng để lưu URL xem trước cục bộ hoặc Cloudinary
+  const [uploading, setUploading] = useState(false); // Trạng thái upload lên Cloudinary
+  const [scanning, setScanning] = useState(false); // Trạng thái quét OCR
+  const [saving, setSaving] = useState(false); // Trạng thái lưu vào AppSheet
+  const [recentContacts, setRecentContacts] = useState([]); // Danh sách liên hệ vừa lưu
+  const [loadingContacts, setLoadingContacts] = useState(false); // Trạng thái tải danh bạ
+  
+  const [scannedData, setScannedData] = useState({
+    tenDoanhNghiep: "",
+    soDienThoai: "",
+    hinhAnh: "" // Link ảnh Cloudinary sau khi upload
+  });
 
   // Hàm tự động kiểm tra xem AI đã quét xong chưa (Polling)
   useEffect(() => {
-    let interval;
-    if (polling && latestScan) {
-      interval = setInterval(async () => {
-        const res = await fetchTableData("DanhBa", APP_ID);
-        if (res.success) {
-          const updatedRow = res.data.find(r => r.ID === latestScan.ID);
-          if (updatedRow && updatedRow.TrangThai === "Completed") {
-            setLatestScan(updatedRow);
-            setPolling(false);
-            showToast("AI đã trích xuất xong!", "success");
-          }
-        }
-      }, 3000); // Kiểm tra mỗi 3 giây
-    }
-    return () => clearInterval(interval);
-  }, [polling, latestScan, APP_ID, showToast]);
+    loadRecentContacts();
+  }, []);
 
-  const handleCapture = async (e) => {
+  const loadRecentContacts = async () => {
+    setLoadingContacts(true);
+    try {
+      const res = await fetchTableData("DanhBa", APP_ID);
+      if (res.success && res.data) {
+        // Lấy 10 bản ghi mới nhất, đảm bảo mapping đúng tên cột
+        setRecentContacts(res.data.slice().reverse().slice(0, 10).map(item => ({
+          id: item.ID || item.id,
+          TenDoanhNghiep: item.TenDoanhNghiep || item.ten || "Không tên",
+          SoDienThoai: item.SoDienThoai || item.sdt || "Không có số"
+        })));
+      }
+    } catch (e) {
+      console.error("Lỗi tải danh bạ:", e);
+      showToast("Lỗi tải danh bạ gần đây.", "error");
+    } finally {
+      setLoadingContacts(false);
+    }
+  };
+
+  // Helper: Làm sạch link Cloudinary từ chuỗi rác
+  const getCleanUrl = (rawUrl) => {
+    if (!rawUrl) return "";
+    const match = String(rawUrl).match(/(https:\/\/res\.cloudinary\.com\/[^\s"'}]+)/);
+    return match ? match[0].replace(/%22/g, '').replace(/["'}]/g, '') : rawUrl;
+  };
+
+  // Xử lý chọn file và upload
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
     setUploading(true);
     try {
-      showToast("Đang tải ảnh...", "info");
+      showToast("Đang tải ảnh và quét OCR...", "info");
+      
+      // 1. Tạo link xem trước cục bộ để hiển thị và quét OCR ngay lập tức
+      const localUrl = URL.createObjectURL(file);
+      setImage(localUrl);
+
+      const isPdf = file.type === "application/pdf";
+      // Nếu là ảnh thì quét OCR song song luôn, không đợi upload
+      if (!isPdf) {
+        handleOCR(file); 
+      }
+
+      // 2. Tiến hành upload lên Cloudinary đồng thời
       const formData = new FormData();
       formData.append("file", file);
       formData.append("upload_preset", UPLOAD_PRESET);
-      
-      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
-      const fileData = await res.json();
+      formData.append("resource_type", "auto"); // Cloudinary tự nhận diện loại file
 
-      if (fileData.secure_url) {
-        const rowData = {
-          ID: `SCAN_${Date.now()}`,
-          AnhCard: fileData.secure_url,
-          TenDoanhNghiep: "Đang phân tích...", 
-          SoDienThoai: "",
-          NgayQuet: new Date().toLocaleString('vi-VN'),
-          TrangThai: "Processing"
-        };
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
-        const sheetRes = await addRowToSheet("DanhBa", rowData, APP_ID);
-        if (sheetRes.success) {
-          setLatestScan(rowData);
-          setPolling(true);
-          showToast("Đã gửi ảnh. Vui lòng chờ AI trong giây lát.", "info");
-        }
+      const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+        method: "POST",
+        body: formData,
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error?.message || `Lỗi Cloudinary: ${res.status}`);
       }
-    } catch (error) { showToast("Lỗi: " + error.message, "error"); }
-    finally { setUploading(false); }
+
+      const fileData = await res.json();
+      if (fileData.secure_url) {
+        const cleanUrl = getCleanUrl(fileData.secure_url);
+        setScannedData(prev => ({ ...prev, hinhAnh: cleanUrl }));
+        showToast("Tải ảnh chứng từ thành công!", "success");
+      }
+    } catch (error) {
+      showToast("Lỗi upload: " + error.message, "error");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Xử lý quét văn bản (OCR) - Chấp nhận cả URL hoặc File object
+  const handleOCR = async (source) => {
+    if (!source) return;
+    setScanning(true);
+    // Chỉ hiện toast nếu không phải đang upload (để tránh chồng chéo thông báo)
+    if (!uploading) showToast("Đang phân tích hình ảnh...", "info");
+    
+    try {
+      const { data: { text } } = await Tesseract.recognize(source, 'vie');
+
+      // Sử dụng functional update để tránh stale state (dữ liệu cũ ghi đè dữ liệu mới)
+      setScannedData(prev => {
+        const extracted = { ...prev };
+        
+        // 1. Tìm số điện thoại (Regex VN cải tiến)
+        const cleanTextForPhone = text.replace(/[^\d]/g, ''); // Chỉ giữ lại số để tìm SĐT
+        const phoneMatch = cleanTextForPhone.match(/(03|05|07|08|09|02)\d{8,9}/);
+        if (phoneMatch) extracted.soDienThoai = phoneMatch[0];
+
+        // 2. Tìm tên doanh nghiệp (Logic trích xuất tiếng Việt)
+        const businessKeywords = [
+          'công ty', 'cửa hàng', 'đại lý', 'vật tư', 'xây dựng', 'văn phòng', 
+          'showroom', 'doanh nghiệp', 'hộ kinh doanh', 'tiệm', 'cơ sở', 
+          'nhà thầu', 'vật liệu', 'trang trí', 'nội thất', 'điện nước'
+        ];
+        
+        const cleanLines = text.split('\n')
+          .map(l => l.trim()
+            .replace(/[|\\\[\]{}()_*~^]/g, '') // Xóa ký tự nhiễu OCR
+            .replace(/^[^\w\sÀ-ỹ0-9]+|[^\w\sÀ-ỹ0-9]+$/g, '') // Xóa rác đầu/cuối
+          )
+          .filter(l => l.length > 2 && !/^\d+$/.test(l)); // Bỏ dòng chỉ toàn số
+
+        if (cleanLines.length > 0) {
+          let nameLine = cleanLines.find(l => 
+            businessKeywords.some(kw => l.toLowerCase().includes(kw))
+          );
+
+          if (!nameLine) {
+            nameLine = cleanLines.find(l => {
+              const upperCount = (l.match(/[A-ZÀ-Ỹ]/g) || []).length;
+              const letterCount = (l.match(/[a-zA-ZÀ-ỹ]/g) || []).length;
+              return letterCount > 5 && (upperCount / letterCount) > 0.5;
+            });
+          }
+
+          if (!nameLine) {
+            nameLine = cleanLines.find(l => {
+              const hasFewNumbers = (l.match(/\d/g) || []).length < 5;
+              const notAddress = !/(số|đường|phường|quận|tp|huyện|tỉnh|địa chỉ|đ\/c|đc|hotline|tel|fax|mst|email|website|web)/i.test(l);
+              const notEmail = !/@/.test(l) && !/\.com|\.vn/.test(l);
+              return hasFewNumbers && notAddress && notEmail;
+            });
+          }
+          
+          let finalName = (nameLine || cleanLines[0]).trim();
+          // Làm sạch lần cuối: Xóa các nhãn thông tin nếu còn sót
+          finalName = finalName.replace(/^(Tên|Cửa hàng|Cty|Công ty|Đ\/c|Địa chỉ|ĐC)[:\s\-]*/i, '');
+          extracted.tenDoanhNghiep = finalName;
+        }
+
+        return extracted;
+      });
+      showToast("Đã nhận diện thông tin liên hệ!", "success");
+    } catch (error) {
+      console.error("OCR Error:", error);
+      showToast("Không thể tự động đọc văn bản.", "warning");
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Lưu vào AppSheet
+  const handleSave = async () => {
+    if (!scannedData.tenDoanhNghiep && !scannedData.soDienThoai) {
+      showToast("Vui lòng nhập Tên doanh nghiệp hoặc Số điện thoại.", "warning");
+      return;
+    }
+    if (!scannedData.hinhAnh && uploading) {
+      showToast("Vui lòng đợi ảnh upload xong.", "warning");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      // CHỈ lấy link từ Cloudinary (scannedData.hinhAnh), KHÔNG lấy link blob (image)
+      const payload = {
+        "ID": `DB_${Date.now()}`, // Tạo ID dạng chuỗi để AppSheet không nhầm lẫn
+        "AnhCard": scannedData.hinhAnh, // Khớp với tên cột của bạn
+        "TenDoanhNghiep": scannedData.tenDoanhNghiep,
+        "SoDienThoai": scannedData.soDienThoai,
+        "NgayQuet": new Date().toLocaleString('vi-VN'),
+        "TrangThai": "Hoàn thành"
+      };
+
+      const res = await addRowToSheet("DanhBa", payload, APP_ID);
+      if (res.success) {
+        showToast("Đã lưu vào Danh bạ!", "success");
+        setImage(null); // Xóa preview
+        setScannedData({ 
+          tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "" 
+        });
+        loadRecentContacts(); // Tải lại danh sách sau khi lưu
+      }
+    } catch (error) {
+      showToast("Lỗi lưu AppSheet: " + error.message, "error");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="scanner-wrapper">
-      <div className="scanner-main-card">
-        <h3>Quét Card AI</h3>
-        
-        <div className="scan-display">
-          {!latestScan ? (
-            <div className="empty-state">Chụp bảng hiệu hoặc card để lưu danh bạ</div>
-          ) : (
-            <div className="scan-result">
-              <img src={latestScan.AnhCard} alt="Card" className="card-thumb" />
-              <div className="scan-info">
-                {polling ? (
-                  <div className="status-loading"><FiClock className="spin" /> AI đang đọc dữ liệu...</div>
-                ) : (
-                  <div className="status-done">
-                    <p className="biz-name"><strong>{latestScan.TenDoanhNghiep}</strong></p>
-                    <p className="biz-phone">{latestScan.SoDienThoai}</p>
-                    {latestScan.SoDienThoai && (
-                      <a href={`tel:${latestScan.SoDienThoai.replace(/\D/g,'')}`} className="call-now-btn">
-                        <FiPhone /> Gọi ngay
+    <div className="scanner-container">
+      <div className="scanner-card">
+        <div className="scanner-header">
+          <h3><FiCamera /> Quét Card & Bảng hiệu</h3>
+          <p>Lưu nhanh thông tin nhà thầu, cửa hàng</p>
+        </div>
+
+        <div className="scanner-body">
+          {/* Khu vực xem trước / Upload */}
+          <div className={`scan-preview-zone ${image ? 'has-img' : ''}`} onClick={() => !uploading && fileInputRef.current.click()}>
+            {uploading ? (
+              <div className="scan-overlay"><FiLoader className="spin" /> <span>Đang tải lên...</span></div>
+            ) : image ? (
+              <img src={image} alt="Preview" className="img-preview" />
+            ) : (
+              <div className="scan-placeholder">
+                <FiImage size={40} />
+                <span>Chạm để chụp hoặc chọn ảnh</span>
+              </div>
+            )}
+            <input type="file" ref={fileInputRef} onChange={handleFileSelect} hidden accept="image/*,application/pdf" />
+          </div>
+
+          {/* Form kết quả quét */}
+          <div className="scan-result-form">
+            <div className="scan-input-group">
+              <label>Tên Doanh nghiệp / Chủ thợ</label>
+              <input type="text" value={scannedData.tenDoanhNghiep} placeholder="Tên đơn vị..." onChange={e => setScannedData({...scannedData, tenDoanhNghiep: e.target.value})} />
+            </div>
+            
+            <div className="scan-input-group">
+              <label>Số điện thoại</label>
+              <div className="input-icon-wrapper">
+                <input type="tel" value={scannedData.soDienThoai} placeholder="090..." onChange={e => setScannedData({...scannedData, soDienThoai: e.target.value})} />
+                {scanning && <FiLoader className="spin icon-inside" />}
+              </div>
+            </div>
+
+            {scannedData.soDienThoai && (
+              <div className="quick-call-zone">
+                <a href={`tel:${scannedData.soDienThoai.replace(/\D/g,'')}`} className="btn-call">
+                  <FiPhoneCall /> Gọi ngay: {scannedData.soDienThoai}
+                </a>
+              </div>
+            )}
+
+            <div className="scan-actions">
+              <button className="btn-secondary" onClick={() => handleOCR(image)} disabled={!image || scanning}>
+                <FiSearch /> {scanning ? "Đang quét..." : "Quét lại ảnh"}
+              </button>
+              <button className="btn-primary" onClick={handleSave} disabled={saving || !image || uploading}>
+                {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Khu vực hiển thị danh bạ vừa lưu */}
+        <div className="recent-contacts-section">
+          <div className="section-divider">
+            <span>Danh bạ đã lưu gần đây</span>
+          </div>
+          
+          {loadingContacts ? (
+            <div className="loading-inline"><FiLoader className="spin" /> Đang tải dữ liệu...</div>
+          ) : recentContacts.length > 0 ? (
+            <div className="contacts-mini-list">
+              {recentContacts.map((contact, idx) => (
+                <div key={contact.id || idx} className="contact-mini-item">
+                  <div className="contact-mini-info">
+                    <div className="contact-name">{contact.TenDoanhNghiep || "Không tên"}</div>
+                    <div className="contact-phone">{contact.SoDienThoai || "Không có số"}</div>
+                  </div>
+                  <div className="contact-mini-actions">
+                    {contact.SoDienThoai && (
+                      <a href={`tel:${contact.SoDienThoai.replace(/\D/g,'')}`} className="mini-call-btn" title="Gọi ngay">
+                        <FiPhoneCall size={14} />
                       </a>
                     )}
                   </div>
-                )}
-              </div>
+                </div>
+              ))}
             </div>
+          ) : (
+            <div className="no-contacts-text">Chưa có liên hệ nào trong danh bạ.</div>
           )}
+          <p className="storage-hint">Dữ liệu được lưu tại Google Sheet: <strong>DanhBa</strong></p>
         </div>
-
-        <label className={`capture-btn ${uploading ? 'disabled' : ''}`}>
-          {uploading ? <FiLoader className="spin" /> : <FiCamera />}
-          <span>{uploading ? "Đang xử lý..." : "Chụp ảnh mới"}</span>
-          <input type="file" accept="image/*" capture="environment" onChange={handleCapture} hidden disabled={uploading} />
-        </label>
       </div>
     </div>
   );
