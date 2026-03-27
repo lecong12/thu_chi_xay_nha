@@ -56,33 +56,46 @@ app.post('/api/gemini-extract', async (req, res) => {
     // Tải ảnh từ Cloudinary để gửi cho Gemini
     const imageResp = await fetch(imageUrl).then(response => response.arrayBuffer());
     
+    // Tự động nhận diện mimeType từ URL để hỗ trợ đa dạng định dạng
+    const urlLower = imageUrl.toLowerCase();
+    let mimeType = "image/jpeg";
+    if (urlLower.endsWith(".png")) mimeType = "image/png";
+    else if (urlLower.endsWith(".pdf")) mimeType = "application/pdf";
+    else if (urlLower.endsWith(".webp")) mimeType = "image/webp";
+    else if (urlLower.endsWith(".heic")) mimeType = "image/heic";
+    
     let prompt = "";
     if (type === 'card') {
-      prompt = `Bạn là một chuyên gia OCR chính xác tuyệt đối. Nhiệm vụ: Trích xuất tên và SĐT từ ảnh.
-      QUY TẮC NGHIÊM NGẶT ĐỂ TRÁNH SAI LỆCH:
-      1. "sdt": CHỈ trích xuất nếu dãy số đó đứng ngay sau các nhãn rõ ràng như: Tel, Mobile, Hotline, SĐT, Điện thoại, hoặc có icon điện thoại bên cạnh.
-      2. "sdt": Phải bắt đầu bằng số 0 hoặc +84 và có độ dài từ 10 đến 11 chữ số.
-      3. CẢNH BÁO: KHÔNG ĐƯỢC lấy Mã số thuế (MST), Số tài khoản (STK), Số hóa đơn hoặc Số nhà. Đây là những dãy số thường bị nhầm với SĐT.
-      4. KHÔNG tự ý ghép các nhóm số nằm rời rạc ở các dòng khác nhau.
-      5. NẾU KHÔNG THẤY SĐT rõ ràng hoặc nghi ngờ dãy số đó là MST/STK, bạn BẮT BUỘC phải để giá trị "sdt" là "".
-      6. TUYỆT ĐỐI KHÔNG ĐƯỢC BỊA SỐ (Hallucination). Nếu không có SĐT trong ảnh, hãy trả về chuỗi rỗng.
-      7. "ten": Trích xuất tên thương hiệu hoặc cửa hàng chính.
-      Trả về JSON duy nhất: {"ten": "...", "sdt": "..."}`;
+      prompt = `Bạn là một chuyên gia OCR chính xác tuyệt đối. Nhiệm vụ: Trích xuất thông tin doanh nghiệp từ danh thiếp hoặc biển hiệu kinh doanh.
+      CÁC TRƯỜNG CẦN LẤY:
+      1. "ten": Tên thương hiệu, cửa hàng hoặc công ty chính (thường là chữ to nhất).
+      2. "sdt": Số điện thoại liên hệ. QUY TẮC: Trả về chuỗi chỉ gồm các chữ số (VD: 0901234567). KHÔNG lấy mã số thuế hay số tài khoản.
+      3. "diaChi": Địa chỉ kinh doanh đầy đủ nếu có.
+      4. "mst": Mã số thuế doanh nghiệp nếu có.
+
+      QUY TẮC NGHIÊM NGẶT:
+      - Phân biệt kỹ SDT (đi kèm nhãn: Tel, Mobile, Hotline, icon điện thoại) với STK hay MST.
+      - Nếu không thấy trường nào, trả về chuỗi rỗng "".
+      - Tuyệt đối không tự bịa thông tin. Trả về JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
     } else {
-      prompt = `Bạn là một kế toán chuyên nghiệp. Hãy phân tích hóa đơn/biên lai vật tư xây dựng này.
-      Yêu cầu:
-      1. "ngay": Tìm ngày giao dịch. Nếu định dạng là dd/mm/yyyy, hãy chuyển về YYYY-MM-DD. Nếu không thấy năm, hãy giả định là 2024 hoặc 2025.
-      2. "soTien": Tìm "Tổng cộng" hoặc "Thành tiền" cuối cùng. Chỉ lấy giá trị số nguyên, bỏ qua ký hiệu tiền tệ.
-      3. "noiDung": Tóm tắt ngắn gọn các mặt hàng (Ví dụ: "Xi măng Hà Tiên", "Cát xây tô").
-      Lưu ý: Ưu tiên độ chính xác hơn là số lượng. Nếu chữ quá mờ không đọc được, để giá trị "".
-      Trả về JSON: {"ngay": "...", "soTien": 0, "noiDung": "..."}`;
+      prompt = `Bạn là một chuyên gia phân tích hóa đơn. Hãy phân tích hóa đơn/biên lai vật tư xây dựng này.
+      CÁC TRƯỜNG CẦN LẤY:
+      1. "ten": Tên đơn vị BÁN HÀNG (doanh nghiệp cung cấp vật tư).
+      2. "sdt": Số điện thoại của đơn vị bán hàng (làm sạch chỉ để lại số).
+      3. "ngay": Ngày giao dịch (định dạng YYYY-MM-DD).
+      4. "soTien": Tổng số tiền thanh toán cuối cùng (Số nguyên, không lấy dấu phân cách).
+      5. "noiDung": Tóm tắt danh sách vật tư chính.
+
+      YÊU CẦU:
+      - KHÔNG lấy thông tin khách hàng (người mua), CHỈ lấy thông tin người bán.
+      - Nếu thông tin mờ hoặc không có, để "". Trả về JSON: {"ten": "...", "sdt": "...", "ngay": "...", "soTien": 0, "noiDung": "..."}`;
     }
 
     const result = await model.generateContent([
       {
         inlineData: {
           data: Buffer.from(imageResp).toString("base64"),
-          mimeType: "image/jpeg"
+          mimeType: mimeType
         }
       },
       prompt
