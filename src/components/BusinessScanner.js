@@ -1,11 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { FiCamera, FiLoader, FiSave, FiImage, FiSearch, FiPhoneCall, FiFileText } from 'react-icons/fi';
+import { FiCamera, FiLoader, FiSave, FiImage, FiPhoneCall, FiFileText, FiCheckCircle } from 'react-icons/fi';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { addRowToSheet, fetchTableData } from '../utils/sheetsAPI';
 import './BusinessScanner.css';
 
+// Cấu hình từ môi trường
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
+
+// SỬ DỤNG KEY ANH ĐÃ CUNG CẤP
+const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY || "AIzaSyD..."; 
 
 function BusinessScanner({ showToast, onScanSuccess }) {
   const fileInputRef = useRef(null);
@@ -13,116 +18,104 @@ function BusinessScanner({ showToast, onScanSuccess }) {
   const [uploading, setUploading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [scanMode, setScanMode] = useState('BILL'); // Mặc định hóa đơn cho thợ Kim Long
   const [recentContacts, setRecentContacts] = useState([]);
-  const [loadingContacts, setLoadingContacts] = useState(false);
-  const [scanMode, setScanMode] = useState('CARD'); 
 
   const [scannedData, setScannedData] = useState({
-    tenDoanhNghiep: "",
-    soDienThoai: "",
-    hinhAnh: "",
-    soTien: 0,
-    noiDung: "",
-    ngay: ""
+    tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "", soTien: 0, noiDung: "", ngay: ""
   });
 
   useEffect(() => { loadRecentContacts(); }, []);
 
   const loadRecentContacts = async () => {
     try {
-      setLoadingContacts(true);
       const res = await fetchTableData("DanhBa", APP_ID);
       if (res.success && res.data) {
-        setRecentContacts(res.data.slice().reverse().slice(0, 10).map(item => ({
-          id: item.ID || item.id,
-          ten: item.TenDoanhNghiep || item.ten || "Không tên",
-          sdt: item.SoDienThoai || item.sdt || "Không có số"
-        })));
+        setRecentContacts(res.data.slice().reverse().slice(0, 5));
       }
-    } catch (e) { console.error("Lỗi tải danh bạ:", e); } finally { setLoadingContacts(false); }
+    } catch (e) { console.error("Lỗi danh bạ:", e); }
+  };
+
+  // HÀM XỬ LÝ AI TRỰC TIẾP (KHÔNG QUA BACKEND)
+  const processWithGemini = async (base64Data) => {
+    try {
+      const genAI = new GoogleGenerativeAI(GEMINI_KEY);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = scanMode === 'BILL' 
+        ? "Bạn là kế toán chuyên nghiệp. Hãy đọc ảnh hóa đơn này. Tìm: 1. Tên cửa hàng (don_vi); 2. Tổng cộng tiền thanh toán (so_tien - chỉ lấy số); 3. Nội dung mua hàng (noi_dung); 4. Ngày (ngay). Trả về định dạng JSON: { 'don_vi': '...', 'so_tien': 0, 'noi_dung': '...', 'ngay': '...' }"
+        : "Bạn là chuyên gia marketing. Hãy đọc Card/Bảng hiệu này. Tìm: 1. Tên doanh nghiệp (ten); 2. Số điện thoại (sdt). Trả về JSON: { 'ten': '...', 'sdt': '...' }";
+
+      const result = await model.generateContent([
+        prompt,
+        { inlineData: { data: base64Data, mimeType: "image/jpeg" } },
+      ]);
+
+      const response = await result.response;
+      const text = response.text();
+      const jsonMatch = text.match(/\{.*\}/s);
+      return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch (error) {
+      console.error("Lỗi Gemini:", error);
+      showToast("Lỗi kết nối Gemini AI", "error");
+      return null;
+    }
   };
 
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const localUrl = URL.createObjectURL(file);
-    setImage(localUrl);
+    setImage(URL.createObjectURL(file));
     setUploading(true);
     setScanning(true);
-    showToast("Đang tải ảnh và phân tích AI...", "info");
+    showToast("Đang tải ảnh và AI đang phân tích...", "info");
 
     try {
-      // BƯỚC 1: UPLOAD LÊN CLOUDINARY
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("upload_preset", UPLOAD_PRESET);
-      const resCloud = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-        method: "POST", body: formData
-      });
-      const cloudData = await resCloud.json();
-      const imageUrl = cloudData.secure_url;
-
-      // BƯỚC 2: GỌI API GEMINI (Với lệnh cưỡng chế thông minh)
-      const resAI = await fetch('/api/gemini-extract', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageUrl, 
-          type: scanMode === 'BILL' ? 'bill' : 'card',
-          prompt: scanMode === 'BILL' 
-            ? "Bạn là kế toán. Tìm số tiền TỔNG CỘNG và tên cửa hàng. Trả về JSON: {so_tien, noi_dung, don_vi, ngay}" 
-            : "Bạn là chuyên gia marketing. Tìm tên cửa hàng và SĐT. Trả về JSON: {ten, sdt}"
-        })
-      });
-      
-      const aiResponse = await resAI.json();
-
-      // BƯỚC 3: XỬ LÝ DỮ LIỆU (CHỐNG TREO MÁY)
-      if (aiResponse) {
-        let finalData = { ...aiResponse };
+      // 1. Chuyển sang Base64 cho AI đọc
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onloadend = async () => {
+        const base64Data = reader.result.split(',')[1];
         
-        // Nếu Server trả về text thuần (như mẫu Kim Long) thay vì JSON chuẩn
-        if (typeof aiResponse === 'string' || aiResponse.text) {
-          const rawText = aiResponse.text || aiResponse;
-          // Tự bóc tách số tiền bằng Regex (Tìm số sau chữ Tổng cộng/Thành tiền)
-          const amountMatch = rawText.match(/(Tổng cộng|Thành tiền|Tổng tiền|Số tiền)[:\s]*([\d.,]+)/i);
-          finalData.so_tien = amountMatch ? amountMatch[2].replace(/[.,]/g, '') : 0;
-          
-          const unitMatch = rawText.match(/(Cửa hàng|Đơn vị|Tên cửa hàng)[:\s]*([^\n]+)/i);
-          finalData.don_vi = unitMatch ? unitMatch[2].trim() : "Đơn vị vật tư";
-          
-          finalData.noi_dung = "Nhập vật tư xây dựng";
-        }
+        // 2. Gọi Gemini trực tiếp từ trình duyệt
+        const aiResult = await processWithGemini(base64Data);
 
-        const result = {
-          tenDoanhNghiep: finalData.don_vi || finalData.ten || "Đơn vị mới",
-          soDienThoai: finalData.sdt || finalData.so_dien_thoai || "",
-          hinhAnh: imageUrl,
-          soTien: finalData.so_tien || 0,
-          noiDung: finalData.noi_dung || "",
-          ngay: finalData.ngay || new Date().toLocaleDateString('vi-VN')
-        };
-        
-        setScannedData(result);
+        // 3. Upload lên Cloudinary để lấy link lưu AppSheet
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("upload_preset", UPLOAD_PRESET);
+        const resCloud = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData });
+        const cloudData = await resCloud.json();
 
-        // NẾU LÀ HÓA ĐƠN: Đổ thẳng về App.js để mở Modal Giao Dịch
-        if (scanMode === 'BILL' && onScanSuccess) {
-          onScanSuccess({...finalData, image_url: imageUrl}, 'BILL');
+        if (aiResult) {
+          const processed = {
+            tenDoanhNghiep: aiResult.don_vi || aiResult.ten || "Đơn vị mới",
+            soDienThoai: aiResult.sdt || "",
+            hinhAnh: cloudData.secure_url,
+            soTien: aiResult.so_tien || 0,
+            noiDung: aiResult.noi_dung || "Vật tư xây dựng",
+            ngay: aiResult.ngay || new Date().toLocaleDateString('vi-VN')
+          };
+          setScannedData(processed);
+
+          // Nếu là hóa đơn, tự động đổ về App.js để mở Modal Giao dịch
+          if (scanMode === 'BILL' && onScanSuccess) {
+            onScanSuccess({ ...aiResult, image_url: cloudData.secure_url }, 'BILL');
+          }
+          showToast("AI đã trích xuất thành công!", "success");
         }
-        showToast("AI đã trích xuất xong!", "success");
-      }
+        setScanning(false);
+        setUploading(false);
+      };
     } catch (err) {
-      console.error("Lỗi:", err);
-      showToast("Lỗi xử lý AI: " + err.message, "error");
-    } finally {
-      setUploading(false);
+      showToast("Lỗi xử lý ảnh", "error");
       setScanning(false);
+      setUploading(false);
     }
   };
 
   const handleSaveContact = async () => {
-    if (!scannedData.tenDoanhNghiep && !scannedData.soDienThoai) return;
     setSaving(true);
     try {
       const payload = {
@@ -131,94 +124,65 @@ function BusinessScanner({ showToast, onScanSuccess }) {
         "TenDoanhNghiep": scannedData.tenDoanhNghiep,
         "SoDienThoai": scannedData.soDienThoai,
         "NgayQuet": new Date().toLocaleString('vi-VN'),
-        "TrangThai": "Hoàn thành"
       };
       const res = await addRowToSheet("DanhBa", payload, APP_ID);
       if (res.success) {
-        showToast("Đã lưu vào Danh bạ!", "success");
+        showToast("Đã lưu vào danh bạ!", "success");
         setImage(null);
-        setScannedData({ tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "", soTien: 0, noiDung: "" });
+        setScannedData({ tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "", soTien: 0 });
         loadRecentContacts();
       }
-    } catch (error) { showToast("Lỗi: " + error.message, "error"); } finally { setSaving(false); }
+    } catch (e) { showToast("Lỗi lưu dữ liệu", "error"); } finally { setSaving(false); }
   };
 
   return (
     <div className="scanner-container">
       <div className="scanner-card">
         <div className="scanner-header">
-          <h3><FiCamera /> Quét Thông minh (Gemini)</h3>
-          <div className="scan-mode-toggle">
-            <button className={scanMode === 'CARD' ? 'active' : ''} onClick={() => setScanMode('CARD')}>
-              <FiSearch /> Danh thiếp
-            </button>
-            <button className={scanMode === 'BILL' ? 'active' : ''} onClick={() => setScanMode('BILL')}>
-              <FiFileText /> Hóa đơn
-            </button>
+          <h3><FiCamera /> Trợ lý AI Công trình</h3>
+          <div className="scan-mode-selector">
+            <button className={scanMode === 'BILL' ? 'active' : ''} onClick={() => setScanMode('BILL')}><FiFileText /> Hóa đơn</button>
+            <button className={scanMode === 'CARD' ? 'active' : ''} onClick={() => setScanMode('CARD')}><FiSearch /> Card</button>
           </div>
         </div>
 
         <div className="scanner-body">
           <div className={`scan-preview-zone ${image ? 'has-img' : ''}`} onClick={() => !uploading && fileInputRef.current.click()}>
-            {uploading || scanning ? (
-              <div className="scan-overlay">
-                <FiLoader className="spin" /> 
-                <span>{uploading ? "Đang tải ảnh..." : "AI đang đọc dữ liệu..."}</span>
-              </div>
+            {scanning ? (
+              <div className="scan-overlay"><FiLoader className="spin" /> <span>AI đang trích xuất...</span></div>
             ) : image ? (
-              <img src={image} alt="Preview" className="img-preview" />
+              <img src={image} alt="preview" className="img-preview" />
             ) : (
               <div className="scan-placeholder">
                 <FiImage size={35} />
-                <span>Chụp ảnh {scanMode === 'CARD' ? 'Card' : 'Hóa đơn'}</span>
+                <span>Chạm để quét {scanMode === 'BILL' ? 'Hóa đơn' : 'Danh thiếp'}</span>
               </div>
             )}
             <input type="file" ref={fileInputRef} onChange={handleFileSelect} hidden accept="image/*" />
           </div>
 
           <div className="scan-result-form">
-            <div className="scan-input-group">
-              <label>Tên Đơn vị / Cửa hàng</label>
-              <input type="text" value={scannedData.tenDoanhNghiep} placeholder="Đang chờ AI..." onChange={e => setScannedData({...scannedData, tenDoanhNghiep: e.target.value})} />
+            <div className="field">
+              <label>Đơn vị/Cửa hàng</label>
+              <input type="text" value={scannedData.tenDoanhNghiep} placeholder="..." onChange={e => setScannedData({...scannedData, tenDoanhNghiep: e.target.value})} />
+            </div>
+            <div className="field">
+              <label>{scanMode === 'BILL' ? "Số tiền (VNĐ)" : "Số điện thoại"}</label>
+              <input type="text" value={scanMode === 'BILL' ? Number(scannedData.soTien).toLocaleString() : scannedData.soDienThoai} onChange={e => setScannedData({...scannedData, [scanMode === 'BILL' ? 'soTien' : 'soDienThoai']: e.target.value})} />
             </div>
             
-            <div className="scan-input-group">
-              <label>{scanMode === 'CARD' ? "Số điện thoại" : "Số tiền trích xuất"}</label>
-              <input 
-                type="text" 
-                value={scanMode === 'CARD' ? scannedData.soDienThoai : scannedData.soTien} 
-                onChange={e => setScannedData({...scannedData, [scanMode === 'CARD' ? 'soDienThoai' : 'soTien']: e.target.value})} 
-              />
-            </div>
-
-            <div className="scan-actions">
-              {scanMode === 'CARD' ? (
-                <button className="btn-primary" onClick={handleSaveContact} disabled={saving || !scannedData.hinhAnh}>
-                  {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
-                </button>
-              ) : (
-                <p className="scan-hint">Thông tin hóa đơn sẽ tự động chuyển sang phiếu Thu/Chi.</p>
-              )}
-            </div>
+            {scanMode === 'CARD' && (
+              <button className="btn-save" onClick={handleSaveContact} disabled={saving || !scannedData.hinhAnh}>
+                {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
+              </button>
+            )}
           </div>
-        </div>
-
-        <div className="recent-contacts-section">
-          <div className="section-divider"><span>10 Liên hệ mới nhất</span></div>
-          {loadingContacts ? <FiLoader className="spin" /> : (
-            <div className="contacts-mini-list">
-              {recentContacts.map((c, i) => (
-                <div key={i} className="contact-mini-item">
-                  <div className="info"><b>{c.ten}</b> - {c.sdt}</div>
-                  <a href={`tel:${c.sdt}`} className="call-icon"><FiPhoneCall size={14} /></a>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </div>
     </div>
   );
 }
+
+const FiSearch = () => <svg stroke="currentColor" fill="none" strokeWidth="2" viewBox="0 0 24 24" height="1em" width="1em"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 
 export default BusinessScanner;
