@@ -4,13 +4,13 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { addRowToSheet, fetchTableData } from '../utils/sheetsAPI';
 import './BusinessScanner.css';
 
-// 1. LẤY CẤU HÌNH TỪ VERCEL / MÔI TRƯỜNG
+// Cấu hình Cloudinary và AppSheet
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "").replace(/['"]/g, '');
 const UPLOAD_PRESET = (process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || "").replace(/['"]/g, '');
 const APP_ID = process.env.REACT_APP_APPSHEET_APP_ID;
 
-// ĐẢM BẢO TÊN BIẾN TRÙNG VỚI VERCEL CỦA ANH
-const GEMINI_KEY = process.env.REACT_APP_GEMINI_API_KEY; 
+// ĐÃ ĐIỀN TRỰC TIẾP KEY CỦA ANH VÀO ĐÂY
+const GEMINI_KEY = "AIzaSyBLOov5tK4IF6qVzfVIou6MiR_0VYqJRfc"; 
 
 function BusinessScanner({ showToast, onScanSuccess }) {
   const fileInputRef = useRef(null);
@@ -36,21 +36,14 @@ function BusinessScanner({ showToast, onScanSuccess }) {
     } catch (e) { console.error("Lỗi danh bạ:", e); }
   };
 
-  // HÀM GỌI GEMINI TRỰC TIẾP
   const processWithGemini = async (base64Data) => {
-    if (!GEMINI_KEY) {
-      showToast("Lỗi: Chưa tìm thấy API Key trên Vercel!", "error");
-      return null;
-    }
-
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_KEY);
-      // Sử dụng bản Flash 1.5 để đọc ảnh nhanh nhất
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const prompt = scanMode === 'BILL' 
-        ? "Bạn là kế toán. Hãy đọc hóa đơn này. Tìm: 1. Tên cửa hàng (don_vi); 2. Tổng cộng tiền (so_tien - chỉ lấy số); 3. Nội dung (noi_dung); 4. Ngày (ngay). Trả về JSON: { 'don_vi': '...', 'so_tien': 0, 'noi_dung': '...', 'ngay': '...' }"
-        : "Bạn là Marketing. Hãy đọc Card này. Tìm: Tên cửa hàng (ten) và SĐT (sdt). Trả về JSON: { 'ten': '...', 'sdt': '...' }";
+        ? "Bạn là kế toán chuyên nghiệp. Hãy đọc hóa đơn này. Tìm: 1. Tên cửa hàng (don_vi); 2. Tổng cộng tiền thanh toán (so_tien - chỉ lấy số); 3. Nội dung mua hàng (noi_dung); 4. Ngày (ngay). Trả về định dạng JSON: { 'don_vi': '...', 'so_tien': 0, 'noi_dung': '...', 'ngay': '...' }"
+        : "Bạn là chuyên gia marketing. Hãy đọc Card/Bảng hiệu này. Tìm: 1. Tên doanh nghiệp (ten); 2. Số điện thoại (sdt). Trả về JSON: { 'ten': '...', 'sdt': '...' }";
 
       const result = await model.generateContent([
         prompt,
@@ -59,12 +52,10 @@ function BusinessScanner({ showToast, onScanSuccess }) {
 
       const response = await result.response;
       const text = response.text();
-      // Loại bỏ các ký tự thừa để lấy đúng JSON
       const jsonMatch = text.match(/\{.*\}/s);
       return jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch (error) {
-      console.error("Lỗi chi tiết từ Gemini:", error);
-      showToast("AI phản hồi lỗi: " + error.message, "error");
+      console.error("Lỗi Gemini:", error);
       return null;
     }
   };
@@ -76,19 +67,18 @@ function BusinessScanner({ showToast, onScanSuccess }) {
     setImage(URL.createObjectURL(file));
     setUploading(true);
     setScanning(true);
-    showToast("Đang đọc dữ liệu...", "info");
+    showToast("Đang tải và AI đang phân tích...", "info");
 
     try {
-      // 1. Chuyển ảnh sang Base64
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onloadend = async () => {
         const base64Data = reader.result.split(',')[1];
         
-        // 2. Gọi Gemini xử lý
+        // Gọi AI trực tiếp với Key đã dán sẵn
         const aiResult = await processWithGemini(base64Data);
 
-        // 3. Upload lên Cloudinary
+        // Upload ảnh lên Cloudinary để lưu link vào AppSheet
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", UPLOAD_PRESET);
@@ -101,20 +91,20 @@ function BusinessScanner({ showToast, onScanSuccess }) {
             soDienThoai: aiResult.sdt || "",
             hinhAnh: cloudData.secure_url,
             soTien: aiResult.so_tien || 0,
-            noiDung: aiResult.noi_dung || "Nhập vật tư",
+            noiDung: aiResult.noi_dung || "Vật tư xây dựng",
             ngay: aiResult.ngay || new Date().toLocaleDateString('vi-VN')
           });
 
           if (scanMode === 'BILL' && onScanSuccess) {
             onScanSuccess({ ...aiResult, image_url: cloudData.secure_url }, 'BILL');
           }
-          showToast("Xong! AI đã trích xuất dữ liệu.", "success");
+          showToast("AI đã đọc xong hóa đơn!", "success");
         }
         setScanning(false);
         setUploading(false);
       };
     } catch (err) {
-      showToast("Lỗi: " + err.message, "error");
+      showToast("Lỗi xử lý ảnh", "error");
       setScanning(false);
       setUploading(false);
     }
@@ -137,14 +127,14 @@ function BusinessScanner({ showToast, onScanSuccess }) {
         setScannedData({ tenDoanhNghiep: "", soDienThoai: "", hinhAnh: "", soTien: 0 });
         loadRecentContacts();
       }
-    } catch (e) { showToast("Lỗi lưu AppSheet!", "error"); } finally { setSaving(false); }
+    } catch (e) { showToast("Lỗi lưu dữ liệu", "error"); } finally { setSaving(false); }
   };
 
   return (
     <div className="scanner-container">
       <div className="scanner-card">
         <div className="scanner-header">
-          <h3>Máy quét Thông minh</h3>
+          <h3>Máy quét AI Công trình</h3>
           <div className="scan-mode-tabs">
             <button className={scanMode === 'BILL' ? 'active' : ''} onClick={() => setScanMode('BILL')}>Hóa đơn</button>
             <button className={scanMode === 'CARD' ? 'active' : ''} onClick={() => setScanMode('CARD')}>Card</button>
@@ -158,15 +148,14 @@ function BusinessScanner({ showToast, onScanSuccess }) {
             ) : image ? (
               <img src={image} alt="preview" className="img-preview" />
             ) : (
-              <div className="scan-placeholder"><FiImage size={30} /><span>Chụp ảnh hóa đơn/card</span></div>
+              <div className="scan-placeholder"><FiImage size={35} /><span>Chụp ảnh hóa đơn Kim Long</span></div>
             )}
             <input type="file" ref={fileInputRef} onChange={handleFileSelect} hidden accept="image/*" />
           </div>
 
           <div className="scan-result-form">
             <input type="text" value={scannedData.tenDoanhNghiep} placeholder="Đang chờ AI..." readOnly />
-            <input type="text" value={scanMode === 'BILL' ? Number(scannedData.soTien).toLocaleString() : scannedData.soDienThoai} readOnly />
-            
+            <input type="text" value={scanMode === 'BILL' ? Number(scannedData.soTien).toLocaleString() + " VNĐ" : scannedData.soDienThoai} readOnly />
             {scanMode === 'CARD' && (
               <button className="btn-save" onClick={handleSaveContact} disabled={saving || !image}>
                 {saving ? <FiLoader className="spin" /> : <FiSave />} Lưu Danh bạ
