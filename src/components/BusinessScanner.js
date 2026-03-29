@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { FiCamera, FiLoader } from 'react-icons/fi';
 
 // KEY MỚI CỦA ANH CÔNG
-const GEMINI_KEY = "AIzaSyDfyd86965EGsNgwhcNCuZQ1SZN3xzWty0"; 
+const GEMINI_KEY = "AIzaSyDfyd86965EGsNgwhcNCuZQ1SZN3xzWty0";
 
 function BusinessScanner({ showToast }) {
   const fileInputRef = useRef(null);
