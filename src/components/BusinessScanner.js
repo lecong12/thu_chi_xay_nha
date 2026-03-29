@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { FiCamera, FiLoader, FiSave, FiImage } from 'react-icons/fi';
 
-const GEMINI_KEY = "AIzaSyBLOov5tK4IF6qVzfVIou6MiR_0VYqJRfc"; 
+// KEY API TRỰC TIẾP ĐỂ KIỂM TRA
+const GEMINI_KEY = "AIzaSyBLOov5tK4IF6qVzfVIou6MiR_0VYqJRfc";
 
 function BusinessScanner({ showToast }) {
   const fileInputRef = useRef(null);
@@ -9,111 +10,131 @@ function BusinessScanner({ showToast }) {
   const [scanning, setScanning] = useState(false);
   const [scannedData, setScannedData] = useState({ ten: "", sdt: "" });
 
-  const handleFileSelect = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setImage(URL.createObjectURL(file));
-    setScanning(true);
-    showToast("Đang kết nối Google AI...", "info");
-
+  const processScanning = async (base64) => {
+    console.log("--- BẮT ĐẦU GỌI API GEMINI ---");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+    
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onloadend = async () => {
-        const base64Data = reader.result.split(',')[1];
-        
-        // Dùng mẫu chuẩn, không qua Proxy trung gian nữa để tránh treo
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: "Đọc ảnh này và trả về JSON gồm 'ten' (tên cửa hàng) và 'sdt' (số điện thoại). Chỉ trả về JSON rỗng {} nếu không thấy." },
+              { inline_data: { mime_type: "image/jpeg", data: base64 } }
+            ]
+          }]
+        })
+      });
 
-        // Cơ chế tự ngắt sau 10 giây nếu treo
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 10000);
+      const data = await response.json();
+      console.log("KẾT QUẢ TỪ GOOGLE:", data);
 
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            signal: controller.signal,
-            body: JSON.stringify({
-              contents: [{ parts: [
-                { text: "Đọc Card/Bảng hiệu này. Trả về JSON: { 'ten': '...', 'sdt': '...' }. Chỉ trả về JSON." },
-                { inline_data: { mime_type: "image/jpeg", data: base64Data } }
-              ] }]
-            })
+      if (data.candidates && data.candidates[0].content.parts[0].text) {
+        const text = data.candidates[0].content.parts[0].text;
+        const jsonMatch = text.match(/\{.*\}/s);
+        const res = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+        if (res) {
+          setScannedData({ 
+            ten: res.ten || "Không tìm thấy tên", 
+            sdt: res.sdt || "Không tìm thấy SĐT" 
           });
-
-          const data = await response.json();
-          clearTimeout(timeout);
-
-          if (data.candidates && data.candidates[0].content.parts[0].text) {
-            const text = data.candidates[0].content.parts[0].text;
-            const jsonMatch = text.match(/\{.*\}/s);
-            const res = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-            if (res) {
-              setScannedData({ ten: res.ten || "", sdt: res.sdt || "" });
-              showToast("Đã đọc xong!", "success");
-            }
-          }
-        } catch (fetchErr) {
-          showToast("Mạng yếu hoặc bị chặn, anh hãy tự nhập tay!", "warning");
-        } finally {
-          setScanning(false);
+          showToast("AI đã phân tích xong!", "success");
         }
-      };
-    } catch (err) {
+      }
+    } catch (error) {
+      console.error("LỖI KHI GỌI API:", error);
+      showToast("Lỗi kết nối API Google", "error");
+    } finally {
       setScanning(false);
     }
   };
 
-  return (
-    <div style={{ padding: '15px', maxWidth: '400px', margin: 'auto', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-      <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>Quét Danh thiếp / Bảng hiệu</h3>
+  const handleFileSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-      {/* KHUNG CHỤP ẢNH */}
+    console.log("ĐÃ CHỌN FILE:", file.name);
+    setImage(URL.createObjectURL(file));
+    setScanning(true);
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64Data = reader.result.split(',')[1];
+      console.log("ĐÃ CHUYỂN ẢNH SANG BASE64 - CHUẨN BỊ GỬI...");
+      processScanning(base64Data);
+    };
+    reader.onerror = (error) => {
+      console.error("LỖI ĐỌC FILE:", error);
+      setScanning(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '450px', margin: 'auto', fontFamily: 'sans-serif' }}>
       <div 
-        onClick={() => !scanning && fileInputRef.current.click()}
-        style={{ width: '100%', height: '160px', border: '2px dashed #007bff', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', background: '#f8fbff' }}
+        onClick={() => fileInputRef.current.click()}
+        style={{ 
+          width: '100%', height: '200px', border: '2px dashed #007bff', 
+          borderRadius: '15px', display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+          background: '#f0f7ff', overflow: 'hidden' 
+        }}
       >
         {scanning ? (
-          <div style={{ textAlign: 'center' }}><FiLoader className="spin" size={30} color="#007bff" /><br/>Đang đọc...</div>
+          <div style={{ textAlign: 'center', color: '#007bff' }}>
+            <FiLoader className="spin" size={40} />
+            <p>ĐANG XỬ LÝ API...</p>
+          </div>
         ) : image ? (
-          <img src={image} alt="scan" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+          <img src={image} alt="preview" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
         ) : (
-          <div style={{ textAlign: 'center', color: '#666' }}><FiImage size={30} /><br/>Bấm để chụp/chọn ảnh</div>
+          <div style={{ textAlign: 'center', color: '#555' }}>
+            <FiCamera size={40} />
+            <p>CHỤP ẢNH / CHỌN FILE</p>
+          </div>
         )}
-        <input type="file" ref={fileInputRef} onChange={handleFileSelect} hidden accept="image/*" />
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileSelect} 
+          hidden 
+          accept="image/*"
+          capture="environment" 
+        />
       </div>
 
-      {/* FORM NHẬP LIỆU - QUAN TRỌNG: LUÔN SỬA ĐƯỢC KỂ CẢ KHI AI ĐANG XOAY */}
       <div style={{ marginTop: '20px' }}>
-        <div style={{ marginBottom: '10px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Tên doanh nghiệp</label>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', fontSize: '13px', color: '#666' }}>TÊN DOANH NGHIỆP</label>
           <input 
             type="text" 
-            value={scannedData.ten} 
+            value={scannedData.ten}
             onChange={(e) => setScannedData({...scannedData, ten: e.target.value})}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginTop: '5px' }}
-            placeholder="AI đang tìm hoặc anh tự gõ..."
+            style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', marginTop: '5px', fontSize: '16px' }}
           />
         </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ fontSize: '12px', fontWeight: 'bold' }}>Số điện thoại</label>
+        <div style={{ marginBottom: '20px' }}>
+          <label style={{ display: 'block', fontWeight: 'bold', fontSize: '13px', color: '#666' }}>SỐ ĐIỆN THOẠI</label>
           <input 
             type="text" 
-            value={scannedData.sdt} 
+            value={scannedData.sdt}
             onChange={(e) => setScannedData({...scannedData, sdt: e.target.value})}
-            style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginTop: '5px' }}
-            placeholder="Số điện thoại..."
+            style={{ width: '100%', padding: '12px', border: '1px solid #ccc', borderRadius: '8px', marginTop: '5px', fontSize: '16px' }}
           />
         </div>
 
         <button 
-          onClick={() => showToast("Đã lưu!", "success")}
-          style={{ width: '100%', padding: '12px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 'bold' }}
+          style={{ 
+            width: '100%', padding: '15px', background: '#28a745', color: '#fff', 
+            border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px' 
+          }}
+          onClick={() => showToast("Đã lưu thành công!", "success")}
         >
-          Lưu vào Danh bạ
+          <FiSave /> LƯU DANH BẠ
         </button>
       </div>
     </div>
