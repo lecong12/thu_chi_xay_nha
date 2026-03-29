@@ -46,10 +46,9 @@ app.post('/api/gemini-extract', async (req, res) => {
     if (!imageUrl) return res.status(400).json({ error: 'Thiếu link ảnh' });
 
     // Cấu hình Model với hướng dẫn hệ thống nghiêm ngặt
-    // TUYỆT ĐỐI KHÔNG DÙNG "gemini-pro-vision" vì đã bị khai tử.
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
-      // Cấu hình để AI luôn trả về JSON hợp lệ
+      // Buộc AI trả về định dạng JSON chuẩn
       generationConfig: {
         responseMimeType: "application/json",
       }
@@ -58,32 +57,33 @@ app.post('/api/gemini-extract', async (req, res) => {
     // Tải ảnh từ Cloudinary để gửi cho Gemini
     const imageResp = await fetch(imageUrl).then(response => response.arrayBuffer());
     
-    // Tự động nhận diện mimeType từ URL để hỗ trợ đa dạng định dạng
+    // Cải tiến việc nhận diện mimeType (xử lý cả URL có tham số phía sau)
     const urlLower = imageUrl.toLowerCase();
     let mimeType = "image/jpeg";
-    if (urlLower.endsWith(".png")) mimeType = "image/png";
-    else if (urlLower.endsWith(".pdf")) mimeType = "application/pdf";
-    else if (urlLower.endsWith(".webp")) mimeType = "image/webp";
-    else if (urlLower.endsWith(".heic")) mimeType = "image/heic";
+    if (urlLower.includes(".png")) mimeType = "image/png";
+    else if (urlLower.includes(".pdf")) mimeType = "application/pdf";
+    else if (urlLower.includes(".webp")) mimeType = "image/webp";
+    else if (urlLower.includes(".heic")) mimeType = "image/heic";
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Trích xuất thông tin từ danh thiếp này. 
-      - "ten": Tên công ty hoặc cửa hàng (thường là chữ to nhất).
-      - "sdt": Số điện thoại liên hệ (tìm các dãy số bắt đầu bằng 0, ưu tiên có chữ ĐT, Tel, Zalo).
-      - "diaChi": Địa chỉ liên lạc.
-      - "mst": Mã số thuế nếu có.
-      Yêu cầu: Nếu không tìm thấy, hãy để giá trị là "". Trả về JSON thuần.`;
+      prompt = `Phân tích ảnh danh thiếp này và trích xuất dữ liệu JSON:
+      1. "ten": Tìm tên cửa hàng, doanh nghiệp hoặc thương hiệu. Thường là dòng chữ to nhất hoặc nằm trên cùng.
+      2. "sdt": Tìm số điện thoại (bắt đầu bằng số 0, dài 10-11 chữ số). Tìm gần các biểu tượng điện thoại hoặc từ khóa 'ĐT', 'Tel', 'Hotline', 'Zalo'.
+      3. "diaChi": Địa chỉ văn phòng/cửa hàng.
+      4. "mst": Mã số thuế nếu có.
+      
+      Nếu thông tin nào không có, hãy để giá trị "". Trả về JSON thuần túy.`;
     } else {
-      prompt = `Phân tích hóa đơn này. Chỉ lấy thông tin NGƯỜI BÁN:
-      - "ten": Tên cửa hàng/doanh nghiệp phát hành hóa đơn (nằm ở trên cùng).
-      - "sdt": Số điện thoại người bán (tìm dãy số bắt đầu bằng 0, gần tên cửa hàng).
-      - "ngay": Ngày ghi hóa đơn (định dạng YYYY-MM-DD).
-      - "soTien": Tổng tiền thanh toán (Số nguyên).
-      - "noiDung": Tóm tắt ngắn gọn các món đã mua, ví dụ: "Mua Xi măng, cát xây tại [Tên cửa hàng]".
-      Lưu ý: Không lấy thông tin người mua hàng. Trả về JSON thuần.`;
+      prompt = `Phân tích hóa đơn này và chỉ lấy thông tin của NGƯỜI BÁN (đơn vị cung cấp hàng):
+      1. "ten": Tên cửa hàng hoặc doanh nghiệp bán hàng (thường nằm ở tiêu đề trên cùng hóa đơn).
+      2. "sdt": Số điện thoại của người bán.
+      3. "ngay": Ngày lập hóa đơn (định dạng YYYY-MM-DD).
+      4. "soTien": Tổng số tiền thanh toán cuối cùng (Số nguyên).
+      5. "noiDung": Tóm tắt mặt hàng đã mua kèm tên cửa hàng. VD: "Mua sắt thép tại Cửa hàng A".
+      
+      Tuyệt đối KHÔNG lấy thông tin người mua. Trả về JSON thuần túy.`;
     }
-
     const result = await model.generateContent([
       {
         inlineData: {
