@@ -1,61 +1,107 @@
-import React, { useState } from 'react';
-import { FiSearch, FiZap, FiAlertTriangle } from 'react-icons/fi';
+import React, { useState, useRef } from 'react';
+import { FiCamera, FiLoader, FiCheckCircle } from 'react-icons/fi';
 
-const GEMINI_KEY = "AIzaSyA_3frlz1WTohsAXGAniuCjiOgT3zvdAQQ"; 
+// CHỖ NÀY ANH TỰ DÁN KEY MỚI CỦA ANH VÀO NHÉ - ĐỪNG GỬI LÊN ĐÂY
+const GEMINI_KEY = AIzaSyDfyd86965EGsNgwhcNCuZQ1SZN3xzWty0; 
 
-function BusinessScanner() {
-  const [debugLog, setDebugLog] = useState("");
+function BusinessScanner({ showToast }) {
+  const fileInputRef = useRef(null);
+  const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [scannedData, setScannedData] = useState({ ten: "", sdt: "" });
+  const [debugLog, setDebugLog] = useState("");
 
-  // CHIÊU CUỐI: ĐIỀU TRA XEM GOOGLE CHO PHÉP MODEL NÀO
-  const checkAvailableModels = async () => {
-    setLoading(true);
-    setDebugLog("Đang tra khảo Google...");
+  const callGemini = async (base64) => {
+    // Dùng v1beta với model flash-latest là ổn định nhất hiện nay
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_KEY}`;
+    
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${GEMINI_KEY}`);
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: "Đọc ảnh và trả về JSON: {\"ten\": \"...\", \"sdt\": \"...\"}. Chỉ trả về JSON." },
+              { inline_data: { mime_type: "image/jpeg", data: base64 } }
+            ]
+          }]
+        })
+      });
+
       const data = await response.json();
       
-      if (data.models) {
-        // Lọc ra những model có thể đọc được ảnh (Vision/Flash)
-        const names = data.models
-          .map(m => m.name.replace("models/", ""))
-          .filter(name => name.includes("flash") || name.includes("vision") || name.includes("pro"));
-        
-        setDebugLog("MODEL ANH ĐƯỢC DÙNG LÀ:\n" + names.join("\n"));
-      } else {
-        setDebugLog("Google báo: " + JSON.stringify(data.error));
+      if (data.error) {
+        setDebugLog(`Lỗi Google: ${data.error.message}`);
+        return null;
       }
+
+      const txt = data.candidates[0].content.parts[0].text;
+      setDebugLog(`AI ĐÃ CHỊU ĐỌC: ${txt}`);
+
+      const tenMatch = txt.match(/"ten":\s*"([^"]+)"/);
+      const sdtMatch = txt.match(/"sdt":\s*"([^"]+)"/);
+      
+      return {
+        ten: tenMatch ? tenMatch[1] : "",
+        sdt: sdtMatch ? sdtMatch[1] : ""
+      };
     } catch (err) {
-      setDebugLog("Lỗi kết nối: " + err.message);
-    } finally {
-      setLoading(false);
+      setDebugLog(`Lỗi mạng: ${err.message}`);
+      return null;
     }
   };
 
-  return (
-    <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto', textAlign: 'center' }}>
-      <h2 style={{ color: '#f5222d' }}>ĐIỀU TRA MODEL</h2>
-      <p style={{ fontSize: '13px', color: '#666' }}>Bấm nút dưới để xem Google "cấp" cho anh model tên là gì!</p>
-      
-      <button 
-        onClick={checkAvailableModels}
-        disabled={loading}
-        style={{ 
-          width: '100%', padding: '20px', background: '#f5222d', 
-          color: '#fff', border: 'none', borderRadius: '15px', 
-          fontWeight: 'bold', fontSize: '18px', cursor: 'pointer' 
-        }}
-      >
-        {loading ? "ĐANG TRA KHẢO..." : "BẮT THÓP GOOGLE"}
-      </button>
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-      <div style={{ 
-        marginTop: '30px', padding: '15px', background: '#000', 
-        color: '#0f0', borderRadius: '10px', fontSize: '14px', 
-        textAlign: 'left', whiteSpace: 'pre-wrap', border: '2px solid #333' 
-      }}>
-        <strong>KẾT QUẢ TRA KHẢO:</strong><br/>
-        {debugLog || "Chưa có dữ liệu. Bấm nút phía trên!"}
+    setImage(URL.createObjectURL(file));
+    setLoading(true);
+    setDebugLog("Đang ép AI làm việc với Key mới...");
+
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async () => {
+      const img = new Image();
+      img.src = reader.result;
+      img.onload = async () => {
+        const canvas = document.createElement('canvas');
+        const scale = 800 / img.width;
+        canvas.width = 800;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const base64 = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
+        
+        const res = await callGemini(base64);
+        if (res) {
+          setScannedData({ ten: res.ten, sdt: res.sdt });
+          showToast("Xong rồi anh Công ơi!", "success");
+        }
+        setLoading(false);
+      };
+    };
+  };
+
+  return (
+    <div style={{ padding: '20px', maxWidth: '400px', margin: 'auto' }}>
+      <div 
+        onClick={() => !loading && fileInputRef.current.click()}
+        style={{ width: '100%', height: '180px', border: '3px solid #28a745', borderRadius: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f6ffed', cursor: 'pointer' }}
+      >
+        {loading ? <FiLoader className="spin" size={40} color="#28a745" /> : image ? <img src={image} style={{ width: '100%', height: '100%', objectFit: 'contain' }} /> : "CHỤP CARD (DÙNG KEY MỚI)"}
+        <input type="file" ref={fileInputRef} onChange={handleFile} hidden accept="image/*" />
+      </div>
+
+      <div style={{ marginTop: '20px' }}>
+        <input placeholder="Tên..." value={scannedData.ten} style={{ width: '100%', padding: '12px', marginBottom: '10px', border: '2px solid #ddd', borderRadius: '10px' }} />
+        <input placeholder="SĐT..." value={scannedData.sdt} style={{ width: '100%', padding: '12px', border: '2px solid #ddd', borderRadius: '10px' }} />
+      </div>
+
+      <div style={{ marginTop: '30px', padding: '10px', background: '#000', color: '#0f0', borderRadius: '8px', fontSize: '11px' }}>
+        <strong>TRẠNG THÁI:</strong><br/>
+        {debugLog || "Vui lòng dùng Key mới và không để lộ!"}
       </div>
     </div>
   );
