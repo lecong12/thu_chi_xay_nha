@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { FiCamera, FiLoader, FiSave, FiCheck, FiAlertCircle } from 'react-icons/fi';
+import { FiCamera, FiLoader, FiSave, FiCheck } from 'react-icons/fi';
 import { addRowToSheet } from '../utils/sheetsAPI';
 
 const CLOUD_NAME = (process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "dpx7v968n").replace(/['"]/g, '');
@@ -11,12 +11,12 @@ function BusinessScanner({ showToast }) {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  
-  // Khởi tạo state với giá trị rỗng rõ ràng
   const [scannedData, setScannedData] = useState({ ten: "", sdt: "", url: "" });
 
   const callGemini = async (base64) => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+    // SỬA LẠI URL VÀ MODEL CHUẨN (v1 thay vì v1beta để ổn định hơn)
+    const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
+    
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -24,20 +24,26 @@ function BusinessScanner({ showToast }) {
         body: JSON.stringify({
           contents: [{
             parts: [
-              { text: "Đọc ảnh này. Trả về JSON: {\"ten\": \"Tên cửa hàng\", \"sdt\": \"Số điện thoại\"}. Chỉ trả về duy nhất JSON." },
+              { text: "Đọc ảnh và trả về JSON: {\"ten\": \"...\", \"sdt\": \"...\"}. Chỉ trả về JSON." },
               { inline_data: { mime_type: "image/jpeg", data: base64 } }
             ]
           }]
         })
       });
+
       const data = await response.json();
-      const rawText = data.candidates[0].content.parts[0].text;
       
-      // XỬ LÝ CHUỖI JSON (Cắt bỏ các ký tự thừa nếu AI trả về Markdown)
+      // Kiểm tra lỗi từ Google
+      if (data.error) {
+        console.error("Lỗi Google:", data.error.message);
+        return null;
+      }
+
+      const rawText = data.candidates[0].content.parts[0].text;
       const cleanJson = rawText.replace(/```json|```/gi, "").trim();
       return JSON.parse(cleanJson);
     } catch (err) {
-      console.error("Lỗi phân tích AI:", err);
+      console.error("Lỗi kết nối AI:", err);
       return null;
     }
   };
@@ -48,7 +54,8 @@ function BusinessScanner({ showToast }) {
 
     setImage(URL.createObjectURL(file));
     setLoading(true);
-    showToast("Đang xử lý...", "info");
+    setScannedData({ ten: "", sdt: "", url: "" });
+    showToast("Đang phân tích ảnh...", "info");
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -56,11 +63,11 @@ function BusinessScanner({ showToast }) {
       const base64 = reader.result.split(',')[1];
       
       try {
-        // Gửi Cloudinary
         const formData = new FormData();
         formData.append("file", file);
         formData.append("upload_preset", UPLOAD_PRESET);
 
+        // Chạy song song
         const [resCloud, aiRes] = await Promise.all([
           fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, { method: "POST", body: formData }),
           callGemini(base64)
@@ -68,7 +75,6 @@ function BusinessScanner({ showToast }) {
 
         const cloudData = await resCloud.json();
 
-        // CẬP NHẬT DỮ LIỆU - ĐẢM BẢO KHÔNG BỊ TRỐNG
         setScannedData({
           ten: aiRes?.ten || "",
           sdt: aiRes?.sdt || "",
@@ -76,12 +82,12 @@ function BusinessScanner({ showToast }) {
         });
 
         if (aiRes) {
-          showToast("Đã trích xuất thông tin!", "success");
+          showToast("Đã lấy thông tin thành công!", "success");
         } else {
-          showToast("AI không đọc được chữ, anh hãy tự nhập.", "warning");
+          showToast("AI không đọc được, mời anh nhập tay.", "warning");
         }
       } catch (err) {
-        showToast("Lỗi kết nối!", "error");
+        showToast("Lỗi hệ thống!", "error");
       } finally {
         setLoading(false);
       }
@@ -89,7 +95,7 @@ function BusinessScanner({ showToast }) {
   };
 
   const handleSave = async () => {
-    if (!scannedData.ten) return showToast("Vui lòng nhập tên!", "warning");
+    if (!scannedData.ten) return showToast("Nhập tên doanh nghiệp!", "warning");
     setLoading(true);
     try {
       const payload = {
@@ -101,12 +107,12 @@ function BusinessScanner({ showToast }) {
       };
       const res = await addRowToSheet("DanhBa", payload, APP_ID);
       if (res.success) {
-        showToast("Đã lưu vào danh bạ!", "success");
+        showToast("Đã lưu danh bạ!", "success");
         setImage(null);
         setScannedData({ ten: "", sdt: "", url: "" });
       }
     } catch (e) {
-      showToast("Lỗi lưu AppSheet", "error");
+      showToast("Lỗi lưu dữ liệu!", "error");
     } finally {
       setLoading(false);
     }
@@ -135,6 +141,7 @@ function BusinessScanner({ showToast }) {
             value={scannedData.ten}
             onChange={(e) => setScannedData({...scannedData, ten: e.target.value})}
             style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginTop: '5px' }}
+            placeholder="Tên cửa hàng..."
           />
         </div>
 
@@ -144,15 +151,18 @@ function BusinessScanner({ showToast }) {
             value={scannedData.sdt}
             onChange={(e) => setScannedData({...scannedData, sdt: e.target.value})}
             style={{ width: '100%', padding: '12px', border: '1px solid #ddd', borderRadius: '8px', marginTop: '5px' }}
+            placeholder="Số điện thoại..."
           />
         </div>
         
+        {scannedData.url && <p style={{ fontSize: '12px', color: '#28a745' }}><FiCheck /> Ảnh đã tải lên máy chủ</p>}
+
         <button 
           onClick={handleSave}
           disabled={loading || !scannedData.ten}
-          style={{ width: '100%', padding: '15px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold' }}
+          style={{ width: '100%', padding: '15px', background: '#28a745', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 'bold', marginTop: '10px' }}
         >
-          {loading ? "ĐANG LƯU..." : "LƯU DANH BẠ"}
+          {loading ? "ĐANG XỬ LÝ..." : "LƯU DANH BẠ"}
         </button>
       </div>
     </div>
