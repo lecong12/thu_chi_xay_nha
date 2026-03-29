@@ -66,27 +66,25 @@ app.post('/api/gemini-extract', async (req, res) => {
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Hãy đóng vai một máy quét OCR. 
-      BƯỚC 1: Đọc và liệt kê toàn bộ văn bản có trong ảnh.
-      BƯỚC 2: Từ văn bản đã đọc, trích xuất chính xác vào JSON:
-      1. "ten": Tên cửa hàng/Công ty.
-      2. "sdt": Tìm các dãy số có 10-11 chữ số bắt đầu bằng 0. Chỉ lấy số, không lấy dấu cách/chấm. Loại bỏ MST (10/13 số).
-      3. "diaChi": Địa chỉ.
-      4. "mst": Mã số thuế.
-      
-      Nếu không thấy SĐT rõ ràng, hãy để "". TUYỆT ĐỐI KHÔNG TỰ BỊA SỐ.
-      JSON: {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
+      prompt = `Phân tích danh thiếp (business card) này:
+      1. "ten": Tìm tên công ty, tên cửa hàng hoặc tên thương hiệu. Đây thường là chữ có kích thước lớn nhất hoặc nằm ở vị trí trung tâm/trên cùng. 
+      2. "sdt": Tìm số điện thoại liên hệ. Ưu tiên các số đi kèm từ khóa 'Tel', 'ĐT', 'Hotline', 'Zalo'. Chỉ lấy các chữ số, bắt đầu bằng 0, dài 10-11 ký tự. Không nhầm lẫn với Mã số thuế (MST).
+      3. "diaChi": Địa chỉ văn phòng hoặc cửa hàng.
+      4. "mst": Mã số thuế nếu có.
+
+      Trả về định dạng JSON thuần túy:
+      {"ten": "...", "sdt": "...", "diaChi": "...", "mst": "..."}`;
     } else {
-      prompt = `Phân tích hóa đơn này như một máy quét OCR chính xác. 
-      Trích xuất thông tin người BÁN (thông tin ở đầu trang):
-      1. "ten": Tên cửa hàng vật tư.
-      2. "sdt": SĐT người bán (thường ở tiêu đề, bắt đầu bằng 0). Chỉ lấy chữ số.
-      3. "ngay": Ngày bán (YYYY-MM-DD).
-      4. "soTien": Tổng cộng tiền (Số nguyên).
-      5. "noiDung": Các mặt hàng đã mua.
-      
-      Lưu ý: Không lấy thông tin người mua. Nếu mờ, để "". 
-      JSON: {"ten": "...", "sdt": "...", "ngay": "...", "soTien": 0, "noiDung": "..."}`;
+      prompt = `Phân tích hóa đơn bán hàng/phiếu thu này. Chỉ tập trung vào thông tin của NGƯỜI BÁN (đơn vị phát hành hóa đơn):
+      1. "ten": Tên cửa hàng hoặc doanh nghiệp bán hàng (thường nằm ở tiêu đề trên cùng, ví dụ: 'Cửa hàng vật liệu xây dựng A').
+      2. "sdt": Số điện thoại của người bán. Tìm các dãy số gần thông tin địa chỉ hoặc tiêu đề, bắt đầu bằng số 0.
+      3. "ngay": Ngày lập hóa đơn (định dạng YYYY-MM-DD).
+      4. "soTien": Tổng cộng số tiền thanh toán cuối cùng (Số nguyên).
+      5. "noiDung": Tóm tắt các mặt hàng chính đã mua.
+
+      Lưu ý: Tuyệt đối không lấy thông tin của người mua hàng.
+      Trả về định dạng JSON thuần túy:
+      {"ten": "...", "sdt": "...", "ngay": "...", "soTien": 0, "noiDung": "..."}`;
     }
 
     const result = await model.generateContent([
@@ -100,8 +98,11 @@ app.post('/api/gemini-extract', async (req, res) => {
     ]);
 
     const response = await result.response;
-    const data = JSON.parse(response.text());
-    res.json(data);
+    let text = response.text();
+    // Loại bỏ markdown code blocks nếu AI vô tình thêm vào
+    text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+    
+    res.json(JSON.parse(text));
   } catch (error) {
     console.error('Gemini Error:', error);
     res.status(500).json({ error: 'AI không thể phân tích ảnh lúc này' });
