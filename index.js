@@ -15,6 +15,10 @@ app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*"); // Trong thực tế nên để http://localhost:3000
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  // Xử lý Preflight request
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
   next();
 });
 
@@ -56,13 +60,24 @@ app.post('/api/gemini-extract', async (req, res) => {
       }
     });
     
-    const imageResp = await fetch(imageUrl).then(response => response.arrayBuffer());
-    
-    const urlLower = imageUrl.toLowerCase();
+    let imageData;
     let mimeType = "image/jpeg";
-    if (urlLower.includes(".png")) mimeType = "image/png";
-    else if (urlLower.includes(".pdf")) mimeType = "application/pdf";
-    else if (urlLower.includes(".webp")) mimeType = "image/webp";
+
+    // Xử lý nếu imageUrl là chuỗi Base64 từ BusinessScanner gửi lên
+    if (imageUrl.startsWith("data:")) {
+      const base64Data = imageUrl.split(",")[1];
+      imageData = base64Data;
+      mimeType = imageUrl.split(";")[0].split(":")[1];
+    } else {
+      // Nếu là URL (Cloudinary), tải về và chuyển sang Base64
+      const imageResp = await fetch(imageUrl).then(response => response.arrayBuffer());
+      imageData = Buffer.from(imageResp).toString("base64");
+
+      const urlLower = imageUrl.toLowerCase();
+      if (urlLower.includes(".png")) mimeType = "image/png";
+      else if (urlLower.includes(".pdf")) mimeType = "application/pdf";
+      else if (urlLower.includes(".webp")) mimeType = "image/webp";
+    }
     
     let prompt = "";
     if (type === 'card') {
@@ -89,7 +104,7 @@ app.post('/api/gemini-extract', async (req, res) => {
     const result = await model.generateContent([
       {
         inlineData: {
-          data: Buffer.from(imageResp).toString("base64"),
+          data: imageData,
           mimeType: mimeType
         }
       },

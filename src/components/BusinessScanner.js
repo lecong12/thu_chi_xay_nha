@@ -57,8 +57,8 @@ function BusinessScanner({ showToast }) {
       img.src = reader.result;
       img.onload = async () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 600; // Nén cực nhỏ để ép nó nhận diện nhanh
-        canvas.height = (img.height / img.width) * 600;
+        canvas.width = 1280; // Tăng độ phân giải để AI đọc chữ nhỏ trên danh thiếp/hóa đơn tốt hơn
+        canvas.height = (img.height / img.width) * 1280;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
