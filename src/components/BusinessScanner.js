@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FiCamera, FiLoader } from 'react-icons/fi';
 
-// KEY MỚI CỦA ANH CÔNG
-const GEMINI_KEY = "AIzaSyDfyd86965EGsNgwhcNCuZQ1SZN3xzWty0";
-
 function BusinessScanner({ showToast }) {
   const fileInputRef = useRef(null);
   const [image, setImage] = useState(null);
@@ -12,27 +9,21 @@ function BusinessScanner({ showToast }) {
   const [debugLog, setDebugLog] = useState("");
 
   const callGemini = async (base64) => {
-    // gemini-pro-vision đã bị khai tử, phải chuyển sang gemini-1.5-flash
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`;
-    
     try {
-      const response = await fetch(url, {
+      // Gọi API Backend của bạn thay vì gọi trực tiếp Google Gemini API
+      const response = await fetch('/api/gemini-extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: "Đọc ảnh và tìm: Tên cửa hàng, Số điện thoại. Trả về đúng định dạng: Tên: [tên], SĐT: [số]" },
-              { inline_data: { mime_type: "image/jpeg", data: base64 } }
-            ]
-          }]
+          imageUrl: `data:image/jpeg;base64,${base64}`, // Gửi base64 lên backend
+          type: 'card' // Loại yêu cầu là danh thiếp
         })
       });
 
       const data = await response.json();
       
       if (data.error) {
-        setDebugLog(`Lỗi Google (Pro Vision): ${data.error.message}`);
+        setDebugLog(`Lỗi từ Backend: ${data.error}`);
         return null;
       }
 
@@ -40,8 +31,8 @@ function BusinessScanner({ showToast }) {
         const txt = data.candidates[0].content.parts[0].text;
         setDebugLog(`AI ĐÃ CHỊU ĐỌC: ${txt}`);
         
-        const tenMatch = txt.match(/Tên:\s*(.*)/i);
-        const sdtMatch = txt.match(/SĐT:\s*([\d\s.-]+)/i);
+        const tenMatch = txt.match(/"ten":\s*"(.*?)"/i); // Lấy từ JSON
+        const sdtMatch = txt.match(/"sdt":\s*"(.*?)"/i); // Lấy từ JSON
         
         return {
           ten: tenMatch ? tenMatch[1].trim() : "",
@@ -50,7 +41,7 @@ function BusinessScanner({ showToast }) {
       }
       return null;
     } catch (err) {
-      setDebugLog(`Lỗi kết nối: ${err.message}`);
+      setDebugLog(`Lỗi kết nối Backend: ${err.message}`);
       return null;
     }
   };
@@ -61,7 +52,7 @@ function BusinessScanner({ showToast }) {
 
     setImage(URL.createObjectURL(file));
     setLoading(true);
-    setDebugLog("Đang thử model Pro Vision...");
+    setDebugLog("Đang gửi ảnh lên Backend để xử lý AI...");
 
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -75,7 +66,7 @@ function BusinessScanner({ showToast }) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         
-        const base64 = canvas.toDataURL('image/jpeg', 0.5).split(',')[1];
+        const base64 = canvas.toDataURL('image/jpeg', 0.7).split(',')[1]; // Tăng chất lượng ảnh một chút
         const res = await callGemini(base64);
         
         if (res) {

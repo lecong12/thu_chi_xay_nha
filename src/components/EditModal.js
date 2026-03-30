@@ -182,7 +182,7 @@ function EditModal({ item, onClose, onSave, showToast }) {
         // Gộp Tên cửa hàng, SĐT và nội dung vào trường noiDung nếu không có cột riêng
         const shopInfo = data.ten ? data.ten : "";
         const phoneInfo = data.sdt ? `(SĐT: ${data.sdt})` : "";
-        const detailInfo = data.noiDung || "";
+        const detailInfo = data.noiDung || ""; // Đảm bảo khai báo một lần
         const combinedNoiDung = [shopInfo, phoneInfo, detailInfo].filter(Boolean).join(" - ");
 
         setFormData(prev => ({
