@@ -10,33 +10,29 @@ function BusinessScanner({ showToast }) {
 
   const callGemini = async (base64) => {
     try {
-      // Gọi API Backend của bạn thay vì gọi trực tiếp Google Gemini API
       const response = await fetch('/api/gemini-extract', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageUrl: `data:image/jpeg;base64,${base64}`, // Gửi base64 lên backend
-          type: 'card' // Loại yêu cầu là danh thiếp
+          imageUrl: `data:image/jpeg;base64,${base64}`,
+          type: 'card'
         })
       });
 
-      const data = await response.json();
-      
-      if (data.error) {
-        setDebugLog(`Lỗi từ Backend: ${data.error}`);
-        return null;
+      if (!response.ok) {
+        throw new Error(`Server trả về lỗi ${response.status}`);
       }
 
-      if (data.candidates && data.candidates[0].content) {
-        const txt = data.candidates[0].content.parts[0].text;
-        setDebugLog(`AI ĐÃ CHỊU ĐỌC: ${txt}`);
-        
-        const tenMatch = txt.match(/"ten":\s*"(.*?)"/i); // Lấy từ JSON
-        const sdtMatch = txt.match(/"sdt":\s*"(.*?)"/i); // Lấy từ JSON
-        
+      const data = await response.json();
+      
+      if (data.error) throw new Error(data.error);
+
+      // Vì Backend index.js đã trả về JSON trích xuất sẵn {ten, sdt, ...}
+      if (data && (data.ten || data.sdt)) {
+        setDebugLog(`AI ĐÃ TRÍCH XUẤT: ${data.ten || "N/A"} - ${data.sdt || "N/A"}`);
         return {
-          ten: tenMatch ? tenMatch[1].trim() : "",
-          sdt: sdtMatch ? sdtMatch[1].trim() : ""
+          ten: (data.ten || "").trim(),
+          sdt: (data.sdt || "").trim()
         };
       }
       return null;
