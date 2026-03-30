@@ -122,7 +122,12 @@ function DesignDrawings({ showToast }) {
 
   const currentList = [...drawings]
     .filter(d => d.category === activeCategory)
-    .reverse(); // Đảo ngược để bản vẽ mới nhất lên đầu
+    .sort((a, b) => {
+      // Sắp xếp theo _RowNumber hoặc timestamp từ ID để tệp mới nhất lên đầu
+      const valA = a._RowNumber || parseInt(a.id?.split('_')[1] || 0);
+      const valB = b._RowNumber || parseInt(b.id?.split('_')[1] || 0);
+      return valB - valA;
+    });
 
   return (
     <div className="drawings-container">

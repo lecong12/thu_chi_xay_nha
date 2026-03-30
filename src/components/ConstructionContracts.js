@@ -122,7 +122,11 @@ function ConstructionContracts({ showToast }) {
   // Lọc danh sách theo Tab đang chọn
   const currentList = [...contracts]
     .filter(c => c.category === activeCategory)
-    .sort((a, b) => (b._RowNumber || 0) - (a._RowNumber || 0)); // Sắp xếp theo RowNumber giảm dần
+    .sort((a, b) => {
+      const valA = a._RowNumber || parseInt(a.id?.split('_')[1] || 0);
+      const valB = b._RowNumber || parseInt(b.id?.split('_')[1] || 0);
+      return valB - valA;
+    });
 
   return (
     <div className="contracts-container">

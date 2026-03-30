@@ -41,14 +41,16 @@ function QuickNotes({ showToast }) {
     // Cấu trúc dữ liệu gửi lên Sheet
     const noteData = {
       id: `NOTE_${Date.now()}`,
-      ngay: now, // sheetsAPI sẽ tự format thành YYYY-MM-DD
+      ngay: now.toISOString(), // Lưu ISO string để sort chính xác
       noiDung: newNote
     };
 
     try {
         const res = await addRowToSheet("GhiChu", noteData, APP_ID);
         if (res.success) {
-            setNotes([noteData, ...notes]);
+            // Nếu server trả về row mới, dùng nó để có _RowNumber chính xác
+            const savedNote = (res.data && res.data[0]) ? res.data[0] : noteData;
+            setNotes([savedNote, ...notes]);
             setNewNote("");
             if (showToast) showToast("Đã lưu ghi chú", "success");
         } else {
@@ -63,10 +65,13 @@ function QuickNotes({ showToast }) {
 
   const deleteNote = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa ghi chú này?")) {
+        const noteToDelete = notes.find(n => n.id === id || n._RowNumber === id);
+        const targetId = noteToDelete?._RowNumber || id;
+
         try {
-            const res = await deleteRowFromSheet("GhiChu", id, APP_ID);
+            const res = await deleteRowFromSheet("GhiChu", targetId, APP_ID);
             if (res.success) {
-                setNotes(notes.filter(n => n.id !== id));
+                setNotes(notes.filter(n => (n.id !== id && n._RowNumber !== id)));
                 if (showToast) showToast("Đã xóa", "success");
             } else {
                 throw new Error(res.message);
