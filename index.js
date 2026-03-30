@@ -51,6 +51,7 @@ app.post('/api/gemini-extract', async (req, res) => {
     const model = genAI.getGenerativeModel({ 
       model: "gemini-1.5-flash",
       generationConfig: {
+        temperature: 0.1, // Giảm độ sáng tạo để trích xuất chính xác hơn
         responseMimeType: "application/json",
       }
     });
@@ -65,24 +66,24 @@ app.post('/api/gemini-extract', async (req, res) => {
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Phân tích ảnh danh thiếp (business card) Việt Nam này và trả về JSON thuần túy:
+      prompt = `Hãy đóng vai một máy quét OCR chuyên nghiệp. Phân tích ảnh danh thiếp (business card) Việt Nam này và trả về JSON:
       {
-        "ten": "Tên công ty/cửa hàng (ưu tiên chữ to nhất, thường ở trên cùng)",
-        "sdt": "Số điện thoại (tìm các số bắt đầu bằng 0, dài 10-11 số. Loại bỏ khoảng trắng và dấu chấm)",
+        "ten": "Tên công ty/cửa hàng (thường là chữ to nhất ở trên cùng)",
+        "sdt": "Số điện thoại liên hệ (Chỉ lấy các chữ số, bắt đầu bằng số 0, dài 10-11 ký tự)",
         "diaChi": "Địa chỉ đầy đủ",
         "mst": "Mã số thuế (nếu có)"
       }
-      Lưu ý: Tìm kỹ các từ khóa 'ĐT', 'Tel', 'Hotline', 'Zalo'. Nếu không thấy, để "".`;
+      Lưu ý: Tìm kỹ các từ khóa 'ĐT', 'Tel', 'Hotline', 'Zalo'. Nếu không thấy thông tin nào, hãy để "".`;
     } else {
-      prompt = `Phân tích hóa đơn/phiếu tính tiền này. Chỉ trích xuất thông tin của NGƯỜI BÁN:
+      prompt = `Phân tích ảnh hóa đơn/phiếu thu này. Chỉ tập trung vào thông tin của BÊN BÁN (NGƯỜI BÁN):
       {
-        "ten": "Tên cửa hàng/đơn vị bán hàng (tiêu đề trên cùng)",
-        "sdt": "Số điện thoại người bán (bắt đầu bằng 0)",
-        "ngay": "Ngày lập hóa đơn (YYYY-MM-DD)",
+        "ten": "Tên cửa hàng hoặc doanh nghiệp bán vật tư (Ví dụ: VLXD A)",
+        "sdt": "Số điện thoại của người bán (Tìm gần địa chỉ hoặc tên cửa hàng, bắt đầu bằng 0)",
+        "ngay": "Ngày mua hàng (Định dạng YYYY-MM-DD)",
         "soTien": 0,
-        "noiDung": "Tóm tắt ngắn gọn các mặt hàng đã mua"
+        "noiDung": "Tóm tắt các mặt hàng chính đã mua (Ví dụ: Gạch ống, Xi măng Hà Tiên)"
       }
-      Lưu ý: KHÔNG lấy thông tin người mua. Trả về JSON thuần túy.`;
+      Lưu ý: KHÔNG lấy thông tin người mua. Nếu không thấy SĐT, hãy để "". Trả về JSON thuần túy.`;
     }
 
     const result = await model.generateContent([

@@ -179,12 +179,18 @@ function EditModal({ item, onClose, onSave, showToast }) {
       const data = await res.json();
       
       if (data && !data.error) {
+        // Gộp Tên cửa hàng, SĐT và nội dung vào trường noiDung nếu không có cột riêng
+        const shopInfo = data.ten ? data.ten : "";
+        const phoneInfo = data.sdt ? `(SĐT: ${data.sdt})` : "";
+        const detailInfo = data.noiDung || prev.noiDung;
+        const combinedNoiDung = [shopInfo, phoneInfo, detailInfo].filter(Boolean).join(" - ");
+
         setFormData(prev => ({
           ...prev,
           ngay: data.ngay || prev.ngay,
           // Format số tiền trả về từ AI thành dạng 1.000.000
           soTien: data.soTien ? new Intl.NumberFormat('vi-VN').format(data.soTien) : prev.soTien,
-          noiDung: data.noiDung || prev.noiDung
+          noiDung: combinedNoiDung
         }));
         showToast("Gemini AI đã tối ưu hóa thông tin hóa đơn!", "success");
       }
