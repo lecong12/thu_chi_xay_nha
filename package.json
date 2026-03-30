@@ -24,7 +24,7 @@
   },
   "scripts": {
     "start": "concurrently \"npm:start-backend\" \"npm:start-frontend\"",
-    "start-frontend": "react-scripts start",
+    "start-frontend": "set PORT=3000 && react-scripts start",
     "start-backend": "nodemon index.js",
     "build": "react-scripts build",
     "test": "react-scripts test",
