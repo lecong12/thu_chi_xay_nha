@@ -65,24 +65,24 @@ app.post('/api/gemini-extract', async (req, res) => {
     
     let prompt = "";
     if (type === 'card') {
-      prompt = `Bạn là một máy quét danh thiếp chuyên nghiệp tại Việt Nam. Trích xuất dữ liệu sau thành JSON:
+      prompt = `Phân tích ảnh danh thiếp (business card) Việt Nam này và trả về JSON thuần túy:
       {
-        "ten": "Tên công ty, cửa hàng hoặc thương hiệu (ưu tiên chữ to nhất, thường nằm ở phần trên)",
-        "sdt": "Chỉ lấy các chữ số của số điện thoại liên hệ (bắt đầu bằng 0, dài 10-11 số). Loại bỏ dấu cách, dấu chấm, gạch ngang",
-        "diaChi": "Địa chỉ ghi trên danh thiếp",
+        "ten": "Tên công ty/cửa hàng (ưu tiên chữ to nhất, thường ở trên cùng)",
+        "sdt": "Số điện thoại (tìm các số bắt đầu bằng 0, dài 10-11 số. Loại bỏ khoảng trắng và dấu chấm)",
+        "diaChi": "Địa chỉ đầy đủ",
         "mst": "Mã số thuế (nếu có)"
       }
-      Lưu ý: Nếu không chắc chắn về SĐT, hãy tìm cạnh các chữ 'ĐT', 'Tel', 'Hotline' hoặc 'Zalo'.`;
+      Lưu ý: Tìm kỹ các từ khóa 'ĐT', 'Tel', 'Hotline', 'Zalo'. Nếu không thấy, để "".`;
     } else {
-      prompt = `Phân tích hóa đơn/phiếu thu này. Chỉ tập trung trích xuất thông tin của NGƯỜI BÁN (đơn vị cung cấp):
+      prompt = `Phân tích hóa đơn/phiếu tính tiền này. Chỉ trích xuất thông tin của NGƯỜI BÁN:
       {
-        "ten": "Tên cửa hàng hoặc doanh nghiệp bán hàng (thường nằm ở tiêu đề trên cùng)",
-        "sdt": "Số điện thoại của người bán (dãy số bắt đầu bằng 0)",
-        "ngay": "Ngày mua hàng (định dạng YYYY-MM-DD)",
+        "ten": "Tên cửa hàng/đơn vị bán hàng (tiêu đề trên cùng)",
+        "sdt": "Số điện thoại người bán (bắt đầu bằng 0)",
+        "ngay": "Ngày lập hóa đơn (YYYY-MM-DD)",
         "soTien": 0,
-        "noiDung": "Tóm tắt ngắn gọn mặt hàng đã mua. Ví dụ: 'Mua xi măng tại Cửa hàng A'"
+        "noiDung": "Tóm tắt ngắn gọn các mặt hàng đã mua"
       }
-      Lưu ý: Tuyệt đối không lấy thông tin người mua. Nếu không thấy SĐT người bán, để "".`;
+      Lưu ý: KHÔNG lấy thông tin người mua. Trả về JSON thuần túy.`;
     }
 
     const result = await model.generateContent([
