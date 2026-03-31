@@ -206,6 +206,13 @@ export const addRowToSheet = async (tableName, payload, appId) => {
  */
 export const deleteRowFromSheet = async (tableName, payloadId, appId) => {
   try {
+    // AppSheet cần Key để xóa. Chúng ta gửi cả 2 định dạng id và ID để đảm bảo trúng đích
+    const deleteRow = {
+      id: payloadId,
+      ID: payloadId,
+      _RowNumber: !isNaN(payloadId) ? payloadId : undefined
+    };
+
     const response = await fetch(getApiUrl(appId, tableName), {
       method: "POST",
       headers: {
@@ -215,7 +222,7 @@ export const deleteRowFromSheet = async (tableName, payloadId, appId) => {
       body: JSON.stringify({
         Action: "Delete",
         Properties: { Locale: "vi-VN" },
-        Rows: [{ id: formatRowId(payloadId) }], // Chỉ cần gửi ID của dòng cần xóa
+        Rows: [deleteRow], 
       }),
     });
 
