@@ -153,6 +153,19 @@ export const updateRowInSheet = async (tableName, payload, appId) => {
         "Ngày": payload.ngay,
         "Nội dung": payload.noiDung
       };
+    } else if (tableName === "GiaoDich") {
+      formattedPayload = {
+        "_RowNumber": payload.appSheetId || payload._RowNumber || payload.id,
+        "ID": payload.keyId || payload.id,
+        "Ngày": payload.ngay,
+        "Loại Thu Chi": payload.loaiThuChi,
+        "Nội dung": payload.noiDung,
+        "Số tiền": payload.soTien,
+        "Hạng mục": payload.doiTuongThuChi,
+        "Hình ảnh": payload.hinhAnh,
+        "Người cập nhật": payload.nguoiCapNhat,
+        "Ghi chú": payload.ghiChu
+      };
     }
 
     // AppSheet cần ID để biết dòng nào cần sửa, và các trường khác để cập nhật
@@ -214,6 +227,18 @@ export const addRowToSheet = async (tableName, payload, appId) => {
         "Ngày": payload.ngay,
         "Nội dung": payload.noiDung
       };
+    } else if (tableName === "GiaoDich") {
+      formattedPayload = {
+        "ID": payload.id || payload.keyId,
+        "Ngày": payload.ngay,
+        "Loại Thu Chi": payload.loaiThuChi,
+        "Nội dung": payload.noiDung,
+        "Số tiền": payload.soTien,
+        "Hạng mục": payload.doiTuongThuChi,
+        "Hình ảnh": payload.hinhAnh,
+        "Người cập nhật": payload.nguoiCapNhat,
+        "Ghi chú": payload.ghiChu
+      };
     }
 
     const response = await fetch(getApiUrl(appId, tableName), {
@@ -268,6 +293,8 @@ export const deleteRowFromSheet = async (tableName, payloadId, appId) => {
     // Đảm bảo gửi đúng cột khóa (Key Column) cho từng bảng
     let deleteRow = {};
     if (tableName === "GhiChu") {
+      deleteRow = { "ID": payloadId };
+    } else if (tableName === "GiaoDich") {
       deleteRow = { "ID": payloadId };
     } else {
       // Mặc định cho các bảng khác, gửi cả ID và id để tăng khả năng tương thích
